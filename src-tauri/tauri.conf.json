@@ -1,0 +1,47 @@
+{
+  "productName": "lore-designer",
+  "version": "0.1.0",
+  "identifier": "com.lore-designer.app",
+  "build": {
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:3000",
+    "beforeDevCommand": "pnpm nuxt:dev",
+    "beforeBuildCommand": "pnpm generate"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Lore Designer",
+        "decorations": false,
+        "width": 1100,
+        "height": 650,
+        "resizable": true,
+        "fullscreen": false,
+        "center": true,
+        "minHeight": 600,
+        "minWidth": 800,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; img-src 'self' asset: https://asset.localhost; connect-src ipc: http://ipc.localhost"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "category": "DeveloperTool",
+    "shortDescription": "Lore Designer is a tool for game developers to efficiently plan and create games.",
+    "longDescription": "Lore Designer is an app that streamlines game development, helping with GDD, dialogues, assets, tasks, and engine integration. It enhances project organization from concept to completion.",
+    "copyright": "Copyright © 2024"
+  },
+  "$schema": "../node_modules/@tauri-apps/cli/schema.json"
+}
