@@ -33,6 +33,9 @@ export default defineNuxtConfig({
         port: 5183,
       },
     },
+    optimizeDeps: {
+      exclude: ['vee-validate']
+    }
   },
   srcDir: 'src',
   modules: [
