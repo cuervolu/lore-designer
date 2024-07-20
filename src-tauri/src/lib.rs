@@ -1,8 +1,9 @@
-use crate::utils::get_fonts;
+use crate::utils::{get_fonts,save_image};
 
 mod utils;
 mod db;
 mod models;
+mod error;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -38,7 +39,7 @@ pub fn run() {
         .plugin(tauri_plugin_window_state::Builder::default().build())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_dialog::init())
-        .invoke_handler(tauri::generate_handler![get_fonts])
+        .invoke_handler(tauri::generate_handler![get_fonts,save_image])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
