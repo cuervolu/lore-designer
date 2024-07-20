@@ -1,6 +1,7 @@
 // src/locales/en.ts
 
 export default {
+  home: "Home",
   welcome: "Welcome to",
   loreDeisgner: "Lore Designer",
   description: "It is an effective tool for game development that seeks to organize files and provide a centralized point to manage all aspects of the game creation process.",
@@ -66,5 +67,8 @@ export default {
         restore: "Restore Default Language"
       }
     }
+  },
+  characters: {
+    title: 'Characters'
   }
 };

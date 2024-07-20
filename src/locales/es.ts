@@ -1,4 +1,5 @@
 export default {
+  home: "Inicio",
   welcome: "Bienvenido a",
   loreDeisgner: "Lore Designer",
   description: "Es una herramienta efectiva para el desarrollo de juegos que busca organizar archivos y proporcionar un punto centralizado para gestionar todos los aspectos del proceso de creación de juegos.",
@@ -63,6 +64,8 @@ export default {
         restore: "Restaurar Idioma Predeterminado"
       }
     }
+  },
+  characters: {
+    title: 'Personajes'
   }
-
 };
