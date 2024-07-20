@@ -55,15 +55,18 @@ export const useCharacterStore = defineStore('character', () => {
       const values = Object.values(character);
       await dbStore.db!.execute(
           `UPDATE characters
-         SET ${setClause},
-             UpdatedAt = CURRENT_TIMESTAMP
-         WHERE id = $1`,
+           SET ${setClause}
+           WHERE id = $1`,
           [id, ...values]
       );
       await emit('character-updated', { id, ...character });
     } catch (error) {
-      console.error('Error updating character:', error);
-      throw error;
+      handleError(new DatabaseError({
+        name: 'DB_QUERY_ERROR',
+        message: 'Failed to update character',
+        cause: error
+      }));
+      throw error;  // Re-throwing the error after handling it
     }
   };
 
