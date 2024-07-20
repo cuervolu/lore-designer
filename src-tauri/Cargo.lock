@@ -132,6 +132,7 @@ dependencies = [
  "tauri-plugin-store",
  "tauri-plugin-window-state",
  "thiserror",
+ "uuid",
 ]
 
 [[package]]
