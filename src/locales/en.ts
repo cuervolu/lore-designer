@@ -31,5 +31,40 @@ export default {
       title: "Task and Milestone Tracker",
       description: "Plan, assign, and track tasks and milestones for your game development project."
     }
+  },
+  sidebar: {
+    projects: "Projects",
+    dialogue: "Dialogue",
+    characters: "Characters",
+    about: "About",
+    settings: "Settings",
+    help: 'Help'
+  },
+  createProjectDialog: {
+    title: "Create a new project",
+    description: "Start creating your first project by filling out the form below.",
+    name: {
+      label: "Name",
+      placeholder: "Project Name",
+      required_error: "Project Name is required",
+
+    },
+    submit: "Save Changes",
+  },
+  settings: {
+    title: "Settings",
+    options: {
+      general: "General",
+      fontFamily: {
+        title: "Font Family",
+        description: "Select the font family for the application.",
+        restore: "Restore Default Font"
+      },
+      language: {
+        title: "Language",
+        description: "Select the language for the application.",
+        restore: "Restore Default Language"
+      }
+    }
   }
 };

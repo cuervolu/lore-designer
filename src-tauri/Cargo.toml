@@ -34,6 +34,7 @@ tauri-plugin-dialog = "2.0.0-beta.0"
 tauri-plugin-clipboard-manager = "2.0.0-beta.0"
 thiserror = "1.0.62"
 anyhow = "1.0.86"
+font-kit = "0.14.1"
 
 [profile.dev]
 incremental = true # Compile your binary in smaller steps.

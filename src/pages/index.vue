@@ -26,9 +26,7 @@ const { t } = useI18n()
             :icon="feat.icon"
         />
       </div>
-      <Button class="flex mx-auto mt-16">
-        <nuxt-link to="#">{{ t('getStarted') }}</nuxt-link>
-      </Button>
+     <create-project-dialog />
       
     </div>
   </main>

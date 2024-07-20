@@ -23,6 +23,7 @@
     "window:allow-set-focus",
     "window:allow-start-dragging",
     "window:allow-toggle-maximize",
+    "window:allow-create",
     "log:default",
     "fs:default",
     "sql:default",
@@ -30,6 +31,17 @@
     "shell:default",
     "store:default",
     "dialog:default",
-    "clipboard-manager:default"
+    "clipboard-manager:default",
+    "window-state:allow-restore-state",
+    "window-state:allow-save-window-state",
+    "os:allow-arch",
+    "os:allow-hostname",
+    "os:allow-os-type",
+    "sql:allow-load",
+    "sql:allow-execute",
+    "store:allow-get",
+    "store:allow-set",
+    "store:allow-save",
+    "store:allow-load"
   ]
 }

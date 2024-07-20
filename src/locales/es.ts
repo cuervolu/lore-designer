@@ -29,5 +29,40 @@ export default {
       title: "Seguimiento de Tareas e Hitos",
       description: "Planifica, asigna y realiza un seguimiento de las tareas e hitos de tu proyecto de desarrollo de juegos."
     }
+  },
+  sidebar: {
+    projects: "Proyectos",
+    dialogue: "Diálogo",
+    characters: "Personajes",
+    about: "Acerca de",
+    settings: "Ajustes",
+    help: 'Ayuda'
+  },
+  createProjectDialog: {
+    title: "Crear un nuevo proyecto",
+    description: "Comienza a crear tu primer proyecto llenando el formulario a continuación.",
+    name: {
+      label: "Nombre",
+      placeholder: "Nombre del Proyecto",
+      required_error: "El Nombre del Proyecto es requerido",
+    },
+    submit: "Guardar Cambios",
+  },
+  settings: {
+    title: "Ajustes",
+    options: {
+      general: "General",
+      fontFamily: {
+        title: "Familia de Fuentes",
+        description: "Selecciona la familia de fuentes para la aplicación.",
+        restore: "Restaurar Fuente Predeterminada"
+      },
+      language: {
+        title: "Lenguaje",
+        description: "Selecciona el idioma de la aplicación.",
+        restore: "Restaurar Idioma Predeterminado"
+      }
+    }
   }
+
 };

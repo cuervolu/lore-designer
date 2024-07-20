@@ -39,7 +39,7 @@
     --input: 240 5.9% 90%;
     --ring: 346.8 77.2% 49.8%;
     --radius: 1rem;
-    font-family: 'Inter Variable', sans-serif;
+    font-family: v-bind('fontStore.currentFont'), 'Inter Variable', sans-serif;
   }
 
   .dark {
