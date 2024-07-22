@@ -25,16 +25,20 @@
       }
     ],
     "security": {
-      "csp": "default-src blob: data: filesystem: wss: https: tauri: 'unsafe-inline' asset: https://asset.localhost 'self'; script-src 'self'; connect-src 'self' ipc:;",
+      "csp": "default-src blob: data: filesystem: ws: wss: http: https: tauri: 'unsafe-inline' asset: https://asset.localhost 'self'; script-src 'self' 'unsafe-eval'; connect-src 'self' ipc: http://ipc.localhost tauri: asset: https://asset.localhost",
       "assetProtocol": {
         "enable": true,
-        "scope": ["$APPDATA/images/*"]
+        "scope": [
+          "$APPDATA/images/*"
+        ]
       }
     }
   },
   "plugins": {
     "fs": {
-      "scope": ["$APPDATA/images/*"]
+      "scope": [
+        "$APPDATA/images/*"
+      ]
     }
   },
   "bundle": {
