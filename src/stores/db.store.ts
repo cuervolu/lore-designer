@@ -8,8 +8,8 @@ export const useDbStore = defineStore('db', () => {
   let initializationPromise: Promise<Database> | null = null;
 
   const initDb = async (): Promise<Database> => {
-    await info('Initializing database');
     if (db.value) return db.value;
+    await info('Initializing database');
 
     if (!initializationPromise) {
       initializationPromise = Database.load('sqlite:loredesigner.db')
