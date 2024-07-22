@@ -1,5 +1,5 @@
 import {emit} from '@tauri-apps/api/event';
-import { error } from '@tauri-apps/plugin-log';
+import {error} from '@tauri-apps/plugin-log';
 import {defineStore} from 'pinia';
 import {useDbStore} from './db.store';
 import type {Character, CharacterRequest, ImageInfo} from '~/interfaces';
@@ -20,7 +20,7 @@ export const useCharacterStore = defineStore('character', () => {
       return imageInfo.id;
     } catch (e) {
       console.error('Error saving image:', e);
-      await error(`Error saving image: ${e}`);
+      // await error(`Error saving image: ${e}`);
       throw new DatabaseError({
         name: 'DB_QUERY_ERROR',
         message: 'Failed to save image',
@@ -53,7 +53,7 @@ export const useCharacterStore = defineStore('character', () => {
       return id;
     } catch (e) {
       console.error('Error creating character:', e);
-      await error(`Error creating character: ${e}`);
+      // await error(`Error creating character: ${e}`);
       throw new DatabaseError({
         name: 'DB_QUERY_ERROR',
         message: 'Failed to create character',
@@ -76,7 +76,7 @@ export const useCharacterStore = defineStore('character', () => {
            LIMIT $1 OFFSET $2`,
           [pageSize, offset]
       );
-
+      await dbStore.closeDb();
       return results.map(row => ({
         id: row.ID,
         name: row.Name,
@@ -89,7 +89,8 @@ export const useCharacterStore = defineStore('character', () => {
         imagePath: row.ImagePath
       }));
     } catch (e) {
-      await error(`Error fetching characters: ${e}`);
+      console.error('Error fetching characters:', e);
+      // await error(`Error fetching characters: ${e}`);
       handleError(new DatabaseError({
         name: 'DB_QUERY_ERROR',
         message: 'Failed to fetch characters',
@@ -128,7 +129,7 @@ export const useCharacterStore = defineStore('character', () => {
         imagePath: row.ImagePath
       };
     } catch (e) {
-      await error(`Error fetching character by ID: ${e}`);
+      // await error(`Error fetching character by ID: ${e}`);
       handleError(new DatabaseError({
         name: 'DB_QUERY_ERROR',
         message: 'Failed to fetch character by ID',
