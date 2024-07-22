@@ -1,7 +1,7 @@
 use std::fs;
 use tauri_plugin_dialog::DialogExt;
 use font_kit::{error::SelectionError, source::SystemSource};
-use log::warn;
+use log::{info, warn};
 use tauri::Manager;
 use uuid::Uuid;
 use crate::error::AppError;
@@ -25,11 +25,13 @@ pub struct ImageInfo {
 /// If no fonts are found or an error occurs during the query, an empty vector is returned.
 #[tauri::command]
 pub async fn get_fonts() -> Vec<String> {
+    info!("Getting fonts from system source");
     let source = SystemSource::new();
 
     let fonts: Result<Vec<String>, SelectionError> = source.all_families();
 
     if let Ok(font) = fonts {
+        info!("Got {:?} fonts", font.len());
         font
     } else {
         warn!("Could not get fonts, returning empty list");
@@ -84,7 +86,7 @@ pub async fn save_image(app: tauri::AppHandle) -> Result<ImageInfo, AppError> {
                 id: uuid.to_string(),
                 path: dest_path.to_string_lossy().to_string(),
             })
-        },
+        }
         Err(e) => Err(AppError::from(e)),
     }
 }

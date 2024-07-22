@@ -1,4 +1,5 @@
 import {emit} from '@tauri-apps/api/event';
+import { error } from '@tauri-apps/plugin-log';
 import {defineStore} from 'pinia';
 import {useDbStore} from './db.store';
 import type {Character, CharacterRequest, ImageInfo} from '~/interfaces';
@@ -17,12 +18,13 @@ export const useCharacterStore = defineStore('character', () => {
           [imageInfo.id, imageInfo.path]
       );
       return imageInfo.id;
-    } catch (error) {
-      console.error('Error saving image:', error);
+    } catch (e) {
+      console.error('Error saving image:', e);
+      await error(`Error saving image: ${e}`);
       throw new DatabaseError({
         name: 'DB_QUERY_ERROR',
         message: 'Failed to save image',
-        cause: error
+        cause: e
       });
     }
   };
@@ -49,12 +51,13 @@ export const useCharacterStore = defineStore('character', () => {
 
       await emit('character-created', {id, ...character});
       return id;
-    } catch (error) {
-      console.error('Error creating character:', error);
+    } catch (e) {
+      console.error('Error creating character:', e);
+      await error(`Error creating character: ${e}`);
       throw new DatabaseError({
         name: 'DB_QUERY_ERROR',
         message: 'Failed to create character',
-        cause: error
+        cause: e
       });
     }
   };
@@ -85,11 +88,12 @@ export const useCharacterStore = defineStore('character', () => {
         updatedAt: row.UpdatedAt,
         imagePath: row.ImagePath
       }));
-    } catch (error) {
+    } catch (e) {
+      await error(`Error fetching characters: ${e}`);
       handleError(new DatabaseError({
         name: 'DB_QUERY_ERROR',
         message: 'Failed to fetch characters',
-        cause: error
+        cause: e
       }));
       return [];
     }
@@ -123,11 +127,12 @@ export const useCharacterStore = defineStore('character', () => {
         updatedAt: row.UpdatedAt,
         imagePath: row.ImagePath
       };
-    } catch (error) {
+    } catch (e) {
+      await error(`Error fetching character by ID: ${e}`);
       handleError(new DatabaseError({
         name: 'DB_QUERY_ERROR',
         message: 'Failed to fetch character by ID',
-        cause: error
+        cause: e
       }));
       return null;
     }
@@ -146,13 +151,14 @@ export const useCharacterStore = defineStore('character', () => {
           [id, ...values]
       );
       await emit('character-updated', {id, ...character});
-    } catch (error) {
+    } catch (e) {
+      console.error('Error updating character:', e);
       handleError(new DatabaseError({
         name: 'DB_QUERY_ERROR',
         message: 'Failed to update character',
-        cause: error
+        cause: e
       }));
-      throw error;
+      throw e;
     }
   };
 
@@ -161,9 +167,10 @@ export const useCharacterStore = defineStore('character', () => {
       const db = await dbStore.initDb();
       await db.execute('DELETE FROM characters WHERE id = $1', [id]);
       await emit('character-deleted', {id});
-    } catch (error) {
-      console.error('Error deleting character:', error);
-      throw error;
+    } catch (e) {
+      await error(`Error deleting character: ${e}`);
+      console.error('Error deleting character:', e);
+      throw e;
     }
   };
 

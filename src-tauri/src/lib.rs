@@ -30,6 +30,9 @@ pub fn run() {
             ])
             .with_colors(ColoredLevelConfig::default())
             .level(LevelFilter::Info)
+            .level_for("tauri", LevelFilter::Warn)
+            .level_for("wry", LevelFilter::Warn)
+            .level_for("tracing", LevelFilter::Warn)
             .build();
 
         builder = builder.plugin(log_plugin);
