@@ -1,4 +1,5 @@
-use crate::utils::{get_fonts,save_image};
+
+use crate::utils::{get_fonts, save_image};
 
 mod utils;
 mod db;
@@ -18,6 +19,8 @@ pub fn run() {
     #[cfg(not(debug_assertions))]
     {
         use tauri_plugin_log::{Builder, Target, TargetKind};
+        use tauri_plugin_log::fern::colors::ColoredLevelConfig;
+        use log::LevelFilter;
 
         let log_plugin = Builder::default()
             .targets([
@@ -25,6 +28,8 @@ pub fn run() {
                 Target::new(TargetKind::LogDir { file_name: None }),
                 Target::new(TargetKind::Webview),
             ])
+            .with_colors(ColoredLevelConfig::default())
+            .level(LevelFilter::Info)
             .build();
 
         builder = builder.plugin(log_plugin);
