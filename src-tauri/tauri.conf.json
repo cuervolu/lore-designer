@@ -25,7 +25,7 @@
       }
     ],
     "security": {
-      "csp": "default-src blob: data: filesystem: wss: https: tauri: 'unsafe-inline' asset: https://asset.localhost 'self'; script-src 'self'",
+      "csp": "default-src blob: data: filesystem: wss: https: tauri: 'unsafe-inline' asset: https://asset.localhost 'self'; script-src 'self'; connect-src 'self' ipc:;",
       "assetProtocol": {
         "enable": true,
         "scope": ["$APPDATA/images/*"]
