@@ -26,6 +26,10 @@
     "window:allow-create",
     "log:default",
     "fs:default",
+    {
+      "identifier": "fs:scope-appdata-recursive",
+      "allow": [{ "path": "$APPDATA/*" }]
+    },
     "sql:default",
     "os:default",
     "shell:default",
