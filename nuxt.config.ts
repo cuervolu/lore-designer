@@ -43,7 +43,6 @@ export default defineNuxtConfig({
     "@nuxt/eslint",
     "@nuxt/fonts",
     "@vee-validate/nuxt",
-    "@nuxt/image",
     "@vueuse/nuxt",
     "@nuxtjs/color-mode",
     "@nuxtjs/partytown",
@@ -81,9 +80,6 @@ export default defineNuxtConfig({
   },
   pinia: {
     storesDirs: ['src/stores/**'],
-  },
-  image: {
-    dir: 'src/assets/img'
   },
   tailwindcss: {
     cssPath: ['~/assets/css/tailwind.css', {injectPosition: 'first'}],
