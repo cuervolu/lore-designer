@@ -25,7 +25,16 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; img-src 'self' asset: https://asset.localhost; connect-src ipc: http://ipc.localhost"
+      "csp": "default-src blob: data: filesystem: wss: https: tauri: 'unsafe-inline' asset: https://asset.localhost 'self'; script-src 'self'",
+      "assetProtocol": {
+        "enable": true,
+        "scope": ["$APPDATA/images/*"]
+      }
+    }
+  },
+  "plugins": {
+    "fs": {
+      "scope": ["$APPDATA/images/*"]
     }
   },
   "bundle": {
