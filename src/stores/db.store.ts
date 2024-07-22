@@ -1,31 +1,41 @@
 import Database from '@tauri-apps/plugin-sql';
-import {defineStore} from 'pinia';
-
-
-interface DbState {
-  db: Database | null;
-}
+import { ref } from 'vue';
+import { defineStore } from 'pinia';
 
 export const useDbStore = defineStore('db', () => {
-  const state = reactive<DbState>({
-    db: null,
-  });
+  const db = ref<Database | null>(null);
+  let initializationPromise: Promise<Database> | null = null;
 
-  const initDb = async () => {
-    if (!state.db) {
-      state.db = await Database.load('sqlite:loredesigner.db');
+  const initDb = async (): Promise<Database> => {
+    if (db.value) return db.value;
+
+    if (!initializationPromise) {
+      initializationPromise = Database.load('sqlite:loredesigner.db')
+      .then((database) => {
+        db.value = database;
+        return database;
+      })
+      .catch((error) => {
+        console.error('Failed to initialize database:', error);
+        throw error;
+      })
+      .finally(() => {
+        initializationPromise = null;
+      });
     }
+
+    return initializationPromise;
   };
 
   const closeDb = async () => {
-    if (state.db) {
-      await state.db.close();
-      state.db = null;
+    if (db.value) {
+      await db.value.close();
+      db.value = null;
     }
   };
 
   return {
-    get db() { return state.db; },
+    db,
     initDb,
     closeDb
   };

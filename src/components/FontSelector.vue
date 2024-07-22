@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import {ref, onMounted} from 'vue';
 import {invoke} from '@tauri-apps/api/core';
-import {useI18n} from "vue-i18n";
 import {Button} from '@/components/ui/button'
 import {
   Card,

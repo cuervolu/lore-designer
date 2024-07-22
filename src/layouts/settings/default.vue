@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import TitleBar from "~/components/TitleBar.vue";
 import SideBar from "~/components/SideBar.vue";
-import {useI18n} from "vue-i18n";
 import SettingsNav from "~/components/SettingsNav.vue";
 import CustomBreadcrumb from "~/components/CustomBreadcrumb.vue";
 

@@ -1,42 +1,90 @@
-import { emit } from '@tauri-apps/api/event';
-import { defineStore } from 'pinia';
-import { useDbStore } from './db.store';
-import type { Character, CharacterRequest } from '~/interfaces';
-import { useErrorHandler } from '~/composables/useErrorHandler';
-import { DatabaseError } from '~/exceptions/db.error';
+import {emit} from '@tauri-apps/api/event';
+import {defineStore} from 'pinia';
+import {useDbStore} from './db.store';
+import type {Character, CharacterRequest, ImageInfo} from '~/interfaces';
+import {useErrorHandler} from '~/composables/useErrorHandler';
+import {DatabaseError} from '~/exceptions/db.error';
 
 export const useCharacterStore = defineStore('character', () => {
   const dbStore = useDbStore();
-  const { handleError } = useErrorHandler();
+  const {handleError} = useErrorHandler();
 
-  const createCharacter = async (character: CharacterRequest): Promise<number | null> => {
+  const saveImage = async (imageInfo: ImageInfo): Promise<string> => {
     try {
-      await dbStore.initDb();
-      const result = await dbStore.db!.execute(
-          'INSERT INTO characters (name, description, role, ImageURL, AdditionalNotes) VALUES ($1, $2, $3, $4, $5)',
-          [character.name, character.description, character.role, character.imageUrl, character.additionalNotes]
+      const db = await dbStore.initDb();
+      await db.execute(
+          'INSERT INTO Images (UUID, Path) VALUES ($1, $2)',
+          [imageInfo.id, imageInfo.path]
       );
-      const id = result.lastInsertId as number;
-      await emit('character-created', { id, ...character });
-      return id;
+      return imageInfo.id;
     } catch (error) {
-      handleError(new DatabaseError({
+      console.error('Error saving image:', error);
+      throw new DatabaseError({
         name: 'DB_QUERY_ERROR',
-        message: 'Failed to create character',
+        message: 'Failed to save image',
         cause: error
-      }));
-      return null;
+      });
     }
   };
 
+  const createCharacter = async (character: CharacterRequest): Promise<number | null> => {
+    try {
+      const db = await dbStore.initDb();
+
+      // Create the character
+      const result = await db.execute(
+          'INSERT INTO Characters (Name, Description, Role, ImageID, AdditionalNotes) VALUES ($1, $2, $3, $4, $5)',
+          [character.name, character.description, character.role, character.imageID, character.additionalNotes]
+      );
+
+      const id = result.lastInsertId as number;
+
+      // Update the image with the character ID if an image was provided
+      if (character.imageID) {
+        await db.execute(
+            'UPDATE Images SET CharacterID = $1 WHERE UUID = $2',
+            [id, character.imageID]
+        );
+      }
+
+      await emit('character-created', {id, ...character});
+      return id;
+    } catch (error) {
+      console.error('Error creating character:', error);
+      throw new DatabaseError({
+        name: 'DB_QUERY_ERROR',
+        message: 'Failed to create character',
+        cause: error
+      });
+    }
+  };
+
+
   const getCharacters = async (page: number = 1, pageSize: number = 20): Promise<Character[]> => {
     try {
-      await dbStore.initDb();
+      const db = await dbStore.initDb();
       const offset = (page - 1) * pageSize;
-      return await dbStore.db!.select<Character[]>(
-          'SELECT * FROM characters ORDER BY CreatedAt DESC LIMIT $1 OFFSET $2',
+      const results = await db.select<any[]>(
+          `SELECT c.*,
+                  i.Path as ImagePath
+           FROM Characters c
+                    LEFT JOIN Images i ON c.ImageID = i.UUID
+           ORDER BY c.CreatedAt DESC
+           LIMIT $1 OFFSET $2`,
           [pageSize, offset]
       );
+
+      return results.map(row => ({
+        id: row.ID,
+        name: row.Name,
+        description: row.Description,
+        role: row.Role,
+        imageID: row.ImageID,
+        additionalNotes: row.AdditionalNotes,
+        createdAt: row.CreatedAt,
+        updatedAt: row.UpdatedAt,
+        imagePath: row.ImagePath
+      }));
     } catch (error) {
       handleError(new DatabaseError({
         name: 'DB_QUERY_ERROR',
@@ -47,34 +95,72 @@ export const useCharacterStore = defineStore('character', () => {
     }
   };
 
+  const getCharacterById = async (id: number): Promise<Character | null> => {
+    try {
+      const db = await dbStore.initDb();
+      const result = await db.select<any[]>(
+          `SELECT c.*,
+                  i.Path as ImagePath
+           FROM Characters c
+                    LEFT JOIN Images i ON c.ImageID = i.UUID
+           WHERE c.ID = $1`,
+          [id]
+      );
+
+      if (result.length === 0) {
+        return null;
+      }
+
+      const row = result[0];
+      return {
+        id: row.ID,
+        name: row.Name,
+        description: row.Description,
+        role: row.Role,
+        imageID: row.ImageID,
+        additionalNotes: row.AdditionalNotes,
+        createdAt: row.CreatedAt,
+        updatedAt: row.UpdatedAt,
+        imagePath: row.ImagePath
+      };
+    } catch (error) {
+      handleError(new DatabaseError({
+        name: 'DB_QUERY_ERROR',
+        message: 'Failed to fetch character by ID',
+        cause: error
+      }));
+      return null;
+    }
+  };
+
 
   const updateCharacter = async (id: number, character: Partial<CharacterRequest>): Promise<void> => {
     try {
-      await dbStore.initDb();
+      const db = await dbStore.initDb();
       const setClause = Object.keys(character).map((key, index) => `${key} = $${index + 2}`).join(', ');
       const values = Object.values(character);
-      await dbStore.db!.execute(
+      await db.execute(
           `UPDATE characters
            SET ${setClause}
            WHERE id = $1`,
           [id, ...values]
       );
-      await emit('character-updated', { id, ...character });
+      await emit('character-updated', {id, ...character});
     } catch (error) {
       handleError(new DatabaseError({
         name: 'DB_QUERY_ERROR',
         message: 'Failed to update character',
         cause: error
       }));
-      throw error;  // Re-throwing the error after handling it
+      throw error;
     }
   };
 
   const deleteCharacter = async (id: number): Promise<void> => {
     try {
-      await dbStore.initDb();
-      await dbStore.db!.execute('DELETE FROM characters WHERE id = $1', [id]);
-      await emit('character-deleted', { id });
+      const db = await dbStore.initDb();
+      await db.execute('DELETE FROM characters WHERE id = $1', [id]);
+      await emit('character-deleted', {id});
     } catch (error) {
       console.error('Error deleting character:', error);
       throw error;
@@ -84,6 +170,8 @@ export const useCharacterStore = defineStore('character', () => {
   return {
     createCharacter,
     getCharacters,
+    getCharacterById,
+    saveImage,
     updateCharacter,
     deleteCharacter
   };

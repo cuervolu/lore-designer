@@ -1,13 +1,12 @@
-<script lang="ts">
+<script setup lang="ts">
 // Supports weights 100-900
 import '@fontsource-variable/inter';
-import Toaster from '@/components/ui/toast/Toaster.vue'
-
+import Toaster from '@/components/ui/toast/Toaster.vue';
 </script>
 
 <template>
   <div>
-    <Toaster />
+    <Toaster/>
     <NuxtLayout>
       <NuxtPage/>
     </NuxtLayout>

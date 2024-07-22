@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import {h} from 'vue'
 import {useForm} from 'vee-validate'
-import {useI18n} from "vue-i18n";
 import {toTypedSchema} from '@vee-validate/zod'
 import * as z from 'zod'
 import {Button} from '@/components/ui/button'
