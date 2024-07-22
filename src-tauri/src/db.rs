@@ -33,16 +33,15 @@ fn get_migrations() -> Vec<Migration> {
         Migration {
             version: 3,
             description: "create_indexes",
-            sql: "CREATE INDEX idx_characters_name ON Characters(Name);
-                CREATE INDEX idx_characters_role ON Characters(Role);
-                CREATE INDEX idx_characters_created_at ON Characters(CreatedAt);
-                CREATE INDEX idx_characters_updated_at ON Characters(UpdatedAt);",
+            sql: "CREATE INDEX IF NOT EXISTS idx_characters_role ON Characters(Role);
+                  CREATE INDEX IF NOT EXISTS idx_characters_created_at ON Characters(CreatedAt);
+                  CREATE INDEX IF NOT EXISTS idx_characters_updated_at ON Characters(UpdatedAt);",
             kind: MigrationKind::Up,
         },
         Migration {
             version: 4,
             description: "add_unique_constraint",
-            sql: "CREATE UNIQUE INDEX idx_characters_name ON Characters(Name);",
+            sql: "CREATE UNIQUE INDEX IF NOT EXISTS idx_characters_name ON Characters(Name);",
             kind: MigrationKind::Up,
         },
         Migration {
