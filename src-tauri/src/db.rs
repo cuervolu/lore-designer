@@ -20,31 +20,6 @@ fn get_migrations() -> Vec<Migration> {
         },
         Migration {
             version: 2,
-            description: "create_indexes",
-            sql: "CREATE INDEX idx_characters_name ON Characters(Name);
-                CREATE INDEX idx_characters_role ON Characters(Role);
-                CREATE INDEX idx_characters_created_at ON Characters(CreatedAt);
-                CREATE INDEX idx_characters_updated_at ON Characters(UpdatedAt);",
-            kind: MigrationKind::Up,
-        },
-        Migration {
-            version: 3,
-            description: "add_unique_constraint",
-            sql: "CREATE UNIQUE INDEX idx_characters_name ON Characters(Name);",
-            kind: MigrationKind::Up,
-        },
-        Migration {
-            version: 4,
-            description: "update_characters_timestamps",
-            sql: "CREATE TRIGGER update_characters_timestamp 
-                    AFTER UPDATE ON Characters
-                    BEGIN
-                        UPDATE Characters SET UpdatedAt = CURRENT_TIMESTAMP WHERE ID = NEW.ID;
-                    END;",
-            kind: MigrationKind::Up,
-        },
-        Migration {
-            version: 5,
             description: "create_images_table",
             sql: "CREATE TABLE Images (
                 UUID TEXT PRIMARY KEY,
@@ -53,6 +28,31 @@ fn get_migrations() -> Vec<Migration> {
                 Timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (CharacterID) REFERENCES Characters(ID) ON DELETE SET NULL
             );",
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 3,
+            description: "create_indexes",
+            sql: "CREATE INDEX idx_characters_name ON Characters(Name);
+                CREATE INDEX idx_characters_role ON Characters(Role);
+                CREATE INDEX idx_characters_created_at ON Characters(CreatedAt);
+                CREATE INDEX idx_characters_updated_at ON Characters(UpdatedAt);",
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 4,
+            description: "add_unique_constraint",
+            sql: "CREATE UNIQUE INDEX idx_characters_name ON Characters(Name);",
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 5,
+            description: "update_characters_timestamps",
+            sql: "CREATE TRIGGER update_characters_timestamp 
+                    AFTER UPDATE ON Characters
+                    BEGIN
+                        UPDATE Characters SET UpdatedAt = CURRENT_TIMESTAMP WHERE ID = NEW.ID;
+                    END;",
             kind: MigrationKind::Up,
         },
         Migration {
