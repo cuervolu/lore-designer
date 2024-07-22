@@ -21,7 +21,7 @@ tauri-build = { version = "2.0.0-beta.19", features = [] }
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 log = "0.4.22"
-tauri = { version = "2.0.0-beta.24", features = ["protocol-asset"] }
+tauri = { version = "2.0.0-beta.24", features = ["protocol-asset", "devtools"] }
 tauri-plugin-devtools = "2.0.0-beta"
 tauri-plugin-log = { version = "2.0.0-beta.0", features = ["colored"] }
 tauri-plugin-fs = "2.0.0-beta.0"
