@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { invoke, convertFileSrc } from "@tauri-apps/api/core";
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { toTypedSchema } from '@vee-validate/zod'
+import {invoke, convertFileSrc} from "@tauri-apps/api/core";
+import {ref} from 'vue'
+import {useRouter} from 'vue-router'
+import {toTypedSchema} from '@vee-validate/zod'
 import * as z from 'zod'
-import { useForm } from 'vee-validate'
+import {useForm} from 'vee-validate'
 import {
   FormControl,
   FormDescription,
@@ -21,12 +21,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { useToast } from '@/components/ui/toast'
-import { useCharacterStore } from '@/stores/character.store'
-import type { CharacterRequest } from '@/interfaces'
+import {useToast} from '@/components/ui/toast'
+import {useCharacterStore} from '@/stores/character.store'
+import type {CharacterRequest} from '@/interfaces'
 
 const router = useRouter()
-const { toast } = useToast()
+const {toast} = useToast()
 const characterStore = useCharacterStore()
 
 const schema = toTypedSchema(z.object({
@@ -47,10 +47,8 @@ const imagePreview = ref<string | null>(null)
 const onSubmit = form.handleSubmit(async (values) => {
   isSubmitting.value = true
   try {
-    // La imagen ya se ha subido previamente si existe values.imageID
     if (values.imageID) {
-      // Guardamos la información de la imagen en la base de datos
-      await characterStore.saveImage({ id: values.imageID, path: imagePreview.value! });
+      await characterStore.saveImage({id: values.imageID, path: imagePreview.value!});
     }
 
     const characterId = await characterStore.createCharacter(values as CharacterRequest)
@@ -59,12 +57,11 @@ const onSubmit = form.handleSubmit(async (values) => {
         title: 'Character Created',
         description: `${values.name} has been successfully created.`,
       })
-      // await router.push('/characters')
+      await router.push('/characters')
     } else {
       throw new Error('Failed to create character')
     }
   } catch (error) {
-    console.error('Error creating character:', error);
     toast({
       title: 'Error',
       description: 'Failed to create character. Please try again.',
@@ -190,7 +187,8 @@ const uploadImage = async () => {
         </CardHeader>
         <CardContent>
           <div class="grid gap-4">
-            <div v-if="!imagePreview" class="flex items-center justify-center rounded-md border border-dashed p-12">
+            <div v-if="!imagePreview"
+                 class="flex items-center justify-center rounded-md border border-dashed p-12">
               <div class="text-center">
                 <div class="mx-auto h-12 w-12 text-muted-foreground"/>
                 <div class="mt-4 font-medium">Click to upload</div>
@@ -199,7 +197,7 @@ const uploadImage = async () => {
               </div>
             </div>
             <div v-else class="relative">
-              <img :src="imagePreview" alt="Character Preview" class="w-full h-auto rounded-md" />
+              <img :src="imagePreview" alt="Character Preview" class="w-full h-auto rounded-md"/>
               <Button @click="uploadImage" class="absolute bottom-2 right-2">Change Image</Button>
             </div>
           </div>
