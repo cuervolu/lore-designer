@@ -1,17 +1,16 @@
-use std::fs;
-use tauri_plugin_dialog::DialogExt;
+use crate::error::AppError;
 use font_kit::{error::SelectionError, source::SystemSource};
 use log::{info, warn};
+use std::fs;
 use tauri::Manager;
+use tauri_plugin_dialog::DialogExt;
 use uuid::Uuid;
-use crate::error::AppError;
 
 #[derive(serde::Serialize)]
 pub struct ImageInfo {
     id: String,
     path: String,
 }
-
 
 /// Retrieves a list of font family names available on the system.
 ///
@@ -72,7 +71,10 @@ pub async fn save_image(app: tauri::AppHandle) -> Result<ImageInfo, AppError> {
     let uuid = Uuid::new_v4();
     let filename = format!("{}.png", uuid);
 
-    let dest_path_result = app.path().app_data_dir().map(|p| p.join("images").join(&filename));
+    let dest_path_result = app
+        .path()
+        .app_data_dir()
+        .map(|p| p.join("images").join(&filename));
 
     match dest_path_result {
         Ok(dest_path) => {
