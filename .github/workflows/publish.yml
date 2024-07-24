@@ -3,7 +3,7 @@ name: 'Bundle and Publish Tauri App 🚀'
 on:
   push:
     tags:
-      - 'app-v*' # push a tag with the format app-v1.0.0
+      - 'v*' # push a tag with the format v1.0.0
   workflow_dispatch:
 
 jobs:
@@ -54,6 +54,7 @@ jobs:
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
         with:
           tagName: app-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
           releaseName: 'App v__VERSION__'
