@@ -28,7 +28,11 @@
     "fs:default",
     {
       "identifier": "fs:scope-appdata-recursive",
-      "allow": [{ "path": "$APPDATA/*" }]
+      "allow": [
+        {
+          "path": "$APPDATA/*"
+        }
+      ]
     },
     "sql:default",
     "os:default",
@@ -46,6 +50,7 @@
     "store:allow-get",
     "store:allow-set",
     "store:allow-save",
-    "store:allow-load"
+    "store:allow-load",
+    "updater:default"
   ]
 }
