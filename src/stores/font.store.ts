@@ -1,11 +1,12 @@
-import {Store} from '@tauri-apps/plugin-store';
-import {defineStore} from 'pinia'
-import {ref} from 'vue'
+import { Store } from '@tauri-apps/plugin-store';
+import { defineStore } from 'pinia'
+import { ref } from 'vue'
 
 export const useFontStore = defineStore('font', () => {
   const store = new Store('store.bin');
   const currentFont = ref('')
   const defaultFont = "'Inter Variable', sans-serif"
+  const availableFonts = ref<string[]>([])
 
   const setFont = async (font: string) => {
     currentFont.value = font
@@ -29,11 +30,17 @@ export const useFontStore = defineStore('font', () => {
     await store.save();
   }
 
+  const setAvailableFonts = (fonts: string[]) => {
+    availableFonts.value = fonts
+  }
+
   return {
     currentFont,
     setFont,
     initFont,
     restoreDefaultFont,
-    defaultFont
+    defaultFont,
+    availableFonts,
+    setAvailableFonts
   }
 })

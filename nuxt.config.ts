@@ -50,6 +50,10 @@ export default defineNuxtConfig({
     "shadcn-nuxt",
     "@nuxtjs/i18n"
   ],
+  plugins: [
+    '~/plugins/i18n.ts',
+    '~/plugins/fonts.ts'
+  ],
   i18n: {
     vueI18n: 'src/config/i18n.config.ts',
     defaultLocale: 'en',

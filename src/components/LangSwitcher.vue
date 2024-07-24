@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import {ref, watch, onMounted} from 'vue'
-import type {LocaleObject} from "@nuxtjs/i18n";
+import { ref, watch } from 'vue'
+import type { LocaleObject } from "@nuxtjs/i18n";
 import {
   Select,
   SelectContent,
@@ -16,11 +16,11 @@ import {
   CardHeader,
   CardTitle
 } from "~/components/ui/card";
-import {Button} from "~/components/ui/button";
-import {useLanguageStore} from "~/stores/language.store";
+import { Button } from "~/components/ui/button";
+import { useLanguageStore } from "~/stores/language.store";
 
-const {t} = useI18n()
-const {locale, locales} = useI18n()
+const { t } = useI18n()
+const { locale, locales } = useI18n()
 const supportedLocales = locales.value as Array<LocaleObject>
 const router = useRouter()
 const switchLocalePath = useSwitchLocalePath()
@@ -32,27 +32,14 @@ async function onLocaleChanged(newLocale: string) {
   console.log('Switching locale to:', newLocale)
   selectedLocale.value = newLocale
   await languageStore.setLanguage(newLocale)
+  await router.push({ path: switchLocalePath(newLocale) })
 }
-
-watch(selectedLocale, (newLocale) => {
-  if (newLocale !== locale.value) {
-    router.push({path: switchLocalePath(newLocale)})
-  }
-})
 
 const restoreDefaultLanguage = async () => {
   await languageStore.restoreDefaultLanguage()
   selectedLocale.value = languageStore.defaultLanguage
-  await router.push({path: switchLocalePath(languageStore.defaultLanguage)})
+  await router.push({ path: switchLocalePath(languageStore.defaultLanguage) })
 }
-
-onMounted(async () => {
-  await languageStore.initLanguage()
-  selectedLocale.value = languageStore.currentLanguage
-  if (selectedLocale.value !== locale.value) {
-    await router.push({path: switchLocalePath(selectedLocale.value)})
-  }
-})
 </script>
 
 <template>
