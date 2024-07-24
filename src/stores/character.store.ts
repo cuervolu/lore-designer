@@ -1,10 +1,10 @@
 import {emit} from '@tauri-apps/api/event';
-import {error} from '@tauri-apps/plugin-log';
 import {defineStore} from 'pinia';
 import {useDbStore} from './db.store';
 import type {Character, CharacterRequest, ImageInfo} from '~/interfaces';
 import {useErrorHandler} from '~/composables/useErrorHandler';
 import {DatabaseError} from '~/exceptions/db.error';
+import {log} from '~/config/log.config';
 
 export const useCharacterStore = defineStore('character', () => {
   const dbStore = useDbStore();
@@ -19,8 +19,7 @@ export const useCharacterStore = defineStore('character', () => {
       );
       return imageInfo.id;
     } catch (e) {
-      console.error('Error saving image:', e);
-      // await error(`Error saving image: ${e}`);
+      await log.error(`Error saving image: ${e}`);
       throw new DatabaseError({
         name: 'DB_QUERY_ERROR',
         message: 'Failed to save image',
@@ -33,7 +32,6 @@ export const useCharacterStore = defineStore('character', () => {
     try {
       const db = await dbStore.initDb();
 
-      // Create the character
       const result = await db.execute(
           'INSERT INTO Characters (Name, Description, Role, ImageID, AdditionalNotes) VALUES ($1, $2, $3, $4, $5)',
           [character.name, character.description, character.role, character.imageID, character.additionalNotes]
@@ -41,7 +39,6 @@ export const useCharacterStore = defineStore('character', () => {
 
       const id = result.lastInsertId as number;
 
-      // Update the image with the character ID if an image was provided
       if (character.imageID) {
         await db.execute(
             'UPDATE Images SET CharacterID = $1 WHERE UUID = $2',
@@ -52,8 +49,7 @@ export const useCharacterStore = defineStore('character', () => {
       await emit('character-created', {id, ...character});
       return id;
     } catch (e) {
-      console.error('Error creating character:', e);
-      // await error(`Error creating character: ${e}`);
+      await log.error(`Error creating character: ${e}`);
       throw new DatabaseError({
         name: 'DB_QUERY_ERROR',
         message: 'Failed to create character',
@@ -61,7 +57,6 @@ export const useCharacterStore = defineStore('character', () => {
       });
     }
   };
-
 
   const getCharacters = async (page: number = 1, pageSize: number = 20): Promise<Character[]> => {
     try {
@@ -89,8 +84,7 @@ export const useCharacterStore = defineStore('character', () => {
         imagePath: row.ImagePath
       }));
     } catch (e) {
-      console.error('Error fetching characters:', e);
-      // await error(`Error fetching characters: ${e}`);
+      await log.error(`Error fetching characters: ${e}`);
       handleError(new DatabaseError({
         name: 'DB_QUERY_ERROR',
         message: 'Failed to fetch characters',
@@ -129,7 +123,7 @@ export const useCharacterStore = defineStore('character', () => {
         imagePath: row.ImagePath
       };
     } catch (e) {
-      // await error(`Error fetching character by ID: ${e}`);
+      await log.error(`Error fetching character by ID: ${e}`);
       handleError(new DatabaseError({
         name: 'DB_QUERY_ERROR',
         message: 'Failed to fetch character by ID',
@@ -138,7 +132,6 @@ export const useCharacterStore = defineStore('character', () => {
       return null;
     }
   };
-
 
   const updateCharacter = async (id: number, character: Partial<CharacterRequest>): Promise<void> => {
     try {
@@ -153,7 +146,7 @@ export const useCharacterStore = defineStore('character', () => {
       );
       await emit('character-updated', {id, ...character});
     } catch (e) {
-      console.error('Error updating character:', e);
+      await log.error(`Error updating character: ${e}`);
       handleError(new DatabaseError({
         name: 'DB_QUERY_ERROR',
         message: 'Failed to update character',
@@ -169,8 +162,7 @@ export const useCharacterStore = defineStore('character', () => {
       await db.execute('DELETE FROM characters WHERE id = $1', [id]);
       await emit('character-deleted', {id});
     } catch (e) {
-      await error(`Error deleting character: ${e}`);
-      console.error('Error deleting character:', e);
+      await log.error(`Error deleting character: ${e}`);
       throw e;
     }
   };

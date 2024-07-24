@@ -1,7 +1,7 @@
 import Database from '@tauri-apps/plugin-sql';
-import {info, error} from '@tauri-apps/plugin-log';
-import {ref} from 'vue';
-import {defineStore} from 'pinia';
+import { ref } from 'vue';
+import { defineStore } from 'pinia';
+import { log } from '~/config/log.config';
 
 export const useDbStore = defineStore('db', () => {
   const db = ref<Database | null>(null);
@@ -9,17 +9,16 @@ export const useDbStore = defineStore('db', () => {
 
   const initDb = async (): Promise<Database> => {
     if (db.value) return db.value;
-    await info('Initializing database');
-
+    await log.info('Initializing database');
     if (!initializationPromise) {
       initializationPromise = Database.load('sqlite:loredesigner.db')
       .then((database) => {
-        info('Database initialized');
+        log.info('Database initialized');
         db.value = database;
         return database;
       })
       .catch(async (e) => {
-        await error(`Failed to initialize database: ${e}`);
+        await log.error(`Failed to initialize database: ${e}`);
         console.error('Failed to initialize database:', e);
         throw e;
       })
@@ -27,16 +26,15 @@ export const useDbStore = defineStore('db', () => {
         initializationPromise = null;
       });
     }
-
     return initializationPromise;
   };
 
   const closeDb = async () => {
-    await info('Closing database');
+    await log.info('Closing database');
     if (db.value) {
       await db.value.close();
       db.value = null;
-      await info('Database closed');
+      await log.info('Database closed');
     }
   };
 
