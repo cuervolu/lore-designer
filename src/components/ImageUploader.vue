@@ -1,0 +1,67 @@
+<script setup lang="ts">
+import { ref } from 'vue'
+import { invoke, convertFileSrc } from "@tauri-apps/api/core"
+import { useToast } from '@/components/ui/toast'
+import { Button } from '@/components/ui/button'
+import type { ImageInfo } from '~/interfaces'
+
+const props = defineProps<{
+  initialImage?: string | null
+  altText?: string
+  characterId?: number
+}>()
+
+const emit = defineEmits<{
+  (e: 'update:image', value: ImageInfo & { characterId?: number }): void
+}>()
+
+const { toast } = useToast()
+const { t } = useI18n()
+
+const imagePreview = ref<string | null>(props.initialImage || null)
+
+const uploadImage = async (event: Event) => {
+  event.preventDefault()
+  try {
+    const result = await invoke('save_image', { characterId: props.characterId }) as { id: string, path: string }
+    const convertedPath = convertFileSrc(result.path)
+    imagePreview.value = convertedPath
+    emit('update:image', {
+      id: result.id,
+      path: convertedPath,
+      characterId: props.characterId
+    })
+    toast({
+      title: t('imageUploader.successTitle'),
+      description: t('imageUploader.successDescription'),
+    })
+  } catch (error) {
+    console.error('Error uploading image:', error)
+    toast({
+      title: t('imageUploader.errorTitle'),
+      description: t('imageUploader.errorDescription'),
+      variant: 'destructive',
+    })
+  }
+}
+</script>
+
+<template>
+  <div class="space-y-4">
+    <h3 class="text-lg font-medium">{{ t('imageUploader.title') }}</h3>
+    <p class="text-sm text-muted-foreground">{{ t('imageUploader.description') }}</p>
+    <div v-if="!imagePreview" class="flex items-center justify-center rounded-md border border-dashed p-6">
+      <div class="text-center">
+        <div class="mt-4 font-medium">{{ t('imageUploader.click') }}</div>
+        <p class="mt-2 text-sm text-muted-foreground">{{ t('imageUploader.size') }}</p>
+        <Button @click="uploadImage" type="button" class="mt-4">{{ t('imageUploader.upload') }}</Button>
+      </div>
+    </div>
+    <div v-else class="relative">
+      <img :src="imagePreview" :alt="altText || t('imageUploader.defaultAlt')" class="w-full h-auto rounded-md"/>
+      <Button @click="uploadImage" type="button" class="absolute bottom-2 right-2">
+        {{ t('imageUploader.change') }}
+      </Button>
+    </div>
+  </div>
+</template>
