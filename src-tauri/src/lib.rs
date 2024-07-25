@@ -7,37 +7,29 @@ mod utils;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let mut builder =
-        tauri::Builder::default();
+    let builder =
+        tauri::Builder::default().setup(|app| {
+            // create the log plugin as usual, but call split() instead of build()
+            let (tauri_plugin_log, max_level, logger) = tauri_plugin_log::Builder::new().split(app.handle())?;
 
-    #[cfg(debug_assertions)]
-    {
-        let devtools = tauri_plugin_devtools::init();
-        builder = builder.plugin(devtools);
-    }
+            // on debug builds, set up the DevTools plugin and pipe the logger from tauri-plugin-log
+            #[cfg(debug_assertions)]
+            {
+                let mut devtools_builder = tauri_plugin_devtools::Builder::default();
+                devtools_builder.attach_logger(logger);
+                app.handle().plugin(devtools_builder.init())?;
+            }
+            // on release builds, only attach the logger from tauri-plugin-log
+            #[cfg(not(debug_assertions))]
+            {
+                tauri_plugin_log::attach_logger(max_level, logger);
+            }
 
-    #[cfg(not(debug_assertions))]
-    {
-        use log::LevelFilter;
-        use tauri_plugin_log::fern::colors::ColoredLevelConfig;
-        use tauri_plugin_log::{Builder, Target, TargetKind};
+            app.handle().plugin(tauri_plugin_log)?;
 
-        let log_plugin = Builder::default()
-            .targets([
-                Target::new(TargetKind::Stdout),
-                Target::new(TargetKind::LogDir { file_name: None }),
-                Target::new(TargetKind::Webview),
-            ])
-            .with_colors(ColoredLevelConfig::default())
-            .level(LevelFilter::Info)
-            .level_for("tauri", LevelFilter::Warn)
-            .level_for("wry", LevelFilter::Warn)
-            .level_for("tracing", LevelFilter::Warn)
-            .build();
-
-        builder = builder.plugin(log_plugin);
-    }
-
+            Ok(())
+        });
+    
     builder
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_fs::init())

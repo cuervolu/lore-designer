@@ -1092,9 +1092,9 @@ dependencies = [
 
 [[package]]
 name = "devtools-core"
-version = "0.3.3"
+version = "0.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "28df654e4031290e3074c048e638aef7783a766414df344aaec23b9321c57b32"
+checksum = "7f21c374111065b917a9ed5d1e377cd5792cd19f641ee0bf316f72878908bb99"
 dependencies = [
  "async-stream",
  "bytes",
@@ -1102,6 +1102,7 @@ dependencies = [
  "futures",
  "http 0.2.12",
  "hyper 0.14.30",
+ "log",
  "prost-types",
  "ringbuf",
  "thiserror",
@@ -5159,9 +5160,9 @@ dependencies = [
 
 [[package]]
 name = "tauri-plugin-devtools"
-version = "2.0.0-beta.4"
+version = "2.0.0-beta.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "33045d0705598727a025af0e7f91f424e1dc09a9a46bcafd11ffac2dc02ccd07"
+checksum = "3d4ca4c8378668c832386b990259663ba0bfc60d4fce9d3714e43d3d99da9b56"
 dependencies = [
  "async-stream",
  "bytes",
@@ -5170,6 +5171,7 @@ dependencies = [
  "devtools-core",
  "futures",
  "local-ip-address",
+ "log",
  "objc",
  "serde",
  "serde_json",
@@ -5222,9 +5224,9 @@ dependencies = [
 
 [[package]]
 name = "tauri-plugin-log"
-version = "2.0.0-beta.8"
+version = "2.0.0-beta.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4cc0912ad72022b4d931c909582f06edb0c5e696cb945f16189ed6abf48a0ebd"
+checksum = "80f80d78a6e8102acf05a1e735f006991a2abfc71566d4e484f820b7495cd52c"
 dependencies = [
  "android_logger",
  "byte-unit",
@@ -5238,6 +5240,7 @@ dependencies = [
  "swift-rs",
  "tauri",
  "tauri-plugin",
+ "thiserror",
  "time",
 ]
 
