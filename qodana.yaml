@@ -27,3 +27,7 @@ profile:
 
 #Specify Qodana linter for analysis (Applied in CI/CD pipeline)
 linter: jetbrains/qodana-js:latest
+exclude:
+  - name: All
+    paths:
+      - src/components/ui
