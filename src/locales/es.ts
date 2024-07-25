@@ -66,6 +66,36 @@ export default {
     }
   },
   characters: {
-    title: 'Personajes'
+    title: 'Personajes',
+    createCharacter: 'Crear Personaje',
+    createCharacterDescription: 'Rellena el formulario para crear un nuevo personaje',
+    name: 'Nombre',
+    namePlaceholder: 'Nombre del personaje',
+    nameDescription: 'El nombre del personaje',
+    rolePlaceholder: 'Selecciona Rol',
+    descriptionPlaceholder: 'Escribe una breve descripción del personaje',
+    role: {
+      name: "Rol",
+      primary: "Principal",
+      secondary: "Secundario",
+      tertiary: "Terciario",
+      undefined: "Indefinido",
+      description: "El rol del personaje en la historia."
+    },
+    description: 'Descripción',
+    textAreaDescription: "Una breve descripción del personaje.",
+    additionalNotes: 'Notas Adicionales',
+    additionalNotesPlaceholder: 'Notas Adicionales o Descripción Adicional',
+    additionalNotesDescription: '¿Hay algo más que debamos saber sobre este personaje? (Opcional)',
+    isSubmitting: 'Guardando...',
+    image: {
+      title: 'Imagen del Personaje',
+      description: 'Sube una imagen para representar al personaje. (Opcional)',
+      click: "Haz clic aquí para subir una imagen",
+      size: "PNG, JPG, GIF hasta 10 MB",
+      upload: "Subir Imagen",
+      change: 'Cambiar Imagen',
+    },
+    noCharacters: "No se encontraron personajes.",
   }
 };

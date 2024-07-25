@@ -58,21 +58,27 @@ export const useCharacterStore = defineStore('character', () => {
     }
   };
 
-  const getCharacters = async (page: number = 1, pageSize: number = 20): Promise<Character[]> => {
+  const getCharacters = async (page: number = 1, pageSize: number = 20): Promise<{ characters: Character[], total: number }> => {
     try {
       const db = await dbStore.initDb();
       const offset = (page - 1) * pageSize;
+
+      const countResult = await db.select<[{ count: number }]>('SELECT COUNT(*) as count FROM Characters');
+      const totalCount = countResult[0].count;
+
       const results = await db.select<any[]>(
           `SELECT c.*,
-                  i.Path as ImagePath
-           FROM Characters c
-                    LEFT JOIN Images i ON c.ImageID = i.UUID
-           ORDER BY c.CreatedAt DESC
-           LIMIT $1 OFFSET $2`,
+              i.Path as ImagePath
+       FROM Characters c
+                LEFT JOIN Images i ON c.ImageID = i.UUID
+       ORDER BY c.CreatedAt DESC
+       LIMIT $1 OFFSET $2`,
           [pageSize, offset]
       );
+
       await dbStore.closeDb();
-      return results.map(row => ({
+
+      const characters = results.map(row => ({
         id: row.ID,
         name: row.Name,
         description: row.Description,
@@ -83,6 +89,8 @@ export const useCharacterStore = defineStore('character', () => {
         updatedAt: row.UpdatedAt,
         imagePath: row.ImagePath
       }));
+
+      return { characters, total: totalCount };
     } catch (e) {
       await log.error(`Error fetching characters: ${e}`);
       handleError(new DatabaseError({
@@ -90,7 +98,7 @@ export const useCharacterStore = defineStore('character', () => {
         message: 'Failed to fetch characters',
         cause: e
       }));
-      return [];
+      return { characters: [], total: 0 };
     }
   };
 

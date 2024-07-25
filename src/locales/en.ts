@@ -69,6 +69,37 @@ export default {
     }
   },
   characters: {
-    title: 'Characters'
+    title: 'Characters',
+    createCharacter: 'Create Character',
+    createCharacterDescription: 'Fill out the form to create a new character',
+    name: 'Name',
+    namePlaceholder: 'Character Name',
+    nameDescription: 'The name of the character.',
+    rolePlaceholder: 'Select Role',
+    descriptionPlaceholder: 'Write a brief description of the character.',
+    role: {
+      name: "Role",
+      primary: "Primary",
+      secondary: "Secondary",
+      tertiary: "Tertiary",
+      undefined: "Undefined",
+      description: "The role of the character in the story."
+    },
+    description: 'Description',
+    textAreaDescription: "A brief description of the character.",
+    additionalNotes: 'Additional Notes',
+    additionalNotesPlaceholder: 'Additional Notes or Additional Description',
+    additionalNotesDescription: 'Is there anything else we should know about this character? (Optional)',
+    isSubmitting: 'Saving...',
+    image: {
+      title: 'Character Image',
+      description: 'Upload an image to represent the character. (Optional)',
+      click: "Click here to upload an image",
+      size: "PNG, JPG, GIF up to 10 MB",
+      upload: "Upload Image",
+      change: 'Change Image',
+    },
+    noCharacters: "No characters found.",
   }
+
 };
