@@ -12,6 +12,11 @@ import {Button} from '@/components/ui/button'
 import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from '@/components/ui/tooltip'
 
 const {t} = useI18n()
+const route = useRoute()
+
+const isActive = computed(() => (path: string) => {
+  return route.path === path || route.path.startsWith(path + '/')
+})
 
 const sidebarItems = [
   {key: 'projects', icon: FolderKanban, route: '/projects'},
@@ -46,7 +51,7 @@ const localePath = useLocalePath()
                   variant="ghost"
                   size="icon"
                   class="rounded-lg w-full"
-                  :class="{ 'bg-muted': item.key === 'projects' }"
+                  :class="{ 'bg-muted': isActive(localePath(item.route)) }"
                   :aria-label="t(`sidebar.${item.key}`)"
               >
                 <component :is="item.icon" class="size-5"/>
@@ -68,6 +73,7 @@ const localePath = useLocalePath()
                   variant="ghost"
                   size="icon"
                   class="mt-auto rounded-lg w-full"
+                  :class="{ 'bg-muted': isActive(localePath(item.route)) }"
                   :aria-label="t(`sidebar.${item.key}`)"
               >
                 <component :is="item.icon" class="size-5"/>
