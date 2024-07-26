@@ -64,6 +64,8 @@ jobs:
     needs: release  # This job depends on the release job
     if: needs.release.outputs.new_version  # Only run if a new version was released
     uses: ./.github/workflows/publish.yml  # Use the publishing workflow
+    permissions:
+      contents: write
     with:
       version: ${{ needs.release.outputs.new_version }}  # Pass the new version to the publishing workflow
     secrets: inherit  # Inherit secrets from the calling workflow
