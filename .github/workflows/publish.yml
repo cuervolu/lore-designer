@@ -1,10 +1,18 @@
 name: 'Bundle and Publish Tauri App 🚀'
 
+# This workflow is now triggered by the release workflow or manually
 on:
-  push:
-    tags:
-      - 'v*' # push a tag with the format v1.0.0
+  workflow_call:
+    inputs:
+      version:
+        required: true
+        type: string
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish'
+        required: true
+        type: string
 
 jobs:
   publish-tauri:
@@ -36,6 +44,13 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
 
+      # Set up Node.js environment
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 'lts/*'
+          cache: 'pnpm'
+
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -53,7 +68,7 @@ jobs:
         id: changelog_reader
         uses: mindsers/changelog-reader-action@v2
         with:
-          version: ${{ github.ref_name }}
+          version: ${{ inputs.version }}
           path: ./CHANGELOG.md
 
       - uses: tauri-apps/tauri-action@v0
@@ -62,9 +77,9 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: 'Lore Designer ${{ github.ref_name }}'
+          tagName: v${{ inputs.version }}
+          releaseName: 'Lore Designer v${{ inputs.version }}'
           releaseBody: ${{ steps.changelog_reader.outputs.changes }}
-          releaseDraft: true
+          releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}

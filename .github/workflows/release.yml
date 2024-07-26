@@ -1,38 +1,69 @@
-name: Semantic Release
+name: Release and Publish
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 
 jobs:
   release:
-    name: Release
+    name: Create Release
     runs-on: ubuntu-latest
+    # Permissions required for releasing
     permissions:
-      contents: write # to be able to publish a GitHub release
-      issues: write # to be able to comment on released issues
-      pull-requests: write # to be able to comment on released pull requests
-      id-token: write # to enable use of OIDC for npm provenance
+      contents: write
+      issues: write
+      pull-requests: write
+      id-token: write
+    # Output the new version for use in other jobs
+    outputs:
+      new_version: ${{ steps.semantic.outputs.new_release_version }}
     steps:
+      # Check out the repository
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0  # Fetch all history for all branches and tags
 
+      # Set up pnpm package manager
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 'lts/*'
-          cache: 'pnpm'
 
+      # Set up Node.js environment
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 'lts/*'  # Use the latest LTS version of Node.js
+          cache: 'pnpm'  # Use pnpm for caching dependencies
+
+      # Install project dependencies
       - name: Install dependencies
         run: pnpm install
 
+      # Run semantic-release to determine version and generate changelog
       - name: Release
+        id: semantic
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx semantic-release
+
+      # Update the version in Cargo.toml if a new release was created
+      - name: Update version in Cargo.toml
+        if: steps.semantic.outputs.new_release_version
+        run: |
+          sed -i 's/^version = ".*"/version = "${{ steps.semantic.outputs.new_release_version }}"/' src-tauri/Cargo.toml
+
+      # Commit and push the version changes
+      - name: Commit & Push changes
+        if: steps.semantic.outputs.new_release_version
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: 'chore(release): ${{ steps.semantic.outputs.new_release_version }} [skip ci]'
+          file_pattern: 'src-tauri/Cargo.toml CHANGELOG.md package.json'
+
+  # Job to publish the Tauri app
+  publish:
+    needs: release  # This job depends on the release job
+    if: needs.release.outputs.new_version  # Only run if a new version was released
+    uses: ./.github/workflows/publish.yml  # Use the publishing workflow
+    with:
+      version: ${{ needs.release.outputs.new_version }}  # Pass the new version to the publishing workflow
+    secrets: inherit  # Inherit secrets from the calling workflow
