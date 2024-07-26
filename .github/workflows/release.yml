@@ -1,15 +1,31 @@
-name: Release and Publish Tauri App
+name: 'Release Drafter'
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
+  update_release_draft:
+    permissions:
+      contents: write
+      pull-requests: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: release-drafter/release-drafter@v6.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   build-tauri:
+    needs: update_release_draft
     strategy:
       fail-fast: false
       matrix:
         platform: [macos-latest, ubuntu-latest, windows-latest]
-
     runs-on: ${{ matrix.platform }}
     permissions:
       contents: write
@@ -23,26 +39,20 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libssl-dev libxdo-dev curl wget file
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 'lts/*'
           cache: 'pnpm'
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Install dependencies (frontend and backend)
+      - name: Install dependencies
         run: pnpm install
-
-      - name: Get version from Cargo.toml
-        id: get_version
-        run: |
-          version=$(grep '^version =' src-tauri/Cargo.toml | sed 's/.*= "\(.*\)"/\1/')
-          echo "version=$version" >> $GITHUB_OUTPUT
 
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0.5.10
@@ -51,8 +61,18 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
         with:
-          tagName: v${{ steps.get_version.outputs.version }}
-          releaseName: 'Release v${{ steps.get_version.outputs.version }}'
-          releaseBody: 'See the assets to download this version and install.'
+          tagName: app-v__VERSION__
+          releaseName: 'Release v__VERSION__'
+          releaseBody: ${{ needs.update_release_draft.outputs.content }}
           releaseDraft: true
           prerelease: false
+
+  publish-release:
+    needs: [update_release_draft, build-tauri]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release list --limit 1 --json id --jq '.[0].id' | xargs -I {} gh release edit {} --draft=false
