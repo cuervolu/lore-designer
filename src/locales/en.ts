@@ -98,8 +98,26 @@ export default {
       size: "PNG, JPG, GIF up to 10 MB",
       upload: "Upload Image",
       change: 'Change Image',
+      noPhoto: 'No Photo'
     },
     noCharacters: "No characters found.",
+    editCharacter: 'Edit Character',
+    editCharacterDescription: 'Edit the character information',
+    updateCharacter: 'Update Character',
+    cancel: 'Cancel'
+  },
+  imageUploader: {
+    title: "Character Image",
+    description: "Upload an image for your character",
+    click: "Click to upload",
+    size: "PNG, JPG or GIF (MAX. 800x400px)",
+    upload: "Upload Image",
+    change: "Change Image",
+    defaultAlt: "Character Image",
+    successTitle: "Image Uploaded",
+    successDescription: "Image has been successfully uploaded.",
+    errorTitle: "Error",
+    errorDescription: "Failed to upload image. Please try again."
   }
 
 };

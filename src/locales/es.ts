@@ -95,7 +95,25 @@ export default {
       size: "PNG, JPG, GIF hasta 10 MB",
       upload: "Subir Imagen",
       change: 'Cambiar Imagen',
+      noPhoto: 'Sin Foto'
     },
     noCharacters: "No se encontraron personajes.",
+    editCharacter: 'Editar el personaje',
+    editCharacterDescription: 'Editar la información del personaje',
+    updateCharacter: 'Actualizar personaje',
+    cancel: 'Cancelar'
+  },
+  imageUploader: {
+    title: "Imagen del Personaje",
+    description: "Sube una imagen para tu personaje",
+    click: "Haz clic para subir",
+    size: "PNG, JPG o GIF (MÁX. 800x400px)",
+    upload: "Subir Imagen",
+    change: "Cambiar Imagen",
+    defaultAlt: "Imagen del Personaje",
+    successTitle: "Imagen Subida",
+    successDescription: "La imagen se ha subido con éxito.",
+    errorTitle: "Error",
+    errorDescription: "No se pudo subir la imagen. Por favor, inténtalo de nuevo.",
   }
 };
