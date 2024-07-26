@@ -1,71 +1,90 @@
-name: Release and Publish
+name: Release and Publish Tauri App
 
 on:
   workflow_dispatch:
 
 jobs:
-  release:
-    name: Create Release
+  create-release:
     runs-on: ubuntu-latest
-    # Permissions required for releasing
-    permissions:
-      contents: write
-      issues: write
-      pull-requests: write
-      id-token: write
-    # Output the new version for use in other jobs
     outputs:
-      new_version: ${{ steps.semantic.outputs.new_release_version }}
+      version: ${{ steps.get_version.outputs.version }}
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
-      # Check out the repository
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # Fetch all history for all branches and tags
 
-      # Set up pnpm package manager
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+      - name: Get version from Cargo.toml
+        id: get_version
+        run: |
+          version=$(grep '^version =' src-tauri/Cargo.toml | sed 's/.*= "\(.*\)"/\1/')
+          echo "version=$version" >> $GITHUB_OUTPUT
 
-      # Set up Node.js environment
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 'lts/*'  # Use the latest LTS version of Node.js
-          cache: 'pnpm'  # Use pnpm for caching dependencies
-
-      # Install project dependencies
-      - name: Install dependencies
-        run: pnpm install
-
-      # Run semantic-release to determine version and generate changelog
-      - name: Release
-        id: semantic
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx semantic-release
-
-      # Update the version in Cargo.toml if a new release was created
-      - name: Update version in Cargo.toml
-        if: steps.semantic.outputs.new_release_version
-        run: |
-          sed -i 's/^version = ".*"/version = "${{ steps.semantic.outputs.new_release_version }}"/' src-tauri/Cargo.toml
-
-      # Commit and push the version changes
-      - name: Commit & Push changes
-        if: steps.semantic.outputs.new_release_version
-        uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          commit_message: 'chore(release): ${{ steps.semantic.outputs.new_release_version }} [skip ci]'
-          file_pattern: 'src-tauri/Cargo.toml CHANGELOG.md package.json'
+          tag_name: v${{ steps.get_version.outputs.version }}
+          release_name: Release ${{ steps.get_version.outputs.version }}
+          draft: false
+          prerelease: false
 
-  # Job to publish the Tauri app
-  publish:
-    needs: release  # This job depends on the release job
-    if: needs.release.outputs.new_version  # Only run if a new version was released
-    uses: ./.github/workflows/publish.yml  # Use the publishing workflow
-    permissions:
-      contents: write
-    with:
-      version: ${{ needs.release.outputs.new_version }}  # Pass the new version to the publishing workflow
-    secrets: inherit  # Inherit secrets from the calling workflow
+  build-tauri:
+    needs: create-release
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [macos-latest, ubuntu-latest, windows-latest]
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies (ubuntu only)
+        if: matrix.platform == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libayatana-appindicator3-dev librsvg2-dev
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install dependencies (frontend and backend)
+        run: |
+          pnpm install
+
+      - name: Build Tauri app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+        with:
+          tagName: v${{ needs.create-release.outputs.version }}
+          releaseName: 'Release v${{ needs.create-release.outputs.version }}'
+          releaseBody: 'See the assets to download this version and install.'
+          releaseDraft: true
+          prerelease: false
+
+  publish-release:
+    needs: [create-release, build-tauri]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish release
+        uses: eregon/publish-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          release_id: ${{ needs.create-release.outputs.id }}
