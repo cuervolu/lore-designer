@@ -5,6 +5,7 @@ use std::fs;
 use tauri::Manager;
 use tauri_plugin_dialog::DialogExt;
 use uuid::Uuid;
+use sqlx::sqlite::SqliteQueryResult;
 
 #[derive(serde::Serialize)]
 pub struct ImageInfo {
