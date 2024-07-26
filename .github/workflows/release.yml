@@ -1,56 +1,62 @@
 name: 'Release and Publish Tauri App'
-
 on:
   workflow_dispatch:
-
 permissions:
-  contents: read
-
+  contents: write
 jobs:
-  update_release_draft:
-    permissions:
-      contents: write
-      pull-requests: write
+  prepare-release:
     runs-on: ubuntu-latest
+    outputs:
+      changelog: ${{ steps.generate-changelog.outputs.changelog }}
     steps:
-      - uses: release-drafter/release-drafter@v6.0.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  build-tauri:
-    needs: update_release_draft
-    strategy:
-      fail-fast: false
-      matrix:
-        platform: [macos-latest, ubuntu-latest, windows-latest]
-    runs-on: ${{ matrix.platform }}
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install dependencies (ubuntu only)
-        if: matrix.platform == 'ubuntu-latest'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libssl-dev libxdo-dev curl wget file
-
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 'lts/*'
           cache: 'pnpm'
-
-      - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@stable
-
       - name: Install dependencies
         run: pnpm install
+      - name: Install conventional-changelog-cli
+        run: pnpm add -g conventional-changelog-cli
+      - name: Generate changelog
+        id: generate-changelog
+        run: |
+          changelog=$(conventional-changelog -p angular)
+          echo 'changelog<<EOF' >> $GITHUB_OUTPUT
+          echo "$changelog" >> $GITHUB_OUTPUT
+          echo 'EOF' >> $GITHUB_OUTPUT
 
+  build-tauri:
+    needs: prepare-release
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [macos-latest, ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install dependencies (ubuntu only)
+        if: matrix.platform == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libssl-dev libxdo-dev curl wget file
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+          cache: 'pnpm'
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+      - name: Install dependencies
+        run: pnpm install
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0.5.10
         env:
@@ -60,16 +66,32 @@ jobs:
         with:
           tagName: app-v__VERSION__
           releaseName: 'Release v__VERSION__'
-          releaseBody: ${{ needs.update_release_draft.outputs.content }}
+          releaseBody: ${{ needs.prepare-release.outputs.changelog }}
           releaseDraft: true
           prerelease: false
 
-  publish-release:
-    needs: [update_release_draft, build-tauri]
+  wait-for-approval:
+    needs: [prepare-release, build-tauri]
     runs-on: ubuntu-latest
     steps:
+      - name: Wait for manual approval
+        uses: trstringer/manual-approval@v1.9.1
+        with:
+          secret: ${{ secrets.GITHUB_TOKEN }}
+          approvers: ${{ github.actor }}
+          minimum-approvals: 1
+          issue-title: "Approve release draft"
+          issue-body: "A new release draft has been created. Please review and approve to publish."
+          exclude-workflow-initiator-as-approver: false
+
+  publish-release:
+    needs: wait-for-approval
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
       - name: Publish release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release list --limit 1 --json id --jq '.[0].id' | xargs -I {} gh release edit {} --draft=false
+          gh release list --limit 1 --json tagName --jq '.[0].tagName' | xargs -I {} gh release edit {} --draft=false
