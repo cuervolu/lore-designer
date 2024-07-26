@@ -1,9 +1,6 @@
-name: 'Release Drafter'
+name: 'Release and Publish Tauri App'
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 permissions:
