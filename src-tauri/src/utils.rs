@@ -1,11 +1,14 @@
+use std::collections::{HashMap, HashSet};
 use crate::error::AppError;
 use font_kit::{error::SelectionError, source::SystemSource};
-use log::{info, warn};
+use log::{error, info, warn};
 use std::fs;
 use tauri::Manager;
 use tauri_plugin_dialog::DialogExt;
 use uuid::Uuid;
 use sqlx::sqlite::SqliteQueryResult;
+use sqlx::SqlitePool;
+use chrono::NaiveDateTime;
 
 #[derive(serde::Serialize)]
 pub struct ImageInfo {
@@ -92,4 +95,108 @@ pub async fn save_image(app: tauri::AppHandle) -> Result<ImageInfo, AppError> {
         }
         Err(e) => Err(AppError::from(e)),
     }
+}
+
+#[tauri::command]
+pub async fn clean_cache(app_handle: tauri::AppHandle) -> Result<String, AppError> {
+    info!("Cleaning up unused files and database entries");
+    let images_path = app_handle.path().app_data_dir()
+        .map_err(|_| AppError::AppDataDirError)?
+        .join("images");
+
+    let db = get_db(&app_handle).await?;
+
+    info!("Images path: {:?}", images_path);
+
+    // Get all images from the database, including their timestamps and character associations
+    let db_images: Vec<(String, String, String, Option<i64>)> = sqlx::query_as(
+        "SELECT i.UUID, i.Path, i.Timestamp, i.CharacterID 
+         FROM Images i"
+    )
+        .fetch_all(&db)
+        .await?;
+
+    info!("Found {} images in the database", db_images.len());
+
+    // Get all image files in the directory
+    let files = fs::read_dir(&images_path)?;
+    let file_paths: Vec<_> = files
+        .filter_map(Result::ok)
+        .filter(|entry| entry.path().extension().and_then(|ext| ext.to_str()) == Some("png"))
+        .map(|entry| entry.path())
+        .collect();
+
+    info!("Found {} image files in the directory", file_paths.len());
+
+    let mut deleted_files = 0;
+    let mut deleted_db_entries = 0;
+
+    // Create a HashMap to store the most recent image for each character
+    let mut most_recent_images: HashMap<i64, (String, NaiveDateTime)> = HashMap::new();
+
+    // Identify the most recent image for each character
+    for (uuid, _, timestamp_str, character_id) in &db_images {
+        if let Some(char_id) = character_id {
+            if let Ok(timestamp) = NaiveDateTime::parse_from_str(timestamp_str, "%Y-%m-%d %H:%M:%S") {
+                most_recent_images
+                    .entry(*char_id)
+                    .and_modify(|(existing_uuid, existing_timestamp)| {
+                        if timestamp > *existing_timestamp {
+                            *existing_uuid = uuid.clone();
+                            *existing_timestamp = timestamp;
+                        }
+                    })
+                    .or_insert((uuid.clone(), timestamp));
+            }
+        }
+    }
+
+    // Create a set of UUIDs to keep (most recent for each character + images not associated with characters)
+    let mut uuids_to_keep: HashSet<String> = most_recent_images.values().map(|(uuid, _)| uuid.clone()).collect();
+    uuids_to_keep.extend(db_images.iter().filter_map(|(uuid, _, _, character_id)| {
+        if character_id.is_none() { Some(uuid.clone()) } else { None }
+    }));
+
+    // Delete files that are not in the set of UUIDs to keep
+    for file_path in &file_paths {
+        let file_name = file_path.file_name().unwrap().to_str().unwrap();
+        let file_name_without_ext = file_name.trim_end_matches(".png");
+
+        if !uuids_to_keep.contains(file_name_without_ext) {
+            if let Err(e) = fs::remove_file(file_path) {
+                error!("Failed to delete file {:?}: {}", file_path, e);
+            } else {
+                info!("Deleted unused file: {:?}", file_path);
+                deleted_files += 1;
+            }
+        }
+    }
+
+    // Delete database entries for files that don't exist or are not in the set of UUIDs to keep
+    for (uuid, _, _, _) in &db_images {
+        let file_name = format!("{}.png", uuid);
+        let full_path = images_path.join(&file_name);
+
+        if !full_path.exists() || !uuids_to_keep.contains(uuid) {
+            let result: SqliteQueryResult = sqlx::query("DELETE FROM Images WHERE UUID = ?")
+                .bind(uuid)
+                .execute(&db)
+                .await?;
+            info!("Deleted database entry: {}", uuid);
+            deleted_db_entries += result.rows_affected();
+        }
+    }
+
+    info!("Cleaned up {} unused files and {} unused database entries", deleted_files, deleted_db_entries);
+    Ok(format!("Cleaned up {} unused files and {} unused database entries", deleted_files, deleted_db_entries))
+}
+async fn get_db(app_handle: &tauri::AppHandle) -> Result<SqlitePool, AppError> {
+    let path = app_handle.path().app_config_dir()
+        .map_err(|_| AppError::AppDataDirError)?;
+    let db_path = path.join("loredesigner.db");
+    info!("Opening database at {:?}", db_path);
+
+    SqlitePool::connect(db_path.to_str().unwrap())
+        .await
+        .map_err(AppError::DatabaseError)
 }

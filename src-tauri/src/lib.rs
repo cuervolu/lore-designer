@@ -1,4 +1,4 @@
-use crate::utils::{get_fonts, save_image};
+use crate::utils::{get_fonts, save_image, clean_cache};
 
 mod db;
 mod error;
@@ -29,7 +29,7 @@ pub fn run() {
 
             Ok(())
         });
-    
+
     builder
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_fs::init())
@@ -40,7 +40,7 @@ pub fn run() {
         .plugin(tauri_plugin_window_state::Builder::default().build())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_dialog::init())
-        .invoke_handler(tauri::generate_handler![get_fonts, save_image])
+        .invoke_handler(tauri::generate_handler![get_fonts, save_image,clean_cache])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

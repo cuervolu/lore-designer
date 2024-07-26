@@ -4,10 +4,16 @@ use thiserror::Error;
 pub enum AppError {
     #[error("File selection was cancelled or failed")]
     FileSelectionFailed,
-    #[error("Failed to create directory: {0}")]
-    CreateDirFailed(#[from] std::io::Error),
     #[error("Tauri error: {0}")]
     TauriError(#[from] tauri::Error),
+    #[error("Failed to get app data directory")]
+    AppDataDirError,
+    #[error("Database error: {0}")]
+    DatabaseError(#[from] sqlx::Error),
+    #[error("File system error: {0}")]
+    FileSystemError(#[from] std::io::Error),
+    #[error("Failed to execute database query")]
+    QueryExecutionError,
 }
 
 impl serde::Serialize for AppError {
