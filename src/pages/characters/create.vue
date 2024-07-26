@@ -158,7 +158,7 @@ const handleImageUpdate = (image: { id: string, path: string }) => {
 
         <ImageUploader
             @update:image="handleImageUpdate"
-            :alt-text="t('characters.image.altText')"
+            :alt-text="t('imageUploader.defaultAlt')"
         />
 
         <Button type="submit" class="w-full" :disabled="isSubmitting">

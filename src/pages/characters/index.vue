@@ -23,7 +23,7 @@ const {handleError} = useErrorHandler();
 const characters = ref<Character[]>([]);
 const isLoading = ref(true);
 const router = useRouter();
-
+const localePath = useLocalePath()
 // Pagination
 const currentPage = ref(1);
 const pageSize = ref(20);
@@ -114,8 +114,10 @@ const visiblePages = computed((): PageItem[] => {
       <p class="text-xl mb-4">
         {{ t('characters.noCharacters') }}
       </p>
-      <Button @click="navigateToCreateCharacter">
-        {{ t('characters.createCharacter') }}
+      <Button>
+        <NuxtLink :to="localePath('/characters/create')">
+          {{ t('characters.createCharacter') }}
+        </NuxtLink>
       </Button>
     </div>
 
