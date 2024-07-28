@@ -104,7 +104,15 @@ export default {
     editCharacter: 'Edit Character',
     editCharacterDescription: 'Edit the character information',
     updateCharacter: 'Update Character',
-    cancel: 'Cancel'
+    cancel: 'Cancel',
+    createSuccess: 'Character created successfully.',
+    createSuccessDescription: 'The character has been successfully created and added to the project.',
+    createError: 'Error creating character.',
+    createErrorDescription: 'Failed to create character. Please try again.',
+    updateSuccess: 'Character updated successfully.',
+    updateSuccessDescription: 'The character has been successfully updated and saved.',
+    updateError: 'Error updating character.',
+    updateErrorDescription: 'Failed to update character. Please try again.'
   },
   imageUploader: {
     title: "Character Image",

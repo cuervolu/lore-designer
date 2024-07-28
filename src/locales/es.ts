@@ -101,7 +101,15 @@ export default {
     editCharacter: 'Editar el personaje',
     editCharacterDescription: 'Editar la información del personaje',
     updateCharacter: 'Actualizar personaje',
-    cancel: 'Cancelar'
+    cancel: 'Cancelar',
+    createSuccess: 'Personaje creado',
+    createSuccessDescription: 'El personaje se ha creado con éxito y se ha añadido a la lista de personajes.',
+    createError: 'Error al crear personaje',
+    createErrorDescription: 'No se pudo crear el personaje. Por favor, inténtalo de nuevo.',
+    updateSuccess: 'Personaje actualizado',
+    updateSuccessDescription: 'El personaje se ha actualizado con éxito y se ha guardado.',
+    updateError: 'Error al actualizar personaje',
+    updateErrorDescription: 'No se pudo actualizar el personaje. Por favor, inténtalo de nuevo.'
   },
   imageUploader: {
     title: "Imagen del Personaje",
