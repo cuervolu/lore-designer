@@ -190,6 +190,28 @@ pub async fn clean_cache(app_handle: tauri::AppHandle) -> Result<String, AppErro
     info!("Cleaned up {} unused files and {} unused database entries", deleted_files, deleted_db_entries);
     Ok(format!("Cleaned up {} unused files and {} unused database entries", deleted_files, deleted_db_entries))
 }
+
+/// Retrieves the SQLite database connection pool for the application.
+///
+/// This function constructs the path to the application's configuration directory and appends
+/// the database filename (`loredesigner.db`). It then attempts to establish a connection to the
+/// SQLite database at the constructed path. If successful, it returns the connection pool.
+///
+/// # Arguments
+///
+/// * `app_handle` - A reference to the `tauri::AppHandle` providing access to the application's environment and utilities.
+///
+/// # Returns
+///
+/// A `Result` which is:
+/// - `Ok(SqlitePool)` containing the connection pool to the SQLite database if the operation succeeds.
+/// - `Err(AppError)` describing the error if the operation fails.
+///
+/// # Errors
+///
+/// This function can return an `AppError` in the following cases:
+/// - `AppDataDirError` if the application configuration directory cannot be determined.
+/// - `DatabaseError` if there is an error connecting to the SQLite database.
 async fn get_db(app_handle: &tauri::AppHandle) -> Result<SqlitePool, AppError> {
     let path = app_handle.path().app_config_dir()
         .map_err(|_| AppError::AppDataDirError)?;
