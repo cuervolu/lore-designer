@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import {ref, watch, onMounted} from 'vue';
+import {ref, watch} from 'vue';
 import {Handle, Position} from '@vue-flow/core';
+import {NodeResizer} from "@vue-flow/node-resizer";
 import {
   Select,
   SelectContent,
@@ -11,88 +12,68 @@ import {
 import {Textarea} from '@/components/ui/textarea';
 import ImageUploader from '@/components/ImageUploader.vue';
 import {useCharacterStore} from '@/stores/character.store';
-import type {Character} from '~/interfaces';
+import type {CharacterForNode} from "~/interfaces";
 
 const props = defineProps<{
   data: {
-    dialogue: string;
-    character: Character | null;
-    image: string | null;
+    type: string;
+    label: string;
+    dialogue?: string;
+    character?: any;
+    image?: string;
   };
-  isConnectable: boolean;
+  isConnectable?: boolean;
 }>();
 
-const emit = defineEmits<{
-  (e: 'update:dialogue', value: string): void;
-  (e: 'update:character', value: Character | null): void;
-  (e: 'update:image', value: string): void;
-}>();
+const emit = defineEmits(['update:data']);
 
 const characterStore = useCharacterStore();
-const characters = ref<Character[]>([]);
-const localDialogue = ref(props.data.dialogue);
-const selectedCharacterName = ref<string>(props.data.character?.name || '');
+const characters = ref<CharacterForNode[]>([]);
+const localData = ref({...props.data});
 
 onMounted(async () => {
-  const result = await characterStore.getCharacters();
-  characters.value = result.characters;
+  characters.value = await characterStore.getCharactersName();
 });
 
 watch(() => props.data, (newData) => {
-  localDialogue.value = newData.dialogue;
-  selectedCharacterName.value = newData.character?.name || '';
+  localData.value = {...newData};
 }, {deep: true});
 
-const updateDialogue = () => {
-  emit('update:dialogue', localDialogue.value);
-};
-
-const updateCharacter = (characterName: string) => {
-  const character = characters.value.find(c => c.name === characterName) || null;
-  emit('update:character', character);
-};
-
-const updateImage = (imageInfo: { path: string }) => {
-  emit('update:image', imageInfo.path);
+const updateData = () => {
+  emit('update:data', localData.value);
 };
 </script>
 
 <template>
-  <div class="bg-muted/60 rounded-lg shadow-lg p-4 w-96">
-    <Handle
-        type="target"
-        :position="Position.Top"
-        :isConnectable="isConnectable"
-        class="w-3 h-3 bg-primary"
-    />
-    <Select v-model="selectedCharacterName" @update:modelValue="updateCharacter">
-      <SelectTrigger class="w-full">
-        <SelectValue :placeholder="selectedCharacterName || 'Select a character'"/>
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem v-for="character in characters" :key="character.id" :value="character.name">
-          {{ character.name }}
-        </SelectItem>
-      </SelectContent>
-    </Select>
-    <Textarea
-        v-model="localDialogue"
-        @input="updateDialogue"
-        class="w-full mt-2 p-2 border rounded"
-        placeholder="Enter dialogue..."
-    />
-    <div class="mt-2">
-      <ImageUploader
-          :initialImage="data.image"
-          :altText="selectedCharacterName"
-          @update:image="updateImage"
+  <div class="bg-gray-700 rounded-lg shadow-lg p-4 w-64">
+    <NodeResizer :min-width="100" :min-height="30"/>
+    <Handle type="target" :position="Position.Left" :isConnectable="isConnectable"/>
+    <h3 class="text-lg font-bold mb-2">{{ localData.label }}</h3>
+
+    <template v-if="localData.type === 'showMessage'">
+      <Select v-model="localData.character" @update:modelValue="updateData">
+        <SelectTrigger class="w-full">
+          <SelectValue :placeholder="localData.character?.name || 'Select a character'"/>
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem v-for="character in characters" :key="character.id" :value="character.name">
+            {{ character.name }}
+          </SelectItem>
+        </SelectContent>
+      </Select>
+      <Textarea
+          v-model="localData.dialogue"
+          @input="updateData"
+          class="w-full mt-2 p-2 border rounded"
+          placeholder="Enter dialogue..."
       />
-    </div>
-    <Handle
-        type="source"
-        :position="Position.Bottom"
-        :isConnectable="isConnectable"
-        class="w-3 h-3 bg-primary"
-    />
+      <ImageUploader
+          :initialImage="localData.image"
+          :altText="localData.character?.name"
+          @update:image="(info) => { localData.image = info.path; updateData(); }"
+      />
+    </template>
+
+    <Handle type="source" :position="Position.Right" :isConnectable="isConnectable"/>
   </div>
 </template>
