@@ -27,7 +27,15 @@ export interface Character {
   imagePath?: string;
 }
 
+
 export interface ImageInfo {
   id: string
   path: string
+}
+
+// Only used for the nodes in the dialogue page
+export interface CharacterForNode {
+  id: number;
+  name: string;
+  imagePath: string;
 }
