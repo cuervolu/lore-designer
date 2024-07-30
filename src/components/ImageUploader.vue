@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watchEffect } from 'vue'
 import { invoke, convertFileSrc } from "@tauri-apps/api/core"
 import { useToast } from '@/components/ui/toast'
 import { Button } from '@/components/ui/button'
@@ -18,7 +18,13 @@ const emit = defineEmits<{
 const { toast } = useToast()
 const { t } = useI18n()
 
-const imagePreview = ref<string | null>(props.initialImage || null)
+const imagePreview = ref<string | null>(null)
+
+watchEffect(() => {
+  if (props.initialImage) {
+    imagePreview.value = props.initialImage
+  }
+})
 
 const uploadImage = async (event: Event) => {
   event.preventDefault()
