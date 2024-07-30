@@ -7,17 +7,27 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import type {Character} from "~/interfaces/models";
+import type { Character } from "~/interfaces/models";
+import { useCharacterRole } from '~/composables/useCharacterRole'
 import noPhoto from '~/assets/img/no_photo.webp';
 
-const props = defineProps<Partial<Character>>();
+const { t } = useI18n();
+const localePath = useLocalePath()
 const router = useRouter();
+
+const props = defineProps<Partial<Character>>();
+
+const { translateRole } = useCharacterRole();
 
 const navigateToCharacterDetails = () => {
   if (props.id) {
-    router.push(`/characters/${props.id}`);
+    router.push(localePath(`/characters/${props.id}`));
   }
 };
+
+const translatedRole = computed(() => {
+  return props.role ? translateRole(props.role) : t('characters.noRole');
+});
 </script>
 
 <template>
@@ -31,18 +41,18 @@ const navigateToCharacterDetails = () => {
       />
     </div>
     <CardHeader class="p-3">
-      <CardTitle class="text-lg">{{ props.name || 'Unnamed Character' }}</CardTitle>
+      <CardTitle class="text-lg">{{ props.name || t('characters.noName') }}</CardTitle>
       <CardDescription class="text-xs">
-        {{ props.description || 'No description available' }}
+        {{ props.description || t('characters.noDescription') }}
       </CardDescription>
     </CardHeader>
     <CardContent class="p-3">
       <p class="text-xs text-gray-600 line-clamp-2">
-        {{ props.additionalNotes || 'No additional notes' }}
+        {{ props.additionalNotes || t('characters.noAdditionalNotes') }}
       </p>
     </CardContent>
     <CardFooter class="p-3 text-xs text-gray-500">
-      {{ props.role || 'Undefined' }}
+      {{ translatedRole }}
     </CardFooter>
   </Card>
 </template>
