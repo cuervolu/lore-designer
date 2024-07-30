@@ -95,7 +95,8 @@ export default {
       size: "PNG, JPG, GIF hasta 10 MB",
       upload: "Subir Imagen",
       change: 'Cambiar Imagen',
-      noPhoto: 'Sin Foto'
+      noPhoto: 'Sin Foto',
+      altText: 'Imagen del Personaje'
     },
     noCharacters: "No se encontraron personajes.",
     editCharacter: 'Editar el personaje',
@@ -109,7 +110,21 @@ export default {
     updateSuccess: 'Personaje actualizado',
     updateSuccessDescription: 'El personaje se ha actualizado con éxito y se ha guardado.',
     updateError: 'Error al actualizar personaje',
-    updateErrorDescription: 'No se pudo actualizar el personaje. Por favor, inténtalo de nuevo.'
+    updateErrorDescription: 'No se pudo actualizar el personaje. Por favor, inténtalo de nuevo.',
+    confirmDelete: {
+      title: '¿Estás seguro de que quieres eliminar este personaje?',
+      description: 'Esta acción no se puede deshacer.',
+      cancel: 'Cancelar',
+      confirm: 'Eliminar'
+    },
+    deleteSuccess: 'Personaje eliminado',
+    deleteSuccessDescription: '{ name } ha sido eliminado con éxito y ya no existe en el proyecto.',
+    deleteError: 'Error al eliminar personaje',
+    deleteErrorDescription: 'No se pudo eliminar el personaje. Por favor, inténtalo de nuevo.',
+    noDescription: 'No hay descripción disponible',
+    noAdditionalNotes: 'No hay notas adicionales disponibles',
+    noRole: "Indefinido",
+    noName:"Personaje sin nombre"
   },
   imageUploader: {
     title: "Imagen del Personaje",
@@ -123,5 +138,10 @@ export default {
     successDescription: "La imagen se ha subido con éxito.",
     errorTitle: "Error",
     errorDescription: "No se pudo subir la imagen. Por favor, inténtalo de nuevo.",
+  },
+  time:{
+    created: "Creado {time}",
+    updated: "Actualizado {time}",
+    justNow: "justo ahora"
   }
 };

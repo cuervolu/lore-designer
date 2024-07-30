@@ -98,7 +98,8 @@ export default {
       size: "PNG, JPG, GIF up to 10 MB",
       upload: "Upload Image",
       change: 'Change Image',
-      noPhoto: 'No Photo'
+      noPhoto: 'No Photo',
+      altText: 'Character Image'
     },
     noCharacters: "No characters found.",
     editCharacter: 'Edit Character',
@@ -112,7 +113,21 @@ export default {
     updateSuccess: 'Character updated successfully.',
     updateSuccessDescription: 'The character has been successfully updated and saved.',
     updateError: 'Error updating character.',
-    updateErrorDescription: 'Failed to update character. Please try again.'
+    updateErrorDescription: 'Failed to update character. Please try again.',
+    confirmDelete: {
+      title: 'Are you sure you want to delete this character?',
+      description: 'This action cannot be undone.',
+      cancel: 'Cancel',
+      confirm: 'Delete'
+    },
+    deleteSuccess: 'Character deleted successfully.',
+    deleteSuccessDescription: "{ name } has been successfully removed from your character list and no longer exists in the project.",
+    deleteError: 'Error deleting character.',
+    deleteErrorDescription: 'Failed to delete character. Please try again.',
+    noDescription: 'No description available',
+    noAdditionalNotes: 'No additional notes available',
+    noRole: "Undefined",
+    noName:"Unnamed Character"
   },
   imageUploader: {
     title: "Character Image",
@@ -126,6 +141,11 @@ export default {
     successDescription: "Image has been successfully uploaded.",
     errorTitle: "Error",
     errorDescription: "Failed to upload image. Please try again."
+  },
+  time:{
+    created: "Created {time}", 
+    updated: "Updated {time}",
+    justNow: "just now"
   }
 
 };
