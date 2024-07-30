@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {ref, onMounted, computed} from 'vue';
+import {ref, onMounted, computed, watch} from 'vue';
 import CharacterCard from "~/components/CharacterCard.vue";
 import CustomBreadcrumb from "~/components/CustomBreadcrumb.vue";
 import {Skeleton} from '@/components/ui/skeleton';
@@ -12,31 +12,28 @@ import {
   PaginationNext,
   PaginationPrev,
 } from '@/components/ui/pagination'
-import type {Character} from "~/interfaces/models";
 import {useCharacterStore} from "~/stores";
 import {useErrorHandler} from '~/composables/useErrorHandler';
 import {DatabaseError} from '~/exceptions/db.error';
 
+
 const {t} = useI18n()
 const characterStore = useCharacterStore();
+const {characters, totalCharacters} = storeToRefs(characterStore);
 const {handleError} = useErrorHandler();
-const characters = ref<Character[]>([]);
-const isLoading = ref(true);
 const router = useRouter();
 const localePath = useLocalePath()
-// Pagination
+
+
+const isLoading = ref(true);
 const currentPage = ref(1);
 const pageSize = ref(20);
-const totalCharacters = ref(0);
-
 const totalPages = computed(() => Math.ceil(totalCharacters.value / pageSize.value));
 
-const fetchCharacters = async () => {
+const fetchCharacters = async (force = false) => {
   isLoading.value = true;
   try {
-    const result = await characterStore.getCharacters(currentPage.value, pageSize.value);
-    characters.value = result.characters;
-    totalCharacters.value = result.total;
+    await characterStore.fetchCharacters(currentPage.value, pageSize.value, force);
   } catch (error) {
     handleError(new DatabaseError({
       name: 'DB_QUERY_ERROR',
@@ -48,7 +45,12 @@ const fetchCharacters = async () => {
   }
 };
 
-onMounted(fetchCharacters);
+onMounted(async () => {
+  await fetchCharacters();
+});
+
+watch(currentPage, () => fetchCharacters(true));
+
 
 const navigateToCreateCharacter = () => {
   router.push('/characters/create');
@@ -56,8 +58,8 @@ const navigateToCreateCharacter = () => {
 
 const changePage = (page: number) => {
   currentPage.value = page;
-  fetchCharacters();
 };
+
 
 type PageItem = number | '...';
 

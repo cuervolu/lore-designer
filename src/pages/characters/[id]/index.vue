@@ -1,12 +1,22 @@
 <script setup lang="ts">
 import {ref, onMounted, computed} from 'vue'
-import {formatDistanceToNow, isEqual, parseISO} from 'date-fns'
+import {formatDistanceToNow, parseISO, differenceInSeconds} from 'date-fns'
+import {es, enUS} from 'date-fns/locale'
 import {Button} from "~/components/ui/button"
 import {Card, CardContent} from "~/components/ui/card"
 import {Label} from "~/components/ui/label"
 import {Textarea} from "~/components/ui/textarea"
 import {Skeleton} from "~/components/ui/skeleton"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import {useCharacterStore} from '~/stores/character.store'
+import {useToast} from '@/components/ui/toast'
 import type {Character} from '~/interfaces/models'
 import noPhoto from 'assets/img/no_photo.webp'
 
@@ -14,8 +24,12 @@ const route = useRoute()
 const router = useRouter()
 const localePath = useLocalePath()
 const characterStore = useCharacterStore()
+const {toast} = useToast()
+const {t, locale} = useI18n()
+const { translateRole } = useCharacterRole()
 const character = ref<Character | null>(null)
 const isLoading = ref(true)
+const showDeleteDialog = ref(false)
 
 onMounted(async () => {
   const characterId = Number(route.params.id)
@@ -33,18 +47,64 @@ const handleEdit = async () => {
   }
 }
 
+const handleDelete = () => {
+  showDeleteDialog.value = true
+}
+
+const confirmDelete = async () => {
+  try {
+    if (character.value) {
+      await characterStore.deleteCharacter(character.value.id)
+      toast({
+        title: t('characters.deleteSuccess'),
+        description: t('characters.deleteSuccessDescription', {name: character.value.name}),
+      })
+      await router.push(localePath('/characters'))
+    }
+  } catch (error) {
+    console.error('Error deleting character:', error)
+    toast({
+      title: t('characters.deleteError'),
+      description: t('characters.deleteErrorDescription'),
+      variant: 'destructive',
+    })
+  } finally {
+    showDeleteDialog.value = false
+  }
+}
 const formattedDate = computed(() => {
+
   if (!character.value) return ''
 
   const createdAt = parseISO(character.value.createdAt)
   const updatedAt = parseISO(character.value.updatedAt)
+  const now = new Date()
 
-  if (isEqual(createdAt, updatedAt)) {
-    return `Created ${formatDistanceToNow(createdAt, {addSuffix: true})}`
+  const dateLocale = locale.value === 'es' ? es : enUS
+
+  const formatDate = (date: Date) => {
+    const secondsDiff = differenceInSeconds(now, date)
+
+    if (secondsDiff < 60) {
+      return t('time.justNow')
+    } else {
+      return formatDistanceToNow(date, {addSuffix: true, locale: dateLocale})
+    }
+  }
+
+  if (differenceInSeconds(updatedAt, createdAt) <= 1) {
+    return t('time.created', {time: formatDate(createdAt)})
   } else {
-    return `Updated ${formatDistanceToNow(updatedAt, {addSuffix: true})}`
+    return t('time.updated', {time: formatDate(updatedAt)})
   }
 })
+
+const translatedRole = computed(() => {
+  return character.value ? translateRole(character.value.role) : ''
+})
+
+
+
 </script>
 
 <template>
@@ -65,12 +125,12 @@ const formattedDate = computed(() => {
             <div>
               <Skeleton v-if="isLoading" class="h-9 w-3/4 mb-2"/>
               <h1 v-else class="text-3xl font-bold mb-2">{{ character?.name }}</h1>
-
               <Skeleton v-if="isLoading" class="h-6 w-1/2 mb-4"/>
-              <p v-else class="text-lg text-muted-foreground mb-4">{{ character?.role }}</p>
-
+              <p v-else class="text-lg text-muted-foreground mb-4">{{ translatedRole }}</p>
               <div class="mb-4">
-                <Label class="text-sm font-medium">Description</Label>
+                <Label class="text-sm font-medium">
+                  {{ t('characters.description') }}
+                </Label>
                 <Skeleton v-if="isLoading" class="h-24 w-full mt-1"/>
                 <Textarea
                     v-else
@@ -81,7 +141,9 @@ const formattedDate = computed(() => {
                 />
               </div>
               <div class="mb-4">
-                <Label class="text-sm font-medium">Additional Notes</Label>
+                <Label class="text-sm font-medium">
+                  {{ t('characters.additionalNotes') }}
+                </Label>
                 <Skeleton v-if="isLoading" class="h-24 w-full mt-1"/>
                 <Textarea
                     v-else
@@ -99,12 +161,34 @@ const formattedDate = computed(() => {
               <div v-else class="text-sm text-muted-foreground">
                 <p>{{ formattedDate }}</p>
               </div>
-              <Skeleton v-if="isLoading" class="h-10 w-32"/>
-              <Button v-else @click="handleEdit">Edit Character</Button>
+              <div v-if="!isLoading" class="space-x-2">
+                <Button @click="handleEdit">Edit Character</Button>
+                <Button variant="destructive" @click="handleDelete">Delete Character</Button>
+              </div>
+              <Skeleton v-else class="h-10 w-32"/>
             </div>
           </div>
         </div>
       </CardContent>
     </Card>
+
+    <Dialog v-model:open="showDeleteDialog">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{{ t('characters.confirmDelete.title') }}</DialogTitle>
+          <DialogDescription>
+            {{ t('characters.confirmDelete.description') }}
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline" @click="showDeleteDialog = false">
+            {{ t('characters.confirmDelete.cancel') }}
+          </Button>
+          <Button variant="destructive" @click="confirmDelete">
+            {{ t('characters.confirmDelete.confirm') }}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   </div>
 </template>

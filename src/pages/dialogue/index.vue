@@ -1,13 +1,7 @@
 <script setup lang="ts">
-
+import DialogueDesigner from '~/components/dialogue/DialogueDesigner.vue';
 </script>
 
 <template>
-  <div>
-    <h1>Dialogue</h1>
-  </div>
+  <DialogueDesigner/>
 </template>
-
-<style scoped>
-
-</style>

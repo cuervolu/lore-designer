@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import {ref, onMounted, computed} from 'vue'
-import {toTypedSchema} from '@vee-validate/zod'
+import { ref, onMounted, computed } from 'vue'
+import { toTypedSchema } from '@vee-validate/zod'
 import * as z from 'zod'
-import {useForm} from 'vee-validate'
+import { useForm } from 'vee-validate'
 import {
   FormControl,
   FormDescription,
@@ -26,26 +26,26 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  
 } from '@/components/ui/dialog'
-import {useToast} from '@/components/ui/toast'
-import {useCharacterStore} from '@/stores/character.store'
-import type {CharacterRequest, Character} from '@/interfaces'
-import ImageUploader from "~/components/ImageUploader.vue";
+import { useToast } from '@/components/ui/toast'
+import { useCharacterStore } from '@/stores/character.store'
+import type { CharacterRequest, Character } from '@/interfaces'
+import ImageUploader from "~/components/ImageUploader.vue"
+import {info} from "@tauri-apps/plugin-log";
 
 const route = useRoute()
 const router = useRouter()
-const {toast} = useToast()
+const { toast } = useToast()
 const characterStore = useCharacterStore()
 
-const {t} = useI18n()
+const { t } = useI18n()
 
 const schema = toTypedSchema(z.object({
   name: z.string().min(1, 'Name is required'),
   description: z.string().optional(),
   role: z.enum(['Primary', 'Secondary', 'Tertiary', 'Undefined']),
-  imageID: z.string().optional(),
-  additionalNotes: z.string().optional(),
+  imageID: z.string().optional().nullable(),
+  additionalNotes: z.string().optional().nullable(),
 }))
 
 const form = useForm({
@@ -56,6 +56,7 @@ const isSubmitting = ref(false)
 const imagePreview = ref<string | null>(null)
 const originalCharacter = ref<Character | null>(null)
 const showConfirmDialog = ref(false)
+const characterId = ref<number | null>(null)
 
 const hasChanges = computed(() => {
   if (!originalCharacter.value) return false
@@ -65,7 +66,6 @@ const hasChanges = computed(() => {
         (originalCharacter.value as any)[key]
   })
 })
-const characterId = ref<number | null>(null)
 
 onMounted(async () => {
   const id = Number(route.params.id)
@@ -75,13 +75,14 @@ onMounted(async () => {
     if (originalCharacter.value) {
       form.setValues({
         name: originalCharacter.value.name,
-        description: originalCharacter.value.description,
+        description: originalCharacter.value.description || '',
         role: originalCharacter.value.role,
-        imageID: originalCharacter.value.imageID ?? undefined,
-        additionalNotes: originalCharacter.value.additionalNotes,
+        imageID: originalCharacter.value.imageID || undefined,
+        additionalNotes: originalCharacter.value.additionalNotes || '',
       })
       if (originalCharacter.value.imagePath) {
-        imagePreview.value = originalCharacter.value.imagePath;
+        await info(`originalCharacter.value.imagePath: ${originalCharacter.value.imagePath}`)
+        imagePreview.value = originalCharacter.value.imagePath
       }
     }
   }
@@ -99,9 +100,9 @@ const onSubmit = form.handleSubmit(async (values) => {
 
     toast({
       title: t('characters.updateSuccess'),
-      description: t('characters.updateSuccessDescription', { name: values.name }),
+      description: t('characters.updateSuccessDescription', {name: values.name}),
     })
-    await router.push(`/characters/${characterId}`)
+    router.back()
   } catch (error) {
     console.error('Error updating character:', error)
     toast({
@@ -116,7 +117,7 @@ const onSubmit = form.handleSubmit(async (values) => {
 
 const handleImageUpdate = async (image: { id: string, path: string }) => {
   if (characterId.value) {
-    await characterStore.updateCharacterImage(characterId.value, { id: image.id, path: image.path })
+    await characterStore.updateCharacterImage(characterId.value, {id: image.id, path: image.path})
     form.setFieldValue('imageID', image.id)
     imagePreview.value = image.path
   }
@@ -135,7 +136,6 @@ const confirmCancel = () => {
   router.back()
 }
 </script>
-
 <template>
   <div class="flex items-center justify-center min-h-screen bg-muted/60">
     <div class="w-full max-w-2xl p-6 space-y-8">
@@ -213,7 +213,6 @@ const confirmCancel = () => {
             :character-id="characterId ?? undefined"
             @update:image="handleImageUpdate"
         />
-
         <div class="flex justify-between">
           <Button type="button" variant="outline" @click="handleCancel">
             {{ t('characters.cancel') }}
