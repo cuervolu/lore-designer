@@ -2,7 +2,7 @@
   "name": "lore-designer",
   "private": true,
   "type": "module",
-  "version": "0.1.0-alpha.1",
+  "version": "0.1.1+1",
   "scripts": {
     "build": "tauri build",
     "dev": "cross-env RUST_BACKTRACE=1 RUST_LOG=info tauri dev",
