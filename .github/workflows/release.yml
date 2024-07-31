@@ -27,16 +27,30 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           previous_tag=$(git describe --tags --abbrev=0 HEAD^)
-          echo "Changes since $previous_tag:" > CHANGELOG.md
+          echo "# Changelog" > CHANGELOG.md
           echo "" >> CHANGELOG.md
-          echo "## Commits" >> CHANGELOG.md
+          echo "## [${version#v}] - $(date +'%Y-%m-%d')" >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          echo "### Commits" >> CHANGELOG.md
           git log ${previous_tag}..HEAD --pretty=format:"* %s (%h)" >> CHANGELOG.md
           echo "" >> CHANGELOG.md
-          echo "## Closed Issues" >> CHANGELOG.md
-          gh issue list --state closed --search "closed:>=${previous_tag}" --json number,title --jq '.[] | "* \(.title) (#\(.number))"' >> CHANGELOG.md
-          echo "" >> CHANGELOG.md
-          echo "## Merged Pull Requests" >> CHANGELOG.md
-          gh pr list --state merged --search "merged:>=${previous_tag}" --json number,title --jq '.[] | "* \(.title) (#\(.number))"' >> CHANGELOG.md
+          
+          # Check for closed issues
+          closed_issues=$(gh issue list --state closed --search "closed:>=${previous_tag}" --json number,title --jq '.[] | "* \(.title) (#\(.number))"')
+          if [ ! -z "$closed_issues" ]; then
+            echo "### Closed Issues" >> CHANGELOG.md
+            echo "$closed_issues" >> CHANGELOG.md
+            echo "" >> CHANGELOG.md
+          fi
+          
+          # Check for merged pull requests
+          merged_prs=$(gh pr list --state merged --search "merged:>=${previous_tag}" --json number,title --jq '.[] | "* \(.title) (#\(.number))"')
+          if [ ! -z "$merged_prs" ]; then
+            echo "### Merged Pull Requests" >> CHANGELOG.md
+            echo "$merged_prs" >> CHANGELOG.md
+            echo "" >> CHANGELOG.md
+          fi
+          
           cat CHANGELOG.md
           changelog=$(cat CHANGELOG.md)
           echo 'changelog<<EOF' >> $GITHUB_OUTPUT
