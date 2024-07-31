@@ -1,6 +1,5 @@
 {
   "productName": "Lore Designer",
-  "version": "0.1.0",
   "identifier": "com.lore-designer.app",
   "build": {
     "frontendDist": "../dist",
