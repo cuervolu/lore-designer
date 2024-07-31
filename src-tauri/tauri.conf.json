@@ -63,10 +63,11 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
+    
     "category": "DeveloperTool",
     "shortDescription": "Lore Designer is a tool for game developers to efficiently plan and create games.",
     "longDescription": "Lore Designer is an app that streamlines game development, helping with GDD, dialogues, assets, tasks, and engine integration. It enhances project organization from concept to completion.",
-    "copyright": "Copyright © 2024"
+    "copyright": "Copyright © 2024 Cuervolu"
   },
   "$schema": "../node_modules/@tauri-apps/cli/schema.json"
 }
