@@ -26,10 +26,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          version=$(git describe --tags --abbrev=0)
+          version=${version#v}
           previous_tag=$(git describe --tags --abbrev=0 HEAD^)
           echo "# Changelog" > CHANGELOG.md
           echo "" >> CHANGELOG.md
-          echo "## [${version#v}] - $(date +'%Y-%m-%d')" >> CHANGELOG.md
+          echo "## [${version}] - $(date +'%Y-%m-%d')" >> CHANGELOG.md
           echo "" >> CHANGELOG.md
           echo "### Commits" >> CHANGELOG.md
           git log ${previous_tag}..HEAD --pretty=format:"* %s (%h)" >> CHANGELOG.md
