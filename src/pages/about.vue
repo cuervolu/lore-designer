@@ -52,7 +52,7 @@ onMounted(async () => {
 
 <template>
   <div class="flex items-center justify-center min-h-[100dvh] bg-gradient-to-b from-background to-muted px-4 py-12 sm:px-6 lg:px-8">
-    <Card class="w-full max-w-3xl">
+    <Card class="w-full max-w-3xl bg-custom-gradient">
       <CardHeader>
         <div class="flex flex-col items-center justify-center mb-6">
           <img src="~/assets/img/lore-designer.svg" alt="App Logo" class="w-24 h-auto mb-4">
@@ -62,17 +62,16 @@ onMounted(async () => {
       </CardHeader>
       <CardContent class="space-y-8">
         <div class="space-y-4">
-          <div v-if="!isLoading" class="prose max-w-none dark:prose-invert">
+          <div v-if="!isLoading" class="prose prose-sm max-w-none dark:prose-invert">
             <MDC :value="initialChangelog" />
             <Dialog v-model:open="isDialogOpen" v-if="hasMoreChangelog">
               <DialogTrigger asChild>
                 <Button variant="outline" class="mt-4">View Full Changelog</Button>
               </DialogTrigger>
               <DialogContent class="max-w-3xl max-h-[80vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>Changelog</DialogTitle>
-                </DialogHeader>
-                <MDC :value="releaseNotes" />
+                <div class="prose prose-sm max-w-none dark:prose-invert">
+                  <MDC :value="releaseNotes" />
+                </div>
               </DialogContent>
             </Dialog>
           </div>
@@ -125,5 +124,11 @@ onMounted(async () => {
 }
 :deep(.prose p, .prose li) {
   @apply text-muted-foreground;
+}
+
+.bg-custom-gradient{
+  background-color: hsla(293.5135135135135, 77%, 28%, 1);
+  background-image: radial-gradient(circle at -30% 20%, hsla(219.82062780269058, 99%, 55%, 1) 0%, transparent 86%), radial-gradient(circle at 107% 0%, hsla(189, 0%, 0%, 1) 0%, transparent 47%);
+  background-blend-mode: normal, normal;
 }
 </style>
