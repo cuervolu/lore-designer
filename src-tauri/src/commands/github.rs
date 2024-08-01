@@ -1,6 +1,6 @@
+use crate::error::AppError;
 use anyhow::Result;
 use serde_json::Value;
-use crate::error::AppError;
 
 #[tauri::command]
 pub async fn get_release_notes() -> Result<String, AppError> {
@@ -12,7 +12,8 @@ pub async fn get_release_notes() -> Result<String, AppError> {
         .await
         .map_err(|e| AppError::GithubError(e.to_string()))?;
 
-    let json: Value = res.json()
+    let json: Value = res
+        .json()
         .await
         .map_err(|e| AppError::GithubError(e.to_string()))?;
 

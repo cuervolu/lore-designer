@@ -34,11 +34,7 @@
     }
   },
   "plugins": {
-    "fs": {
-      "scope": [
-        "$APPDATA/images/*"
-      ]
-    },
+    
     "sql": {
       "preload": [
         "sqlite:loredesigner.db"

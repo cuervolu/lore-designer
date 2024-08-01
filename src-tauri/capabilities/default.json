@@ -51,6 +51,7 @@
     "store:allow-set",
     "store:allow-save",
     "store:allow-load",
-    "updater:default"
+    "updater:default",
+    "process:default"
   ]
 }

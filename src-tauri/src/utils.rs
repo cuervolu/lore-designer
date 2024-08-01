@@ -1,15 +1,15 @@
-use std::collections::{HashMap, HashSet};
 use crate::error::AppError;
+use chrono::NaiveDateTime;
 use font_kit::{error::SelectionError, source::SystemSource};
 use log::{error, info, warn};
-use std::fs;
-use tauri_plugin_shell::ShellExt;
-use tauri::Manager;
-use tauri_plugin_dialog::DialogExt;
-use uuid::Uuid;
 use sqlx::sqlite::SqliteQueryResult;
 use sqlx::SqlitePool;
-use chrono::NaiveDateTime;
+use std::collections::{HashMap, HashSet};
+use std::fs;
+use tauri::Manager;
+use tauri_plugin_dialog::DialogExt;
+use tauri_plugin_shell::ShellExt;
+use uuid::Uuid;
 
 #[derive(serde::Serialize)]
 pub struct ImageInfo {
@@ -101,7 +101,9 @@ pub async fn save_image(app: tauri::AppHandle) -> Result<ImageInfo, AppError> {
 #[tauri::command]
 pub async fn clean_cache(app_handle: tauri::AppHandle) -> Result<String, AppError> {
     info!("Cleaning up unused files and database entries");
-    let images_path = app_handle.path().app_data_dir()
+    let images_path = app_handle
+        .path()
+        .app_data_dir()
         .map_err(|_| AppError::AppDataDirError)?
         .join("images");
 
@@ -112,10 +114,10 @@ pub async fn clean_cache(app_handle: tauri::AppHandle) -> Result<String, AppErro
     // Get all images from the database, including their timestamps and character associations
     let db_images: Vec<(String, String, String, Option<i64>)> = sqlx::query_as(
         "SELECT i.UUID, i.Path, i.Timestamp, i.CharacterID 
-         FROM Images i"
+         FROM Images i",
     )
-        .fetch_all(&db)
-        .await?;
+    .fetch_all(&db)
+    .await?;
 
     info!("Found {} images in the database", db_images.len());
 
@@ -138,7 +140,8 @@ pub async fn clean_cache(app_handle: tauri::AppHandle) -> Result<String, AppErro
     // Identify the most recent image for each character
     for (uuid, _, timestamp_str, character_id) in &db_images {
         if let Some(char_id) = character_id {
-            if let Ok(timestamp) = NaiveDateTime::parse_from_str(timestamp_str, "%Y-%m-%d %H:%M:%S") {
+            if let Ok(timestamp) = NaiveDateTime::parse_from_str(timestamp_str, "%Y-%m-%d %H:%M:%S")
+            {
                 most_recent_images
                     .entry(*char_id)
                     .and_modify(|(existing_uuid, existing_timestamp)| {
@@ -153,9 +156,16 @@ pub async fn clean_cache(app_handle: tauri::AppHandle) -> Result<String, AppErro
     }
 
     // Create a set of UUIDs to keep (most recent for each character + images not associated with characters)
-    let mut uuids_to_keep: HashSet<String> = most_recent_images.values().map(|(uuid, _)| uuid.clone()).collect();
+    let mut uuids_to_keep: HashSet<String> = most_recent_images
+        .values()
+        .map(|(uuid, _)| uuid.clone())
+        .collect();
     uuids_to_keep.extend(db_images.iter().filter_map(|(uuid, _, _, character_id)| {
-        if character_id.is_none() { Some(uuid.clone()) } else { None }
+        if character_id.is_none() {
+            Some(uuid.clone())
+        } else {
+            None
+        }
     }));
 
     // Delete files that are not in the set of UUIDs to keep
@@ -188,8 +198,14 @@ pub async fn clean_cache(app_handle: tauri::AppHandle) -> Result<String, AppErro
         }
     }
 
-    info!("Cleaned up {} unused files and {} unused database entries", deleted_files, deleted_db_entries);
-    Ok(format!("Cleaned up {} unused files and {} unused database entries", deleted_files, deleted_db_entries))
+    info!(
+        "Cleaned up {} unused files and {} unused database entries",
+        deleted_files, deleted_db_entries
+    );
+    Ok(format!(
+        "Cleaned up {} unused files and {} unused database entries",
+        deleted_files, deleted_db_entries
+    ))
 }
 
 /// Retrieves the SQLite database connection pool for the application.
@@ -214,7 +230,9 @@ pub async fn clean_cache(app_handle: tauri::AppHandle) -> Result<String, AppErro
 /// - `AppDataDirError` if the application configuration directory cannot be determined.
 /// - `DatabaseError` if there is an error connecting to the SQLite database.
 async fn get_db(app_handle: &tauri::AppHandle) -> Result<SqlitePool, AppError> {
-    let path = app_handle.path().app_config_dir()
+    let path = app_handle
+        .path()
+        .app_config_dir()
         .map_err(|_| AppError::AppDataDirError)?;
     let db_path = path.join("loredesigner.db");
     info!("Opening database at {:?}", db_path);
