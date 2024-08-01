@@ -21,6 +21,9 @@ const changelogLines = computed(() => releaseNotes.value.split('\n'))
 const initialChangelog = computed(() => changelogLines.value.slice(0, initialChangelogLines).join('\n'))
 const hasMoreChangelog = computed(() => changelogLines.value.length > initialChangelogLines)
 
+const {t} = useI18n()
+
+
 const fetchVersion = async () => {
   version.value = await getVersion()
 }
@@ -30,7 +33,7 @@ const fetchReleaseNotes = async () => {
     releaseNotes.value = await invoke('get_release_notes')
   } catch (error) {
     console.error('Error fetching release notes:', error)
-    releaseNotes.value = 'Unable to fetch release notes.'
+    releaseNotes.value = t('about.errorFetchingReleaseNotes')
   } finally {
     isLoading.value = false
   }
@@ -57,7 +60,9 @@ onMounted(async () => {
         <div class="flex flex-col items-center justify-center mb-6">
           <img src="~/assets/img/lore-designer.svg" alt="App Logo" class="w-24 h-auto mb-4">
           <CardTitle class="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Lore Designer</CardTitle>
-          <CardDescription>Version {{ version }}</CardDescription>
+          <CardDescription>
+            {{ t('about.version', {version: version}) }}
+          </CardDescription>
         </div>
       </CardHeader>
       <CardContent class="space-y-8">
@@ -66,7 +71,9 @@ onMounted(async () => {
             <MDC :value="initialChangelog" />
             <Dialog v-model:open="isDialogOpen" v-if="hasMoreChangelog">
               <DialogTrigger asChild>
-                <Button variant="outline" class="mt-4">View Full Changelog</Button>
+                <Button variant="outline" class="mt-4">
+                  {{ t('about.showMore') }}
+                </Button>
               </DialogTrigger>
               <DialogContent class="max-w-3xl max-h-[80vh] overflow-y-auto">
                 <div class="prose prose-sm max-w-none dark:prose-invert">
@@ -83,11 +90,13 @@ onMounted(async () => {
           </div>
         </div>
         <div class="space-y-4">
-          <h2 class="text-2xl font-bold tracking-tight text-foreground">Useful Links</h2>
+          <h2 class="text-2xl font-bold tracking-tight text-foreground">
+            {{ t('about.links') }}
+          </h2>
           <div class="flex flex-wrap gap-4 justify-center">
             <Button @click="openBrowser(repoUrl)" variant="outline" class="flex items-center px-4 py-2 rounded-full transition-colors hover:bg-primary hover:text-primary-foreground">
               <Book class="mr-2 h-4 w-4"/>
-              Documentation
+              {{ t('about.documentation') }}
             </Button>
             <Button @click="openBrowser(repoUrl)" variant="outline" class="flex items-center px-4 py-2 rounded-full transition-colors hover:bg-primary hover:text-primary-foreground">
               <GithubIcon class="mr-2 h-4 w-4"/>
@@ -102,7 +111,7 @@ onMounted(async () => {
       </CardContent>
       <CardFooter class="flex justify-center">
         <p class="text-sm text-muted-foreground">
-          Made with ❤️ by
+         {{t('about.madeBy')}}
           <a
               @click="openBrowser(authorUrl)"
               class="font-medium text-primary hover:underline cursor-pointer"
