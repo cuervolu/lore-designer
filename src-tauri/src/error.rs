@@ -12,9 +12,10 @@ pub enum AppError {
     DatabaseError(#[from] sqlx::Error),
     #[error("File system error: {0}")]
     FileSystemError(#[from] std::io::Error),
-    #[error("Failed to execute database query")]
-    QueryExecutionError,
-
+    // #[error("Failed to execute database query")]
+    // QueryExecutionError,
+    #[error("Failed to fetch GitHub release notes: {0}")]
+    GithubError(String),
     #[error("Failed to open browser")]
     ShellError(#[from] tauri_plugin_shell::Error),
 }
