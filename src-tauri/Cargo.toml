@@ -4,7 +4,7 @@ version = "0.1.1"
 description = "A Tauri App"
 authors = ["Ángel Cuervo <cuervolu@protonmail.com>"]
 license = "MIT"
-repository = ""
+repository = "https://github.com/cuervolu/lore-designer"
 edition = "2021"
 rust-version = "1.70"
 
@@ -38,6 +38,7 @@ font-kit = "0.14.1"
 chrono = "0.4.38"
 uuid = { version = "1.10.0", features = ["v4"] }
 sqlx = { version = "0.8.0", features = ["runtime-tokio-native-tls", "sqlite", "chrono"] }
+reqwest = { version = "0.12.5", features = ["json"] }
 
 [profile.dev]
 incremental = true # Compile your binary in smaller steps.
