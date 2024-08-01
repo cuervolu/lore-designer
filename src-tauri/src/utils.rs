@@ -3,6 +3,7 @@ use crate::error::AppError;
 use font_kit::{error::SelectionError, source::SystemSource};
 use log::{error, info, warn};
 use std::fs;
+use tauri_plugin_shell::ShellExt;
 use tauri::Manager;
 use tauri_plugin_dialog::DialogExt;
 use uuid::Uuid;
@@ -221,4 +222,32 @@ async fn get_db(app_handle: &tauri::AppHandle) -> Result<SqlitePool, AppError> {
     SqlitePool::connect(db_path.to_str().unwrap())
         .await
         .map_err(AppError::DatabaseError)
+}
+
+/// Opens the default web browser with the specified URL.
+///
+/// This function uses the `tauri_plugin_shell` to open the default web browser
+/// and navigate to the provided URL. It requires a valid `tauri::AppHandle` to
+/// access the shell extension.
+///
+/// # Arguments
+///
+/// * `app_handle` - A `tauri::AppHandle` providing access to the application's environment and utilities.
+/// * `url` - A `String` containing the URL to be opened in the default web browser.
+///
+/// # Returns
+///
+/// A `Result` which is:
+/// - `Ok(())` if the browser was successfully opened.
+/// - `Err(AppError)` if there was an error opening the browser.
+///
+/// # Errors
+///
+/// This function can return an `AppError` if there is an issue with the shell extension or if the URL is invalid.
+#[tauri::command]
+pub fn open_browser(app_handle: tauri::AppHandle, url: String) -> Result<(), AppError> {
+    let shell = app_handle.shell();
+    shell.open(url, None)?;
+
+    Ok(())
 }

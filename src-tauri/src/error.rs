@@ -14,6 +14,9 @@ pub enum AppError {
     FileSystemError(#[from] std::io::Error),
     #[error("Failed to execute database query")]
     QueryExecutionError,
+
+    #[error("Failed to open browser")]
+    ShellError(#[from] tauri_plugin_shell::Error),
 }
 
 impl serde::Serialize for AppError {
