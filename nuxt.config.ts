@@ -48,7 +48,8 @@ export default defineNuxtConfig({
     "@nuxtjs/partytown",
     "@nuxtjs/tailwindcss",
     "shadcn-nuxt",
-    "@nuxtjs/i18n"
+    "@nuxtjs/i18n",
+    "@nuxtjs/mdc"
   ],
   plugins: [
     '~/plugins/i18n.ts',
