@@ -124,7 +124,7 @@ export default {
     noDescription: 'No hay descripción disponible',
     noAdditionalNotes: 'No hay notas adicionales disponibles',
     noRole: "Indefinido",
-    noName:"Personaje sin nombre"
+    noName: "Personaje sin nombre"
   },
   imageUploader: {
     title: "Imagen del Personaje",
@@ -139,9 +139,17 @@ export default {
     errorTitle: "Error",
     errorDescription: "No se pudo subir la imagen. Por favor, inténtalo de nuevo.",
   },
-  time:{
+  time: {
     created: "Creado {time}",
     updated: "Actualizado {time}",
     justNow: "justo ahora"
+  },
+  about: {
+    version: "Versión {version}",
+    showMore: "Ver Registro de Cambios Completo",
+    links: "Enlaces Útiles",
+    documentation: "Documentación",
+    madeBy: "Hecho con ❤️ por ",
+    errorFetchingReleaseNotes: "No se pueden obtener las notas de la versión. Por favor, inténtalo de nuevo más tarde."
   }
 };

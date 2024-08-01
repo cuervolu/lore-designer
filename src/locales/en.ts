@@ -146,6 +146,14 @@ export default {
     created: "Created {time}", 
     updated: "Updated {time}",
     justNow: "just now"
+  },
+  about:{
+    version: "Version {version}",
+    showMore: "View Full Changelog",
+    links: "Useful Links",
+    documentation: "Documentation",
+    madeBy: "Made with ❤️ by ",
+    errorFetchingReleaseNotes: "Unable to fetch release notes. Please try again later."
   }
 
 };
