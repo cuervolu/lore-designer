@@ -161,15 +161,15 @@ const translatedRole = computed(() => {
               <div v-else class="text-sm text-muted-foreground">
                 <p>{{ formattedDate }}</p>
               </div>
-              <div v-if="!isLoading" class="space-x-2">
-                <Button @click="handleEdit">
+              <div v-if="!isLoading" class="flex flex-col space-y-2 mt-4">
+                <Button @click="handleEdit" variant="outline">
                   {{ t('characters.editCharacter') }}
                 </Button>
                 <Button variant="destructive" @click="handleDelete">
-                  {{ t('characters.deleteCharacter') }}
+                  {{ t('characters.confirmDelete.confirm') }}
                 </Button>
               </div>
-              <Skeleton v-else class="h-10 w-32"/>
+              <Skeleton v-else class="h-20 w-32"/>
             </div>
           </div>
         </div>
