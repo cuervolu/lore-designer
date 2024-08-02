@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {invoke} from '@tauri-apps/api/core'
 import {getVersion} from '@tauri-apps/api/app'
-import {appDataDir, join} from '@tauri-apps/api/path'
+import {appLogDir} from '@tauri-apps/api/path'
 import {error} from "@tauri-apps/plugin-log";
 import {open} from '@tauri-apps/plugin-shell'
 import {writeText} from '@tauri-apps/plugin-clipboard-manager'
@@ -80,8 +80,7 @@ onMounted(async () => {
     console.log('Translations:', t('help.faq.questions'))
     appVersion.value = await getVersion()
     systemInfo.value = await invoke('get_system_info')
-    const dataDir = await appDataDir()
-    logPath.value = await join(dataDir, 'logs')
+    logPath.value = await appLogDir()
   } catch (e) {
     await error(`Failed to load system information: ${e}`)
     toast({
