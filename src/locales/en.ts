@@ -126,7 +126,7 @@ export default {
     noDescription: 'No description available',
     noAdditionalNotes: 'No additional notes available',
     noRole: "Undefined",
-    noName:"Unnamed Character"
+    noName: "Unnamed Character"
   },
   imageUploader: {
     title: "Character Image",
@@ -141,12 +141,12 @@ export default {
     errorTitle: "Error",
     errorDescription: "Failed to upload image. Please try again."
   },
-  time:{
-    created: "Created {time}", 
+  time: {
+    created: "Created {time}",
     updated: "Updated {time}",
     justNow: "just now"
   },
-  about:{
+  about: {
     version: "Version {version}",
     showMore: "View Full Changelog",
     links: "Useful Links",
@@ -283,5 +283,12 @@ export default {
     loadMore: "Load more",
     exit: "Exit application"
   },
-
+  updateNotification: {
+    title: "Update Available",
+    description: "A new version ({version}) of Lore Designer is available.",
+    whatsNew: "What's new:",
+    later: "Later",
+    updating: "Updating...",
+    updateNow: "Update Now"
+  },
 };

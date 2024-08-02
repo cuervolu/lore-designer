@@ -282,4 +282,12 @@ export default {
     loadMore: "Cargar Más",
     exit: "Salir de la Aplicación",
   },
+  updateNotification: {
+    title: "Actualización Disponible",
+    description: "Una nueva versión ({version}) de Lore Designer está disponible.",
+    whatsNew: "Qué hay de nuevo:",
+    later: "Más tarde",
+    updating: "Actualizando...",
+    updateNow: "Actualizar ahora"
+  },
 };

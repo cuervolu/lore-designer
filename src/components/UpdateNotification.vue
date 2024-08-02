@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import { useUpdaterStore } from '~/stores/updater.store'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
@@ -7,22 +7,58 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 const updaterStore = useUpdaterStore()
 const maxChangelogHeight = ref(300) // Maximum height for the changelog in pixels
 
+const { t } = useI18n()
+
+const isDev = computed(() => import.meta.dev)
+
+const showDialog = computed(() => isDev.value ? true : updaterStore.isUpdateAvailable)
+
+const closeDialog = () => {
+  if (!isDev.value) {
+    updaterStore.isUpdateAvailable = false
+  }
+}
+
 onMounted(() => {
-  updaterStore.checkForUpdates()
+  if (!isDev.value) {
+    updaterStore.checkForUpdates()
+  } else {
+    // Simulate update data for development
+    updaterStore.isUpdateAvailable = true
+    updaterStore.updateVersion = '0.2.0'
+    updaterStore.updateNotes = `
+# Version 0.2.0
+
+## New Features
+- Added GlobalCommand component for enhanced navigation and actions
+- Updated help page with system information module
+
+## Improvements
+- Improved button layout in character details view
+- Updated character buttons with translated text
+
+## Bug Fixes
+- Fixed missing translations for characters
+
+## Other Changes
+- Updated npm dependencies to latest versions
+- Updated clipboard manager capabilities
+    `
+  }
 })
 </script>
 
 <template>
-  <Dialog :open="updaterStore.isUpdateAvailable" @update:open="updaterStore.isUpdateAvailable = $event">
+  <Dialog :open="showDialog" @update:open="closeDialog">
     <DialogContent class="sm:max-w-[500px]">
       <DialogHeader>
-        <DialogTitle>Update Available</DialogTitle>
+        <DialogTitle>{{ t('updateNotification.title') }}</DialogTitle>
         <DialogDescription>
-          A new version ({{ updaterStore.updateVersion }}) of Lore Designer is available.
+          {{ t('updateNotification.description', { version: updaterStore.updateVersion }) }}
         </DialogDescription>
       </DialogHeader>
       <div v-if="updaterStore.updateNotes" class="mt-4">
-        <h4 class="text-sm font-semibold mb-2">What's new:</h4>
+        <h4 class="text-sm font-semibold mb-2">{{ t('updateNotification.whatsNew') }}</h4>
         <div :style="{ maxHeight: `${maxChangelogHeight}px`, overflowY: 'auto' }" class="pr-2">
           <div class="text-sm text-muted-foreground prose prose-sm dark:prose-invert">
             <MDC :value="updaterStore.updateNotes" />
@@ -30,14 +66,17 @@ onMounted(() => {
         </div>
       </div>
       <DialogFooter class="mt-6">
-        <Button variant="outline" @click="updaterStore.isUpdateAvailable = false">Later</Button>
+        <Button variant="outline" @click="closeDialog">
+          {{ t('updateNotification.later') }}
+        </Button>
         <Button @click="updaterStore.installUpdate" :disabled="updaterStore.isUpdating">
-          {{ updaterStore.isUpdating ? 'Updating...' : 'Update Now' }}
+          {{ updaterStore.isUpdating ? t('updateNotification.updating') : t('updateNotification.updateNow') }}
         </Button>
       </DialogFooter>
     </DialogContent>
   </Dialog>
 </template>
+
 
 <style scoped>
 .prose :deep(h1, h2, h3, h4, h5, h6) {
