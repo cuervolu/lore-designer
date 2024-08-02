@@ -6,15 +6,18 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 
 const updaterStore = useUpdaterStore()
 const maxChangelogHeight = ref(300) // Maximum height for the changelog in pixels
-
 const { t } = useI18n()
-
 const isDev = computed(() => import.meta.dev)
 
-const showDialog = computed(() => isDev.value ? true : updaterStore.isUpdateAvailable)
+// Use a separate ref to control the dialog visibility in dev mode
+const devShowDialog = ref(true)
+
+const showDialog = computed(() => isDev.value ? devShowDialog.value : updaterStore.isUpdateAvailable)
 
 const closeDialog = () => {
-  if (!isDev.value) {
+  if (isDev.value) {
+    devShowDialog.value = false
+  } else {
     updaterStore.isUpdateAvailable = false
   }
 }
@@ -28,18 +31,14 @@ onMounted(() => {
     updaterStore.updateVersion = '0.2.0'
     updaterStore.updateNotes = `
 # Version 0.2.0
-
 ## New Features
 - Added GlobalCommand component for enhanced navigation and actions
 - Updated help page with system information module
-
 ## Improvements
 - Improved button layout in character details view
 - Updated character buttons with translated text
-
 ## Bug Fixes
 - Fixed missing translations for characters
-
 ## Other Changes
 - Updated npm dependencies to latest versions
 - Updated clipboard manager capabilities
