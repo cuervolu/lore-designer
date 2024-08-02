@@ -25,14 +25,49 @@ import {Search} from 'lucide-vue-next'
 import {useToast} from "@/components/ui/toast"
 
 const {t} = useI18n()
+const faqQuestions = [
+  {
+    key: 'updateFrequency',
+    q: t('help.faq.questions.updateFrequency.q'),
+    a: t('help.faq.questions.updateFrequency.a')
+  },
+  {
+    key: 'offlineUse',
+    q: t('help.faq.questions.offlineUse.q'),
+    a: t('help.faq.questions.offlineUse.a')
+  },
+  {
+    key: 'contributions',
+    q: t('help.faq.questions.contributions.q'),
+    a: t('help.faq.questions.contributions.a')
+  },
+  {
+    key: 'dataSecurity',
+    q: t('help.faq.questions.dataSecurity.q'),
+    a: t('help.faq.questions.dataSecurity.a')
+  },
+  {
+    key: 'projectTypes',
+    q: t('help.faq.questions.projectTypes.q'),
+    a: t('help.faq.questions.projectTypes.a')
+  },
+  {
+    key: 'platforms',
+    q: t('help.faq.questions.platforms.q'),
+    a: t('help.faq.questions.platforms.a')
+  },
+  {
+    key: 'gameEngineCompatibility',
+    q: t('help.faq.questions.gameEngineCompatibility.q'),
+    a: t('help.faq.questions.gameEngineCompatibility.a')
+  },
+  {
+    key: 'characterLimit',
+    q: t('help.faq.questions.characterLimit.q'),
+    a: t('help.faq.questions.characterLimit.a')
+  }
+]
 
-const faqQuestions = computed(() => {
-  const questions = t('help.faq.questions') as unknown as Record<string, { q: string; a: string }>
-  return Object.entries(questions).map(([key, value]) => ({
-    key,
-    ...value
-  }))
-})
 
 const {toast} = useToast()
 const appVersion = ref('')
@@ -77,7 +112,6 @@ const openGitHubIssues = () => {
 
 onMounted(async () => {
   try {
-    console.log('Translations:', t('help.faq.questions'))
     appVersion.value = await getVersion()
     systemInfo.value = await invoke('get_system_info')
     logPath.value = await appLogDir()
