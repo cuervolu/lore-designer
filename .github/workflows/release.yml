@@ -92,8 +92,8 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
         with:
-          tagName: app-v${{ needs.prepare-release.outputs.version }}
-          releaseName: 'Release v${{ needs.prepare-release.outputs.version }}'
+          tagName: v__VERSION__
+          releaseName: 'Lore Designer ${{ needs.prepare-release.outputs.version }}'
           releaseBody: ${{ needs.prepare-release.outputs.changelog }}
           releaseDraft: true
           prerelease: false
