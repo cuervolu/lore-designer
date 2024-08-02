@@ -231,11 +231,9 @@ export default {
     tips: {
       title: "Consejos y Trucos",
       list: [
-        "Usa atajos de teclado para una navegación más rápida (presiona '?' para ver todos los atajos)",
-        "Activa el modo oscuro para una escritura cómoda durante la noche",
-        "Utiliza etiquetas para organizar tus personajes, ubicaciones y puntos de trama",
-        "Establece metas de escritura para seguir tu progreso",
-        "Usa las herramientas de investigación incorporadas para mantener tus notas organizadas"
+        "Presiona Ctrl + P para abrir la paleta de comandos y viajar más rápido a través de la aplicación",
+        "¿No te gusta el tema de la aplicación? Puedes cambiar el modo claro y oscuro, inclusive la fuente global de la app en configuración",
+        "Utiliza el panel Kanban para manejar las tareas de tu proyecto"
       ]
     },
     moreHelp: {

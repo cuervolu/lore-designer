@@ -232,11 +232,9 @@ export default {
     tips: {
       title: "Tips and Tricks",
       list: [
-        "Use keyboard shortcuts for faster navigation (press '?' to view all shortcuts)",
-        "Enable dark mode for comfortable night-time writing",
-        "Utilize tags to organize your characters, locations, and plot points",
-        "Set writing goals to track your progress",
-        "Use the built-in research tools to keep your notes organized"
+        "Press Ctrl + P to open the command palette and navigate faster through the application",
+        "Don't like the app's theme? You can change between light and dark mode, and even the global font of the app in settings",
+        "Use the Kanban board to manage your project tasks"
       ]
     },
     moreHelp: {

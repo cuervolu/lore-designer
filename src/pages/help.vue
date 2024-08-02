@@ -176,8 +176,6 @@ onMounted(async () => {
             <li>{{ t('help.tips.list.0') }}</li>
             <li>{{ t('help.tips.list.1') }}</li>
             <li>{{ t('help.tips.list.2') }}</li>
-            <li>{{ t('help.tips.list.3') }}</li>
-            <li>{{ t('help.tips.list.4') }}</li>
           </ul>
         </AccordionContent>
       </AccordionItem>
