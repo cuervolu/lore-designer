@@ -1,4 +1,5 @@
 use crate::commands::github::get_release_notes;
+use crate::commands::help::get_system_info;
 use crate::utils::{clean_cache, get_fonts, open_browser, save_image};
 use tauri_plugin_log::fern::colors::ColoredLevelConfig;
 mod commands;
@@ -10,7 +11,7 @@ mod utils;
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let builder = tauri::Builder::default()
-        
+
         .setup(|app| {
             // create the log plugin as usual, but call split() instead of build()
             let (tauri_plugin_log, max_level, logger) = tauri_plugin_log::Builder::new()
@@ -56,7 +57,8 @@ pub fn run() {
             save_image,
             clean_cache,
             open_browser,
-            get_release_notes
+            get_release_notes,
+            get_system_info
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

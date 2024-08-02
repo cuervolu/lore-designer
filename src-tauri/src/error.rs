@@ -18,6 +18,9 @@ pub enum AppError {
     GithubError(String),
     #[error("Failed to open browser")]
     ShellError(#[from] tauri_plugin_shell::Error),
+
+    #[error("Failed to get system information: {0}")]
+    SystemInfoError(String),
 }
 
 impl serde::Serialize for AppError {
