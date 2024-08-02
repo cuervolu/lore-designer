@@ -6,7 +6,7 @@ authors = ["Ángel Cuervo <cuervolu@protonmail.com>"]
 license = "MIT"
 repository = "https://github.com/cuervolu/lore-designer"
 edition = "2021"
-rust-version = "1.70"
+rust-version = "1.80"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -31,7 +31,7 @@ tauri-plugin-shell = "2.0.0-beta.10"
 tauri-plugin-store = "2.0.0-beta.11"
 tauri-plugin-window-state = "2.0.0-beta.12"
 tauri-plugin-dialog = "2.0.0-beta.12"
-tauri-plugin-clipboard-manager = "2.0.0-beta.2"
+tauri-plugin-clipboard-manager = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v2" }
 tauri-plugin-process = "2.0.0-beta.9"
 thiserror = "1.0.63"
 anyhow = "1.0.86"
@@ -40,6 +40,7 @@ chrono = "0.4.38"
 uuid = { version = "1.10.0", features = ["v4"] }
 sqlx = { version = "0.8.0", features = ["runtime-tokio-native-tls", "sqlite", "chrono"] }
 reqwest = { version = "0.12.5", features = ["json"] }
+sysinfo = "0.31.2"
 
 [profile.dev]
 incremental = true # Compile your binary in smaller steps.
