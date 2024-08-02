@@ -1,6 +1,6 @@
-import { Store } from '@tauri-apps/plugin-store';
-import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import {Store} from '@tauri-apps/plugin-store';
+import {defineStore} from 'pinia'
+import {ref} from 'vue'
 
 export const useFontStore = defineStore('font', () => {
   const store = new Store('store.bin');
@@ -34,6 +34,12 @@ export const useFontStore = defineStore('font', () => {
     availableFonts.value = fonts
   }
 
+  const getAvailableFonts = async (page: number = 1, pageSize: number = 10): Promise<{ fonts: string[], total: number }> => {
+    const start = (page - 1) * pageSize;
+    const end = start + pageSize;
+    const fonts = availableFonts.value.slice(start, end);
+    return { fonts, total: availableFonts.value.length };
+  }
   return {
     currentFont,
     setFont,
@@ -41,6 +47,7 @@ export const useFontStore = defineStore('font', () => {
     restoreDefaultFont,
     defaultFont,
     availableFonts,
+    getAvailableFonts,
     setAvailableFonts
   }
 })

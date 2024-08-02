@@ -58,6 +58,8 @@
     "store:allow-save",
     "store:allow-load",
     "updater:default",
-    "process:default"
+    "process:default",
+    "process:allow-exit",
+    "process:allow-restart"
   ]
 }

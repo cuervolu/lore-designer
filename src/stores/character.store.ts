@@ -73,6 +73,42 @@ export const useCharacterStore = defineStore('character', () => {
     }
   };
 
+
+  const getCharactersNames = async (page: number = 1, pageSize: number = 10): Promise<{ characters: CharacterForNode[], total: number }> => {
+    try {
+      const offset = (page - 1) * pageSize;
+
+      const countResult = await dbStore.select<[{ count: number }]>('SELECT COUNT(*) as count FROM Characters');
+      const totalCount = countResult[0].count;
+
+      const results = await dbStore.select<any[]>(
+          `SELECT c.ID, c.Name, i.Path as ImagePath
+           FROM Characters c
+                    LEFT JOIN Images i ON c.ImageID = i.UUID
+           ORDER BY c.CreatedAt DESC
+           LIMIT $1 OFFSET $2`,
+          [pageSize, offset]
+      );
+
+      const characters = results.map(row => ({
+        id: row.ID,
+        name: row.Name,
+        imagePath: row.ImagePath
+      }));
+
+      return { characters, total: totalCount };
+    } catch (e) {
+      await error(`Error fetching characters: ${e}`);
+      handleError(new DatabaseError({
+        name: 'DB_QUERY_ERROR',
+        message: 'Failed to fetch characters',
+        cause: e
+      }));
+      return { characters: [], total: 0 };
+    }
+  };
+
+
   const createCharacter = async (character: CharacterRequest): Promise<number | null> => {
     try {
       const result = await dbStore.executeQuery(
@@ -250,6 +286,7 @@ export const useCharacterStore = defineStore('character', () => {
   return {
     characters,
     totalCharacters,
+    getCharactersNames,
     createCharacter,
     fetchCharacters,
     getCharacterById,

@@ -264,5 +264,22 @@ export default {
         description: "No se pudo cargar la información del sistema"
       }
     }
-  }
+  },
+  globalCommand: {
+    searchPlaceholder: "Escribe un comando o busca...",
+    noResults: "No se encontraron resultados.",
+    characters: "Personajes",
+    navigation: "Navegación",
+    language: "Cambiar Idioma",
+    actions: "Acciones",
+    external: "Enlaces Externos",
+    english: "Inglés",
+    spanish: "Español",
+    relaunch: "Reiniciar App",
+    github: "Repositorio GitHub",
+    documentation: "Documentación",
+    fonts: "Fuentes",
+    loadMore: "Cargar Más",
+    exit: "Salir de la Aplicación",
+  },
 };

@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { useNuxtApp } from '#app'
+import {useNuxtApp} from '#app'
 import '@fontsource-variable/inter'
 import Toaster from '@/components/ui/toast/Toaster.vue'
 import UpdateNotification from '@/components/UpdateNotification.vue'
-const { $initI18n, $initFonts } = useNuxtApp()
+import GlobalCommand from "~/components/GlobalCommand.vue";
+
+const {$initI18n, $initFonts} = useNuxtApp()
 
 // Call the initI18n function to set up the language
 await $initI18n()
@@ -14,10 +16,11 @@ await $initFonts()
 
 <template>
   <div>
-    <Toaster />
-    <UpdateNotification />
+    <Toaster/>
+    <UpdateNotification/>
+    <GlobalCommand/>
     <NuxtLayout>
-      <NuxtPage />
+      <NuxtPage/>
     </NuxtLayout>
   </div>
 </template>

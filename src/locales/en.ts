@@ -265,6 +265,23 @@ export default {
         description: "Failed to load system information"
       }
     }
-  }
+  },
+  globalCommand: {
+    searchPlaceholder: "Type a command or search...",
+    noResults: "No results found.",
+    characters: "Characters",
+    navigation: "Navigation",
+    language: "Change Language",
+    actions: "Actions",
+    external: "External Links",
+    english: "English",
+    spanish: "Spanish",
+    relaunch: "Relaunch App",
+    github: "GitHub Repository",
+    documentation: "Documentation",
+    fonts: "Fonts",
+    loadMore: "Load more",
+    exit: "Exit application"
+  },
 
 };
