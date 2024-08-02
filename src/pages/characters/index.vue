@@ -18,6 +18,7 @@ import {DatabaseError} from '~/exceptions/db.error';
 
 
 const {t} = useI18n()
+const localeRoute = useLocaleRoute()
 const characterStore = useCharacterStore();
 const {characters, totalCharacters} = storeToRefs(characterStore);
 const {handleError} = useErrorHandler();
@@ -53,7 +54,10 @@ watch(currentPage, () => fetchCharacters(true));
 
 
 const navigateToCreateCharacter = () => {
-  router.push('/characters/create');
+  const route = localeRoute('characters-create');
+  if (route) {
+    return navigateTo(route.fullPath)
+  }
 };
 
 const changePage = (page: number) => {

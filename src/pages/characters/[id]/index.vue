@@ -162,8 +162,12 @@ const translatedRole = computed(() => {
                 <p>{{ formattedDate }}</p>
               </div>
               <div v-if="!isLoading" class="space-x-2">
-                <Button @click="handleEdit">Edit Character</Button>
-                <Button variant="destructive" @click="handleDelete">Delete Character</Button>
+                <Button @click="handleEdit">
+                  {{ t('characters.editCharacter') }}
+                </Button>
+                <Button variant="destructive" @click="handleDelete">
+                  {{ t('characters.deleteCharacter') }}
+                </Button>
               </div>
               <Skeleton v-else class="h-10 w-32"/>
             </div>
