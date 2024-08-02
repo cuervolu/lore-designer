@@ -1,5 +1,3 @@
-// src/locales/en.ts
-
 export default {
   home: "Home",
   welcome: "Welcome to",
@@ -104,6 +102,7 @@ export default {
     noCharacters: "No characters found.",
     editCharacter: 'Edit Character',
     editCharacterDescription: 'Edit the character information',
+    deleteCharacter: 'Delete Character',
     updateCharacter: 'Update Character',
     cancel: 'Cancel',
     createSuccess: 'Character created successfully.',
@@ -154,6 +153,118 @@ export default {
     documentation: "Documentation",
     madeBy: "Made with ❤️ by ",
     errorFetchingReleaseNotes: "Unable to fetch release notes. Please try again later."
+  },
+  help: {
+    title: "Help & Support",
+    searchPlaceholder: "Search for help topics...",
+    usage: {
+      title: "How to Use Lore Designer",
+      intro: "Here are the basic steps to get started with Lore Designer:",
+      steps: {
+        1: "Create a new project or open an existing one",
+        2: "Use the character creator to design your protagonists",
+        3: "Build your world using the world-building tools",
+        4: "Create your story structure in the plot outliner",
+        5: "Write your scenes in the distraction-free writing mode"
+      },
+      moreInfo: "For more detailed instructions, check out our {0}.",
+      userGuide: "comprehensive user guide"
+    },
+    reportBug: {
+      title: "Report a Bug",
+      intro: "If you encounter a bug, please follow these steps to report it:",
+      steps: {
+        1: "Describe the issue in detail",
+        2: "Note the steps to reproduce the bug",
+        3: "Include the system information and app version (provided below)",
+        4: "Attach any relevant screenshots or error messages",
+        5: "Submit the report through our GitHub issues page"
+      },
+      sysInfo: {
+        title: "System Information",
+        description: "Please include this information when reporting a bug",
+        appVersion: "App Version",
+        logDirectory: "Log Directory"
+      },
+      buttons: {
+        copy: "Copy Info",
+        openLog: "Open Log Directory",
+        report: "Report on GitHub"
+      }
+    },
+    faq: {
+      title: "Frequently Asked Questions",
+      questions: {
+        updateFrequency: {
+          q: "How often is Lore Designer updated?",
+          a: "Lore Designer is developed by a single person, so updates are released when this person has available time. We strive to provide updates as frequently as possible, but the schedule may vary."
+        },
+        offlineUse: {
+          q: "Can I use Lore Designer offline?",
+          a: "Yes, 99% of Lore Designer's features are designed to work locally, using a local SQLite database. As of this version, the only function that uses the internet is checking the changelogs for each release."
+        },
+        contributions: {
+          q: "Do you accept contributions?",
+          a: "Yes, we welcome contributions! If you're interested in contributing to Lore Designer, please check our GitHub repository for more information on how to get involved."
+        },
+        dataSecurity: {
+          q: "How does Lore Designer handle the privacy and security of my data?",
+          a: "We don't handle any of your data. Everything runs within your computer and we have no way of knowing anything about what you do."
+        },
+        projectTypes: {
+          q: "What types of projects is Lore Designer useful for?",
+          a: "Lore Designer is useful for RPG games, visual novels, or linear stories. It's also great for game planning."
+        },
+        platforms: {
+          q: "On which platforms is Lore Designer available?",
+          a: "Currently, as we don't own a Mac, Lore Designer is only available on Linux and Windows. There is a file to run it on Mac with each release, but it hasn't been tested at all."
+        },
+        gameEngineCompatibility: {
+          q: "Is Lore Designer compatible with any specific game engine?",
+          a: "Any engine that supports JSON is compatible with Lore Designer!"
+        },
+        characterLimit: {
+          q: "Is there a limit to the number of characters I can create?",
+          a: "Nope! You can go crazy with it."
+        }
+      }
+    },
+    tips: {
+      title: "Tips and Tricks",
+      list: [
+        "Use keyboard shortcuts for faster navigation (press '?' to view all shortcuts)",
+        "Enable dark mode for comfortable night-time writing",
+        "Utilize tags to organize your characters, locations, and plot points",
+        "Set writing goals to track your progress",
+        "Use the built-in research tools to keep your notes organized"
+      ]
+    },
+    moreHelp: {
+      title: "Need More Help?",
+      description: "If you couldn't find the answer you're looking for, feel free to reach out to our support team:",
+      contact: {
+        email: "Email: cuervolu＠protonmail.com",
+        twitter: "Twitter: ＠cuervolu29",
+      },
+    },
+    toasts: {
+      copySuccess: {
+        title: "Success",
+        description: "System information copied to clipboard"
+      },
+      copyError: {
+        title: "Error",
+        description: "Failed to copy to clipboard"
+      },
+      openLogError: {
+        title: "Error",
+        description: "Failed to open log directory"
+      },
+      loadInfoError: {
+        title: "Error",
+        description: "Failed to load system information"
+      }
+    }
   }
 
 };

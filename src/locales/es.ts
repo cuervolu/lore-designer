@@ -101,6 +101,7 @@ export default {
     noCharacters: "No se encontraron personajes.",
     editCharacter: 'Editar el personaje',
     editCharacterDescription: 'Editar la información del personaje',
+    deleteCharacter: 'Eliminar Personaje',
     updateCharacter: 'Actualizar personaje',
     cancel: 'Cancelar',
     createSuccess: 'Personaje creado',
@@ -151,5 +152,117 @@ export default {
     documentation: "Documentación",
     madeBy: "Hecho con ❤️ por ",
     errorFetchingReleaseNotes: "No se pueden obtener las notas de la versión. Por favor, inténtalo de nuevo más tarde."
+  },
+  help: {
+    title: "Ayuda y Soporte",
+    searchPlaceholder: "Buscar temas de ayuda...",
+    usage: {
+      title: "Cómo usar Lore Designer",
+      intro: "Aquí están los pasos básicos para comenzar con Lore Designer:",
+      steps: {
+        1: "Crea un nuevo proyecto o abre uno existente",
+        2: "Usa el creador de personajes para diseñar tus protagonistas",
+        3: "Construye tu mundo usando las herramientas de creación de mundos",
+        4: "Crea la estructura de tu historia en el esquema de trama",
+        5: "Escribe tus escenas en el modo de escritura sin distracciones"
+      },
+      moreInfo: "Para instrucciones más detalladas, consulta nuestra {0}.",
+      userGuide: "guía de usuario completa"
+    },
+    reportBug: {
+      title: "Reportar un Error",
+      intro: "Si encuentras un error, por favor sigue estos pasos para reportarlo:",
+      steps: {
+        1: "Describe el problema en detalle",
+        2: "Anota los pasos para reproducir el error",
+        3: "Incluye la información del sistema y la versión de la aplicación (proporcionada abajo)",
+        4: "Adjunta capturas de pantalla o mensajes de error relevantes",
+        5: "Envía el reporte a través de nuestra página de problemas en GitHub"
+      },
+      sysInfo: {
+        title: "Información del Sistema",
+        description: "Por favor, incluye esta información al reportar un error",
+        appVersion: "Versión de la Aplicación",
+        logDirectory: "Directorio de Registros"
+      },
+      buttons: {
+        copy: "Copiar Info",
+        openLog: "Abrir Directorio de Registros",
+        report: "Reportar en GitHub"
+      }
+    },
+    faq: {
+      title: "Preguntas Frecuentes",
+      questions: {
+        updateFrequency: {
+          q: "¿Con qué frecuencia se actualiza Lore Designer?",
+          a: "Lore Designer es desarrollado por una sola persona, por lo que las actualizaciones se lanzan cuando esta persona tiene tiempo disponible. Nos esforzamos por proporcionar actualizaciones con la mayor frecuencia posible, pero el calendario puede variar."
+        },
+        offlineUse: {
+          q: "¿Puedo usar Lore Designer sin conexión?",
+          a: "Sí, el 99% de las funciones de Lore Designer están diseñadas para funcionar localmente, utilizando una base de datos SQLite local. Hasta esta versión, la única función que usa internet es la que revisa los changelogs de cada release."
+        },
+        contributions: {
+          q: "¿Se aceptan contribuciones?",
+          a: "¡Sí, se aceptan contribuciones! Si estás interesado en contribuir a Lore Designer, por favor revisa nuestro repositorio de GitHub para más información sobre cómo involucrarte."
+        },
+        dataSecurity: {
+          q: "¿Cómo maneja Lore Designer la privacidad y seguridad de mis datos?",
+          a: "No manejamos ninguno de tus datos. Todo se ejecuta dentro de tu computadora y no tenemos forma de saber nada sobre lo que haces."
+        },
+        projectTypes: {
+          q: "¿Para qué tipos de proyectos es útil Lore Designer?",
+          a: "Lore Designer es útil para juegos RPG, novelas visuales o historias lineales. También es excelente para la planificación de juegos."
+        },
+        platforms: {
+          q: "¿En qué plataformas está disponible Lore Designer?",
+          a: "De momento, como no poseemos una Mac, Lore Designer solo está disponible en Linux y Windows. Existe un archivo para ejecutarlo en Mac con cada release, pero no ha sido probado en absoluto."
+        },
+        gameEngineCompatibility: {
+          q: "¿Lore Designer es compatible con algún motor de juegos específico?",
+          a: "¡Cualquier motor que tenga soporte a JSON es compatible con Lore Designer!"
+        },
+        characterLimit: {
+          q: "¿Hay un límite en el número de personajes que puedo crear?",
+          a: "¡No! Puedes volverte loco con ello."
+        }
+      }
+    },
+    tips: {
+      title: "Consejos y Trucos",
+      list: [
+        "Usa atajos de teclado para una navegación más rápida (presiona '?' para ver todos los atajos)",
+        "Activa el modo oscuro para una escritura cómoda durante la noche",
+        "Utiliza etiquetas para organizar tus personajes, ubicaciones y puntos de trama",
+        "Establece metas de escritura para seguir tu progreso",
+        "Usa las herramientas de investigación incorporadas para mantener tus notas organizadas"
+      ]
+    },
+    moreHelp: {
+      title: "¿Necesitas Más Ayuda?",
+      description: "Si no encontraste la respuesta que buscas, no dudes en contactar a nuestro equipo de soporte:",
+      contact: {
+        email: "Correo electrónico: cuervolu＠protonmail.com",
+        twitter: "Twitter: ＠cuervolu29",
+      },
+    },
+    toasts: {
+      copySuccess: {
+        title: "Éxito",
+        description: "Información del sistema copiada al portapapeles"
+      },
+      copyError: {
+        title: "Error",
+        description: "No se pudo copiar al portapapeles"
+      },
+      openLogError: {
+        title: "Error",
+        description: "No se pudo abrir el directorio de registros"
+      },
+      loadInfoError: {
+        title: "Error",
+        description: "No se pudo cargar la información del sistema"
+      }
+    }
   }
 };
