@@ -15,27 +15,27 @@ name = "app_lib"
 crate-type = ["staticlib", "cdylib", "lib"]
 
 [build-dependencies]
-tauri-build = { version = "2.0.0-beta.19", features = [] }
+tauri-build = { version = "2.0.0-rc.1", features = [] }
 
 [dependencies]
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 log = "0.4.22"
-tauri = { version = "2.0.0-beta.25", features = ["protocol-asset"] }
-tauri-plugin-devtools = { version = "2.0.0-beta.5" }
-tauri-plugin-log = { version = "2.0.0-beta.10", features = ["colored"] }
-tauri-plugin-fs = "2.0.0-beta.12"
-tauri-plugin-sql = { version = "2.0.0-beta.11", features = ["sqlite"] }
-tauri-plugin-os = "2.0.0-beta.9"
-tauri-plugin-shell = "2.0.0-beta.10"
-tauri-plugin-store = "2.0.0-beta.11"
-tauri-plugin-window-state = "2.0.0-beta.12"
-tauri-plugin-dialog = "2.0.0-beta.12"
-tauri-plugin-clipboard-manager = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v2" }
-tauri-plugin-process = "2.0.0-beta.9"
+tauri = { version = "2.0.0-rc.1", features = ["protocol-asset"] }
+tauri-plugin-devtools = { version = "2.0.0-rc.0" }
+tauri-plugin-log = { version = "2.0.0-rc.0", features = ["colored"] }
+tauri-plugin-fs = "2.0.0-rc.0"
+tauri-plugin-sql = { version = "2.0.0-rc.0", features = ["sqlite"] }
+tauri-plugin-os = "2.0.0-rc.0"
+tauri-plugin-shell = "2.0.0-rc.0"
+tauri-plugin-store = "2.0.0-rc.0"
+tauri-plugin-window-state = "2.0.0-rc.0"
+tauri-plugin-dialog = "2.0.0-rc.0"
+tauri-plugin-clipboard-manager = "2.0.0-rc.0"
+tauri-plugin-process = "2.0.0-rc.0"
 thiserror = "1.0.63"
 anyhow = "1.0.86"
-font-kit = "0.14.1"
+font-kit = "0.14.2"
 chrono = "0.4.38"
 uuid = { version = "1.10.0", features = ["v4"] }
 sqlx = { version = "0.8.0", features = ["runtime-tokio-native-tls", "sqlite", "chrono"] }
@@ -53,5 +53,5 @@ panic = "abort" # Higher performance by disabling panic handlers.
 strip = true # Ensures debug symbols are removed.
 
 [target."cfg(not(any(target_os = \"android\", target_os = \"ios\")))".dependencies]
-tauri-plugin-updater = "2.0.0-beta.0"
+tauri-plugin-updater = "2.0.0-rc.0"
 
