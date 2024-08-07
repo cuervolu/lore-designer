@@ -5,6 +5,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
+const { t } = useI18n();
+
 interface Variable {
   type: string;
   name: string;
@@ -43,7 +45,7 @@ watchEffect(() => {
   <Dialog :open="props.open" @update:open="(value: boolean) => emit('update:open', value)">
     <DialogContent>
       <DialogHeader>
-        <DialogTitle>Local Variables</DialogTitle>
+        <DialogTitle>{{ t('branchDialogue.localVariables') }}</DialogTitle>
       </DialogHeader>
       <div class="flex space-x-2">
         <Select v-model="newVariableType">
@@ -51,17 +53,17 @@ watchEffect(() => {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="STRING">STRING</SelectItem>
-            <SelectItem value="NUMBER">NUMBER</SelectItem>
-            <SelectItem value="BOOLEAN">BOOLEAN</SelectItem>
+            <SelectItem value="STRING">{{ t('branchDialogue.variableType.string') }}</SelectItem>
+            <SelectItem value="NUMBER">{{ t('branchDialogue.variableType.number') }}</SelectItem>
+            <SelectItem value="BOOLEAN">{{ t('branchDialogue.variableType.boolean') }}</SelectItem>
           </SelectContent>
         </Select>
-        <Input v-model="newVariableName" placeholder="Variable name" />
-        <Button @click="addVariable">+</Button>
+        <Input v-model="newVariableName" :placeholder="t('branchDialogue.variableName')" />
+        <Button @click="addVariable">{{ t('branchDialogue.addVariable') }}</Button>
       </div>
       <ul>
         <li v-for="variable in variables" :key="variable.name">
-          {{ variable.type }} - {{ variable.name }}
+          {{ t(`branchDialogue.variableType.${variable.type.toLowerCase()}`) }} - {{ variable.name }}
         </li>
       </ul>
     </DialogContent>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import {ref, watch, computed} from 'vue';
-import {Handle, Position} from '@vue-flow/core';
-import {NodeResizer} from "@vue-flow/node-resizer";
+import { ref, watch, computed } from 'vue';
+import { Handle, Position } from '@vue-flow/core';
+import { NodeResizer } from "@vue-flow/node-resizer";
 import {
   Select,
   SelectContent,
@@ -9,10 +9,13 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select';
-import {Textarea} from '@/components/ui/textarea';
+import { Textarea } from '@/components/ui/textarea';
 import ImageUploader from '@/components/ImageUploader.vue';
-import {useCharacterStore} from '@/stores/character.store';
-import type {CharacterForNode} from "~/interfaces";
+import { useCharacterStore } from '@/stores/character.store';
+import type { CharacterForNode } from "~/interfaces";
+import noPhoto from '~/assets/img/no_photo.webp';
+
+const { t } = useI18n();
 
 const props = defineProps<{
   data: {
@@ -66,35 +69,47 @@ const handleCharacterChange = (characterName: string) => {
 
 <template>
   <div class="node-container">
-    <NodeResizer :min-width="100" :min-height="30"/>
+    <NodeResizer :min-width="300" :min-height="100" />
     <div class="node-content bg-gray-700 rounded-lg shadow-lg p-4">
-      <Handle type="target" :position="Position.Left" :isConnectable="isConnectable"/>
-      <h3 class="text-lg font-bold mb-2">{{ localData.label }}</h3>
+      <Handle type="target" :position="Position.Left" :isConnectable="isConnectable" />
+      <div class="flex items-center mb-2">
+        <div class="character-image mr-3">
+          <img
+              :src="localData.image || noPhoto"
+              :alt="localData.character || t('branchDialogue.selectCharacter')"
+              class="w-12 h-12 rounded-full object-cover border-2 border-primary"
+          />
+        </div>
+        <div class="flex-grow">
+          <h3 class="text-lg font-bold">{{ localData.label }}</h3>
+          <Select v-model="localData.character" @update:modelValue="handleCharacterChange">
+            <SelectTrigger class="w-full">
+              <SelectValue :placeholder="localData.character || t('branchDialogue.selectCharacter')" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem v-for="character in characters" :key="character.id" :value="character.name">
+                {{ character.name }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
       <template v-if="localData.type === 'showMessage'">
-        <Select v-model="localData.character" @update:modelValue="handleCharacterChange">
-          <SelectTrigger class="w-full">
-            <SelectValue :placeholder="localData.character || 'Select a character'"/>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem v-for="character in characters" :key="character.id" :value="character.name">
-              {{ character.name }}
-            </SelectItem>
-          </SelectContent>
-        </Select>
         <Textarea
             v-model="localData.dialogue"
             @input="updateData"
             class="w-full mt-2 p-2 border rounded"
-            placeholder="Enter dialogue..."
+            :placeholder="t('branchDialogue.showMessage.placeholder')"
         />
-        <ImageUploader
-            :initialImage="localData.image"
-            :altText="localData.character"
-            :characterId="selectedCharacter?.id"
-            @update:image="(info) => { localData.image = info.path; updateData(); }"
-        />
+        <!-- <ImageUploader
+          :initialImage="localData.image"
+          :altText="localData.character"
+          :characterId="selectedCharacter?.id"
+          @update:image="(info) => { localData.image = info.path; updateData(); }"
+          class="mt-2"
+        /> -->
       </template>
-      <Handle type="source" :position="Position.Right" :isConnectable="isConnectable"/>
+      <Handle type="source" :position="Position.Right" :isConnectable="isConnectable" />
     </div>
   </div>
 </template>
@@ -103,13 +118,17 @@ const handleCharacterChange = (characterName: string) => {
 .node-container {
   width: 100%;
   height: 100%;
-  min-width: 100px;
-  min-height: 30px;
+  min-width: 300px;
+  min-height: 100px;
 }
-
 .node-content {
   width: 100%;
   height: 100%;
   overflow: auto;
+}
+.character-image img {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
 }
 </style>

@@ -4,6 +4,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Button } from '@/components/ui/button';
 import type { NodeRemoveChange, EdgeRemoveChange } from '@vue-flow/core';
 
+const { t } = useI18n();
+
 const props = defineProps<{
   open: boolean;
   elementToRemove: NodeRemoveChange | EdgeRemoveChange | null;
@@ -29,14 +31,14 @@ const handleCancel = () => {
   <Dialog :open="open" @update:open="(value: boolean) => emit('update:open', value)">
     <DialogContent>
       <DialogHeader>
-        <DialogTitle>Remove Element</DialogTitle>
+        <DialogTitle>{{ t('branchDialogue.removeElementTitle') }}</DialogTitle>
         <DialogDescription>
-          Are you sure you want to remove this {{ elementType }}?
+          {{ t('branchDialogue.removeElementDescription', { elementType: elementType }) }}
         </DialogDescription>
       </DialogHeader>
       <DialogFooter>
-        <Button @click="handleCancel">Cancel</Button>
-        <Button @click="handleConfirm" variant="destructive">Remove</Button>
+        <Button @click="handleCancel">{{ t('branchDialogue.cancel') }}</Button>
+        <Button @click="handleConfirm" variant="destructive">{{ t('branchDialogue.remove') }}</Button>
       </DialogFooter>
     </DialogContent>
   </Dialog>

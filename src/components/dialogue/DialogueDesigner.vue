@@ -29,16 +29,20 @@ const nodeTypes = markRaw({
 
 const { project, addNodes, addEdges, onNodesChange, onEdgesChange, applyNodeChanges, applyEdgeChanges } = useVueFlow();
 
+const { t } = useI18n();
+
 const addNode = (type: string) => {
   const newNode: Node = {
     id: (nodes.value.length + 1).toString(),
     type: 'dialogueNode',
     position: project({ x: Math.random() * 500, y: Math.random() * 500 }),
-    data: { type, label: type }
+    data: {
+      type,
+      label: t(`branchDialogue.${type}.label`) // Use the translated label here
+    }
   };
   addNodes([newNode]);
 };
-
 const onConnect = (params: any) => {
   addEdges([params]);
 };

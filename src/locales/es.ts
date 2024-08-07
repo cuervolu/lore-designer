@@ -39,16 +39,6 @@ export default {
     settings: "Ajustes",
     help: 'Ayuda'
   },
-  createProjectDialog: {
-    title: "Crear un nuevo proyecto",
-    description: "Comienza a crear tu primer proyecto llenando el formulario a continuación.",
-    name: {
-      label: "Nombre",
-      placeholder: "Nombre del Proyecto",
-      required_error: "El Nombre del Proyecto es requerido",
-    },
-    submit: "Guardar Cambios",
-  },
   settings: {
     title: "Ajustes",
     options: {
@@ -287,5 +277,102 @@ export default {
     later: "Más tarde",
     updating: "Actualizando...",
     updateNow: "Actualizar ahora"
+  },
+  projects: {
+    title: "Proyectos",
+    loading: "Cargando proyectos...",
+    noProjects: "No se encontraron proyectos. ¡Crea tu primer proyecto!",
+    noName: "Proyecto sin nombre",
+    noDescription: "Sin descripción disponible",
+    created: "Creado",
+    lastUpdated: "Última actualización",
+    never: "Nunca",
+    createProject: "Crear Nuevo Proyecto",
+    editProject: "Editar Proyecto",
+    deleteProject: "Eliminar Proyecto",
+    confirmDelete: {
+      title: "¿Estás seguro de que quieres eliminar este proyecto?",
+      description: "Esta acción no se puede deshacer.",
+      confirm: "Eliminar",
+      cancel: "Cancelar"
+    },
+    createSuccess: "Proyecto creado con éxito",
+    updateSuccess: "Proyecto actualizado con éxito",
+    deleteSuccess: "Proyecto eliminado con éxito",
+    createError: "Error al crear el proyecto",
+    updateError: "Error al actualizar el proyecto",
+    deleteError: "Error al eliminar el proyecto",
+    dashboard: {
+      download: "Descargar",
+      tasksOverview: "Resumen de Tareas",
+      tasksCompleted: "{completed} de {total} tareas completadas",
+      activeTasks: "tareas activas",
+      budget: "Presupuesto",
+      budgetRemaining: "${remaining} restantes",
+      teamSize: "Tamaño del Equipo",
+      activeMembers: "miembros activos",
+      nextDeadline: "Próxima Fecha Límite",
+      daysRemaining: "{days} días restantes",
+      progressOverview: "Resumen de Progreso",
+      progressChartPlaceholder: "El gráfico de progreso se mostrará aquí",
+      recentTasks: "Tareas Recientes",
+      recentTasksDescription: "Últimas actualizaciones de las tareas del proyecto",
+      recentTasksPlaceholder: "Las tareas recientes se listarán aquí"
+    },
+    tabs: {
+      overview: "Visión General",
+      kanban: "Tablero Kanban",
+      gdd: "Editor GDD",
+      timeline: "Línea de Tiempo",
+      expenses: "Gastos"
+    },
+    content: {
+      kanban: "El contenido del tablero Kanban se mostrará aquí.",
+      gdd: "El editor GDD se integrará aquí.",
+      timeline: "La línea de tiempo del proyecto se mostrará aquí.",
+      expenses: "La información de seguimiento de gastos se mostrará aquí."
+    }
+  },
+  createProjectDialog: {
+    title: "Crear un Nuevo Proyecto",
+    description: "Ingresa el nombre para tu nuevo proyecto.",
+    name: {
+      label: "Nombre del Proyecto",
+      placeholder: "Ingresa el nombre del proyecto",
+      required_error: "El nombre del proyecto es obligatorio",
+    },
+    submit: "Crear Proyecto",
+  },
+  submitting: "Creando...",
+  branchDialogue: {
+    showMessage: {
+      label: 'Mostrar Mensaje',
+      placeholder: 'Ingresa el diálogo...'
+    },
+    execute: 'Ejecutar',
+    wait: 'Esperar',
+    conditionBranch: 'Rama Condicional',
+    randomBranch: 'Rama Aleatoria',
+    chanceBranch: 'Rama de Probabilidad',
+    repeat: 'Repetir',
+    setLocalVariable: 'Establecer Variable Local',
+    comment: 'Comentario',
+    selectCharacter: 'Selecciona un personaje',
+    removeElementTitle: 'Eliminar Elemento',
+    removeElementDescription: '¿Estás seguro de que quieres eliminar este {elementType}?',
+    cancel: 'Cancelar',
+    remove: 'Eliminar',
+    load: 'Cargar',
+    save: 'Guardar',
+    export: 'Exportar',
+    variables: 'Variables',
+    localVariables: 'Variables Locales',
+    addVariable: 'Añadir Variable',
+    variableName: 'Nombre de la variable',
+    variableType: {
+      string: 'TEXTO',
+      number: 'NÚMERO',
+      boolean: 'BOOLEANO'
+    }
   },
 };

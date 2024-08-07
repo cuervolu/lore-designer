@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import {Button} from '@/components/ui/button';
-import {FileUp, Save, Download} from 'lucide-vue-next';
+import { Button } from '@/components/ui/button';
+import { FileUp, Save, Download } from 'lucide-vue-next';
 import NodeToolbar from './NodeToolbar.vue';
+
+const { t } = useI18n();
 
 const props = defineProps<{
   addNode: (type: string) => void
@@ -10,15 +12,15 @@ const props = defineProps<{
 const emit = defineEmits(['open-variables']);
 
 const loadFile = () => {
-  // La lógica será implementada por el usuario
+  // Logic to be implemented by the user
 };
 
 const saveFile = () => {
-  // La lógica será implementada por el usuario
+  // Logic to be implemented by the user
 };
 
 const exportFile = () => {
-  // La lógica será implementada por el usuario
+  // Logic to be implemented by the user
 };
 </script>
 
@@ -27,15 +29,15 @@ const exportFile = () => {
     <div class="flex items-center space-x-2">
       <Button @click="loadFile" variant="ghost" size="sm">
         <FileUp class="h-4 w-4 mr-2"/>
-        Load
+        {{ t('branchDialogue.load') }}
       </Button>
       <Button @click="saveFile" variant="ghost" size="sm">
         <Save class="h-4 w-4 mr-2"/>
-        Save
+        {{ t('branchDialogue.save') }}
       </Button>
       <Button @click="exportFile" variant="ghost" size="sm">
         <Download class="h-4 w-4 mr-2"/>
-        Export
+        {{ t('branchDialogue.export') }}
       </Button>
     </div>
 
@@ -45,11 +47,8 @@ const exportFile = () => {
 
     <div class="flex-shrink-0">
       <Button @click="$emit('open-variables')" variant="ghost" size="sm">
-        Variables
+        {{ t('branchDialogue.variables') }}
       </Button>
     </div>
   </div>
 </template>
-
-<style scoped>
-</style>

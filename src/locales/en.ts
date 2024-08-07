@@ -39,17 +39,6 @@ export default {
     settings: "Settings",
     help: 'Help'
   },
-  createProjectDialog: {
-    title: "Create a new project",
-    description: "Start creating your first project by filling out the form below.",
-    name: {
-      label: "Name",
-      placeholder: "Project Name",
-      required_error: "Project Name is required",
-
-    },
-    submit: "Save Changes",
-  },
   settings: {
     title: "Settings",
     options: {
@@ -288,5 +277,102 @@ export default {
     later: "Later",
     updating: "Updating...",
     updateNow: "Update Now"
+  },
+  projects: {
+    title: "Projects",
+    loading: "Loading projects...",
+    noProjects: "No projects found. Create your first project!",
+    noName: "Unnamed Project",
+    noDescription: "No description available",
+    created: "Created",
+    lastUpdated: "Last updated",
+    never: "Never",
+    createProject: "Create New Project",
+    editProject: "Edit Project",
+    deleteProject: "Delete Project",
+    confirmDelete: {
+      title: "Are you sure you want to delete this project?",
+      description: "This action cannot be undone.",
+      confirm: "Delete",
+      cancel: "Cancel"
+    },
+    createSuccess: "Project created successfully",
+    updateSuccess: "Project updated successfully",
+    deleteSuccess: "Project deleted successfully",
+    createError: "Error creating project",
+    updateError: "Error updating project",
+    deleteError: "Error deleting project",
+    dashboard: {
+      download: "Download",
+      tasksOverview: "Tasks Overview",
+      tasksCompleted: "{completed} of {total} tasks completed",
+      activeTasks: "active tasks",
+      budget: "Budget",
+      budgetRemaining: "${remaining} remaining",
+      teamSize: "Team Size",
+      activeMembers: "active members",
+      nextDeadline: "Next Deadline",
+      daysRemaining: "{days} days remaining",
+      progressOverview: "Progress Overview",
+      progressChartPlaceholder: "Progress chart will be displayed here",
+      recentTasks: "Recent Tasks",
+      recentTasksDescription: "Latest updates on project tasks",
+      recentTasksPlaceholder: "Recent tasks will be listed here"
+    },
+    tabs: {
+      overview: "Overview",
+      kanban: "Kanban Board",
+      gdd: "GDD Editor",
+      timeline: "Timeline",
+      expenses: "Expenses"
+    },
+    content: {
+      kanban: "Kanban board content will be displayed here.",
+      gdd: "GDD editor will be integrated here.",
+      timeline: "Project timeline will be shown here.",
+      expenses: "Expense tracking information will be displayed here."
+    }
+  },
+  createProjectDialog: {
+    title: "Create a New Project",
+    description: "Enter the name for your new project.",
+    name: {
+      label: "Project Name",
+      placeholder: "Enter project name",
+      required_error: "Project name is required",
+    },
+    submit: "Create Project",
+  },
+  submitting: "Creating...",
+  branchDialogue: {
+    showMessage: {
+      label: 'Show Message',
+      placeholder: 'Enter dialogue...'
+    },
+    execute: 'Execute',
+    wait: 'Wait',
+    conditionBranch: 'Condition Branch',
+    randomBranch: 'Random Branch',
+    chanceBranch: 'Chance Branch',
+    repeat: 'Repeat',
+    setLocalVariable: 'Set Local Variable',
+    comment: 'Comment',
+    selectCharacter: 'Select a character',
+    removeElementTitle: 'Remove Element',
+    removeElementDescription: 'Are you sure you want to remove this {elementType}?',
+    cancel: 'Cancel',
+    remove: 'Remove',
+    load: 'Load',
+    save: 'Save',
+    export: 'Export',
+    variables: 'Variables',
+    localVariables: 'Local Variables',
+    addVariable: 'Add Variable',
+    variableName: 'Variable name',
+    variableType: {
+      string: 'STRING',
+      number: 'NUMBER',
+      boolean: 'BOOLEAN'
+    }
   },
 };
