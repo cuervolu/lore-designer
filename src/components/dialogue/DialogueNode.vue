@@ -10,7 +10,6 @@ import {
   SelectValue
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import ImageUploader from '@/components/ImageUploader.vue';
 import { useCharacterStore } from '@/stores/character.store';
 import type { CharacterForNode } from "~/interfaces";
 import noPhoto from '~/assets/img/no_photo.webp';
@@ -71,7 +70,12 @@ const handleCharacterChange = (characterName: string) => {
   <div class="node-container">
     <NodeResizer :min-width="300" :min-height="100" />
     <div class="node-content bg-gray-700 rounded-lg shadow-lg p-4">
-      <Handle type="target" :position="Position.Left" :isConnectable="isConnectable" />
+      <Handle
+          type="target"
+          :position="Position.Left"
+          :isConnectable="isConnectable"
+          class="w-4 h-4 -left-2 bg-blue-500 border-2 border-white"
+      />
       <div class="flex items-center mb-2">
         <div class="character-image mr-3">
           <img
@@ -101,15 +105,13 @@ const handleCharacterChange = (characterName: string) => {
             class="w-full mt-2 p-2 border rounded"
             :placeholder="t('branchDialogue.showMessage.placeholder')"
         />
-        <!-- <ImageUploader
-          :initialImage="localData.image"
-          :altText="localData.character"
-          :characterId="selectedCharacter?.id"
-          @update:image="(info) => { localData.image = info.path; updateData(); }"
-          class="mt-2"
-        /> -->
       </template>
-      <Handle type="source" :position="Position.Right" :isConnectable="isConnectable" />
+      <Handle
+          type="source"
+          :position="Position.Right"
+          :isConnectable="isConnectable"
+          class="w-4 h-4 -right-2 bg-green-500 border-2 border-white"
+      />
     </div>
   </div>
 </template>
@@ -130,5 +132,22 @@ const handleCharacterChange = (characterName: string) => {
   width: 48px;
   height: 48px;
   object-fit: cover;
+}
+.vue-flow__handle {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: #3b82f6;
+  border: 2px solid #ffffff;
+  transition: transform 0.3s ease;
+}
+.vue-flow__handle:hover {
+  transform: scale(1.2);
+}
+.vue-flow__handle-left {
+  left: -8px;
+}
+.vue-flow__handle-right {
+  right: -8px;
 }
 </style>
