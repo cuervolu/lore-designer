@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useForm } from 'vee-validate'
-import { toTypedSchema } from '@vee-validate/zod'
+import {ref} from 'vue'
+import {useForm} from 'vee-validate'
+import {toTypedSchema} from '@vee-validate/zod'
 import * as z from 'zod'
-import { Button } from '@/components/ui/button'
+import {Button} from '~/components/ui/button'
 import {
   Dialog,
   DialogFooter,
@@ -12,25 +12,25 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog'
-import { useToast } from '@/components/ui/toast'
+} from '~/components/ui/dialog'
+import {useToast} from '~/components/ui/toast'
 import {
   FormControl,
   FormField,
   FormItem,
   FormLabel,
   FormMessage
-} from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
-import { useProjectStore } from '~/stores/project.store'
+} from '~/components/ui/form'
+import {Input} from '~/components/ui/input'
+import {useProjectStore} from '~/stores/project.store'
 
-const { t } = useI18n()
+const {t} = useI18n()
 const localeRoute = useLocaleRoute()
 const projectStore = useProjectStore()
-const { toast } = useToast()
+const {toast} = useToast()
 
 const formSchema = toTypedSchema(z.object({
-  name: z.string({ required_error: t('createProjectDialog.name.required_error') }),
+  name: z.string({required_error: t('createProjectDialog.name.required_error')}),
 }))
 
 const form = useForm({
@@ -46,11 +46,11 @@ const onSubmit = form.handleSubmit(async (values) => {
     if (projectId) {
       toast({
         title: t('projects.createSuccess'),
-        description: t('projects.createSuccessDescription', { name: values.name }),
+        description: t('projects.createSuccessDescription', {name: values.name}),
       })
       const route = localeRoute({
         name: 'projects',
-        params: { projectId },
+        params: {projectId},
       })
       if (route) {
         return navigateTo(route.fullPath)
