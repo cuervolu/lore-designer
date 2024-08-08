@@ -48,6 +48,7 @@ export interface Project {
   budget?: number;
   createdAt: string;
   updatedAt: string;
+  imagePath?: string;
 }
 
 export interface ProjectRequest {
