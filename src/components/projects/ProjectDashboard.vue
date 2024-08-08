@@ -12,6 +12,7 @@ const props = defineProps<{
 }>()
 
 const {t} = useI18n()
+const localePath = useLocalePath()
 const projectStore = useProjectStore()
 
 const project = ref<Project | null>(null)
@@ -47,6 +48,11 @@ const nextDeadline = ref('')
       </h2>
       <div class="flex items-center space-x-2">
         <DateRangePicker/>
+        <Button as-child>
+          <NuxtLink :to="localePath(`/projects/${project.id}/edit`)">
+            {{ t('projects.editProject') }}
+          </NuxtLink>
+        </Button>
         <Button>{{ t('projects.dashboard.download') }}</Button>
       </div>
     </div>
