@@ -39,3 +39,109 @@ export interface CharacterForNode {
   name: string;
   imagePath: string;
 }
+
+export interface Project {
+  id: number;
+  name: string;
+  description?: string;
+  imageID?: string;
+  budget?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProjectRequest {
+  name: string;
+  description?: string;
+  imageID?: string;
+  budget?: number;
+}
+
+export interface ProjectGoal {
+  id: number;
+  projectID: number;
+  description: string;
+  isCompleted: boolean;
+  dueDate?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProjectResource {
+  id: number;
+  projectID: number;
+  name: string;
+  type: string;
+  description?: string;
+  quantity?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProjectAsset {
+  id: number;
+  projectID: number;
+  name: string;
+  type: string;
+  status: 'Pending' | 'InProgress' | 'Completed';
+  filePath?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProjectNote {
+  id: number;
+  projectID: number;
+  title: string;
+  content?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProjectMetric {
+  id: number;
+  projectID: number;
+  name: string;
+  description?: string;
+  target?: number;
+  currentValue?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProjectGoalRequest {
+  projectID: number;
+  description: string;
+  isCompleted?: boolean;
+  dueDate?: string;
+}
+
+export interface ProjectResourceRequest {
+  projectID: number;
+  name: string;
+  type: string;
+  description?: string;
+  quantity?: number;
+}
+
+export interface ProjectAssetRequest {
+  projectID: number;
+  name: string;
+  type: string;
+  status?: 'Pending' | 'InProgress' | 'Completed';
+  filePath?: string;
+}
+
+export interface ProjectNoteRequest {
+  projectID: number;
+  title: string;
+  content?: string;
+}
+
+export interface ProjectMetricRequest {
+  projectID: number;
+  name: string;
+  description?: string;
+  target?: number;
+  currentValue?: number;
+}
