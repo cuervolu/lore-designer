@@ -39,7 +39,6 @@ const fetchProjects = async (force = false) => {
 }
 
 onMounted(() => fetchProjects())
-
 watch(currentPage, () => fetchProjects(true))
 
 const changePage = (page: number) => {
@@ -56,19 +55,16 @@ const visiblePages = computed(() => {
   ) {
     range.push(i)
   }
-
   if (currentPage.value - delta > 2) {
     range.unshift("...")
   }
   if (currentPage.value + delta < totalPages.value - 1) {
     range.push("...")
   }
-
   range.unshift(1)
   if (totalPages.value !== 1) {
     range.push(totalPages.value)
   }
-
   return range
 })
 
@@ -82,32 +78,36 @@ const localePath = useLocalePath()
 
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-3xl font-bold">{{ t('projects.title') }}</h1>
+    </div>
+
+    <div class="absolute top-6 right-6">
       <CreateProjectDialog>
         <Button>{{ t('projects.createProject') }}</Button>
       </CreateProjectDialog>
     </div>
 
-    <div v-if="loading" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+    <div v-if="loading" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
       <Skeleton v-for="i in pageSize" :key="i" class="h-64 w-full" />
     </div>
+
     <div v-else-if="projects.length === 0" class="flex flex-col items-center justify-center h-[50vh]">
       <p class="text-xl mb-4">{{ t('projects.noProjects') }}</p>
       <CreateProjectDialog>
         <Button>{{ t('projects.createProject') }}</Button>
       </CreateProjectDialog>
     </div>
+
     <div v-else>
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         <ProjectCard v-for="project in projects" :key="project.id" v-bind="project" />
       </div>
     </div>
 
-    <Pagination v-if="totalPages > 1" class="mt-6">
+    <Pagination v-if="totalPages > 1" class="mt-6 flex justify-center">
       <PaginationPrev
           :disabled="currentPage === 1"
           @click="changePage(currentPage - 1)"
       />
-
       <PaginationList>
         <template v-for="(page, index) in visiblePages" :key="index">
           <PaginationListItem
@@ -121,7 +121,6 @@ const localePath = useLocalePath()
           <PaginationEllipsis v-else />
         </template>
       </PaginationList>
-
       <PaginationNext
           :disabled="currentPage === totalPages"
           @click="changePage(currentPage + 1)"
@@ -129,3 +128,9 @@ const localePath = useLocalePath()
     </Pagination>
   </div>
 </template>
+
+<style scoped>
+.grid {
+  @apply gap-6;
+}
+</style>

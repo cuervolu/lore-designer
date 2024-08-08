@@ -46,7 +46,7 @@ const showLastUpdated = computed(() => {
         @click="navigateToProjectDetails">
     <div class="relative h-32 overflow-hidden rounded-t-lg">
       <img
-          :src="props.imageID || noProjectImage"
+          :src="props.imagePath || noProjectImage"
           :alt="props.name || 'Project'"
           class="absolute inset-0 h-full w-full object-cover"
       />

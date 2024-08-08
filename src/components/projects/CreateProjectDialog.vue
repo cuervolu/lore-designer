@@ -79,7 +79,7 @@ const onSubmit = form.handleSubmit(async (values) => {
   <Dialog>
     <DialogTrigger as-child>
       <Button class="flex mx-auto mt-16">
-        {{ t('getStarted') }}
+        {{ t('projects.createProject') }}
       </Button>
     </DialogTrigger>
     <DialogContent class="sm:max-w-[425px]">
