@@ -317,7 +317,8 @@ export default {
       progressChartPlaceholder: "El gráfico de progreso se mostrará aquí",
       recentTasks: "Tareas Recientes",
       recentTasksDescription: "Últimas actualizaciones de las tareas del proyecto",
-      recentTasksPlaceholder: "Las tareas recientes se listarán aquí"
+      recentTasksPlaceholder: "Las tareas recientes se listarán aquí",
+      noDeadline: "Sin fecha límite",
     },
     tabs: {
       overview: "Visión General",
