@@ -3,6 +3,7 @@ import { ref, watchEffect } from 'vue'
 import { invoke, convertFileSrc } from "@tauri-apps/api/core"
 import { useToast } from '@/components/ui/toast'
 import { Button } from '@/components/ui/button'
+import {useImageStore} from '@/stores/image.store'
 import type { ImageInfo } from '~/interfaces'
 
 const props = defineProps<{
@@ -12,10 +13,11 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'update:image', value: ImageInfo & { characterId?: number }): void
+  (e: 'update:image', value: ImageInfo): void
 }>()
 
 const { toast } = useToast()
+const imageStore = useImageStore()
 const { t } = useI18n()
 
 const imagePreview = ref<string | null>(null)
@@ -31,18 +33,18 @@ const uploadImage = async (event: Event) => {
   try {
     const result = await invoke('save_image', { characterId: props.characterId }) as { id: string, path: string }
     const convertedPath = convertFileSrc(result.path)
+
+    await imageStore.saveImage({id: result.id, path: convertedPath})
     imagePreview.value = convertedPath
     emit('update:image', {
       id: result.id,
-      path: convertedPath,
-      characterId: props.characterId
+      path: convertedPath
     })
     toast({
       title: t('imageUploader.successTitle'),
       description: t('imageUploader.successDescription'),
     })
   } catch (error) {
-    console.error('Error uploading image:', error)
     toast({
       title: t('imageUploader.errorTitle'),
       description: t('imageUploader.errorDescription'),
@@ -50,8 +52,16 @@ const uploadImage = async (event: Event) => {
     })
   }
 }
-</script>
 
+const revertImage = async (originalImageId: string, originalImagePath: string) => {
+  if (imagePreview.value !== originalImagePath) {
+    await imageStore.revertImage(originalImageId, originalImagePath)
+    imagePreview.value = originalImagePath
+  }
+}
+
+defineExpose({revertImage})
+</script>
 <template>
   <div class="space-y-4">
     <h3 class="text-lg font-medium">{{ t('imageUploader.title') }}</h3>

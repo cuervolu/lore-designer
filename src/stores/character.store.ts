@@ -9,7 +9,6 @@ import {error} from "@tauri-apps/plugin-log";
 export const useCharacterStore = defineStore('character', () => {
   const dbStore = useDbStore();
   const {handleError} = useErrorHandler();
-
   const characters = ref<Character[]>([]);
   const totalCharacters = ref(0);
   const lastFetchTimestamp = ref(0);
@@ -19,66 +18,17 @@ export const useCharacterStore = defineStore('character', () => {
   const isCacheValid = computed(() => {
     return Date.now() - lastFetchTimestamp.value < CACHE_DURATION;
   });
-
-  const saveImage = async (imageInfo: ImageInfo): Promise<string> => {
-    try {
-      const updateResult = await dbStore.executeQuery(
-          'UPDATE Images SET Path = $1 WHERE UUID = $2',
-          [imageInfo.path, imageInfo.id]
-      );
-
-      if (updateResult.rowsAffected === 0) {
-        await dbStore.executeQuery(
-            'INSERT INTO Images (UUID, Path) VALUES ($1, $2)',
-            [imageInfo.id, imageInfo.path]
-        );
-      }
-
-      return imageInfo.id;
-    } catch (e) {
-      await error(`Error saving image: ${e}`);
-      throw new DatabaseError({
-        name: 'DB_QUERY_ERROR',
-        message: 'Failed to save image',
-        cause: e
-      });
-    }
-  };
-
-  const updateCharacterImage = async (characterId: number, imageInfo: ImageInfo): Promise<void> => {
-    try {
-      await dbStore.executeQuery(
-          'INSERT INTO Images (UUID, Path, CharacterID) VALUES ($1, $2, $3)',
-          [imageInfo.id, imageInfo.path, characterId]
-      );
-
-      await dbStore.executeQuery(
-          'UPDATE Characters SET ImageID = $1 WHERE ID = $2',
-          [imageInfo.id, characterId]
-      );
-
-      await emit('character-image-updated', {
-        characterId,
-        imageId: imageInfo.id,
-        path: imageInfo.path
-      });
-    } catch (e) {
-      await error(`Error updating character image: ${e}`);
-      handleError(new DatabaseError({
-        name: 'DB_QUERY_ERROR',
-        message: 'Failed to update character image',
-        cause: e
-      }));
-      throw e;
-    }
-  };
-
-
-  const getCharactersNames = async (page: number = 1, pageSize: number = 10): Promise<{ characters: CharacterForNode[], total: number }> => {
+  
+  const getCharactersNames = async (page: number = 1, pageSize: number = 10): Promise<{
+    characters: CharacterForNode[],
+    total: number
+  }> => {
     try {
       const offset = (page - 1) * pageSize;
 
-      const countResult = await dbStore.select<[{ count: number }]>('SELECT COUNT(*) as count FROM Characters');
+      const countResult = await dbStore.select<[{
+        count: number
+      }]>('SELECT COUNT(*) as count FROM Characters');
       const totalCount = countResult[0].count;
 
       const results = await dbStore.select<any[]>(
@@ -96,7 +46,7 @@ export const useCharacterStore = defineStore('character', () => {
         imagePath: row.ImagePath
       }));
 
-      return { characters, total: totalCount };
+      return {characters, total: totalCount};
     } catch (e) {
       await error(`Error fetching characters: ${e}`);
       handleError(new DatabaseError({
@@ -104,7 +54,7 @@ export const useCharacterStore = defineStore('character', () => {
         message: 'Failed to fetch characters',
         cause: e
       }));
-      return { characters: [], total: 0 };
+      return {characters: [], total: 0};
     }
   };
 
@@ -235,14 +185,9 @@ export const useCharacterStore = defineStore('character', () => {
           [id, ...values]
       );
 
-      // Invalidate cache
       lastFetchTimestamp.value = 0;
     } catch (e) {
-      handleError(new DatabaseError({
-        name: 'DB_QUERY_ERROR',
-        message: 'Failed to update character',
-        cause: e
-      }));
+      await error(`Error updating character: ${e}`);
       throw e;
     }
   };
@@ -291,8 +236,6 @@ export const useCharacterStore = defineStore('character', () => {
     fetchCharacters,
     getCharacterById,
     getCharactersName,
-    saveImage,
-    updateCharacterImage,
     updateCharacter,
     deleteCharacter
   };

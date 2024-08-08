@@ -17,7 +17,7 @@ import {
   SelectGroup,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from '@/components/ui/select'
 import {
   Dialog,
@@ -25,18 +25,20 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from '@/components/ui/dialog'
 import { useToast } from '@/components/ui/toast'
 import { useCharacterStore } from '@/stores/character.store'
-import type { CharacterRequest, Character } from '@/interfaces'
+import {useImageStore} from '@/stores/image.store'
+import type {CharacterRequest, Character, ImageInfo} from '@/interfaces'
 import ImageUploader from "~/components/ImageUploader.vue"
-import {info} from "@tauri-apps/plugin-log";
+import {info} from "@tauri-apps/plugin-log"
 
 const route = useRoute()
 const router = useRouter()
 const { toast } = useToast()
 const characterStore = useCharacterStore()
+const imageStore = useImageStore()
 
 const { t } = useI18n()
 
@@ -57,6 +59,7 @@ const imagePreview = ref<string | null>(null)
 const originalCharacter = ref<Character | null>(null)
 const showConfirmDialog = ref(false)
 const characterId = ref<number | null>(null)
+const imageUploaderRef = ref<InstanceType<typeof ImageUploader> | null>(null)
 
 const hasChanges = computed(() => {
   if (!originalCharacter.value) return false
@@ -64,7 +67,7 @@ const hasChanges = computed(() => {
   return Object.keys(currentValues).some(key => {
     return currentValues[key as keyof typeof currentValues] !==
         (originalCharacter.value as any)[key]
-  })
+  }) || imagePreview.value !== originalCharacter.value.imagePath
 })
 
 onMounted(async () => {
@@ -81,7 +84,6 @@ onMounted(async () => {
         additionalNotes: originalCharacter.value.additionalNotes || '',
       })
       if (originalCharacter.value.imagePath) {
-        await info(`originalCharacter.value.imagePath: ${originalCharacter.value.imagePath}`)
         imagePreview.value = originalCharacter.value.imagePath
       }
     }
@@ -92,7 +94,7 @@ const onSubmit = form.handleSubmit(async (values) => {
   isSubmitting.value = true
   try {
     if (values.imageID && imagePreview.value) {
-      await characterStore.saveImage({id: values.imageID, path: imagePreview.value})
+      await imageStore.saveImage({id: values.imageID, path: imagePreview.value})
     }
 
     const characterId = Number(route.params.id)
@@ -115,24 +117,39 @@ const onSubmit = form.handleSubmit(async (values) => {
   }
 })
 
-const handleImageUpdate = async (image: { id: string, path: string }) => {
-  if (characterId.value) {
-    await characterStore.updateCharacterImage(characterId.value, {id: image.id, path: image.path})
-    form.setFieldValue('imageID', image.id)
-    imagePreview.value = image.path
+const handleImageUpdate = async (image: ImageInfo) => {
+  form.setFieldValue('imageID', image.id)
+  imagePreview.value = image.path
+}
+
+
+const revertChanges = async () => {
+  if (originalCharacter.value) {
+    form.setValues({
+      name: originalCharacter.value.name,
+      description: originalCharacter.value.description || '',
+      role: originalCharacter.value.role,
+      imageID: originalCharacter.value.imageID || undefined,
+      additionalNotes: originalCharacter.value.additionalNotes || '',
+    })
+    if (imageUploaderRef.value && originalCharacter.value.imageID && originalCharacter.value.imagePath) {
+      await imageUploaderRef.value.revertImage(originalCharacter.value.imageID, originalCharacter.value.imagePath)
+    }
   }
 }
 
-const handleCancel = () => {
+const handleCancel = async () => {
   if (hasChanges.value) {
     showConfirmDialog.value = true
   } else {
+    await revertChanges()
     router.back()
   }
 }
 
-const confirmCancel = () => {
+const confirmCancel = async () => {
   showConfirmDialog.value = false
+  await revertChanges()
   router.back()
 }
 </script>
@@ -208,6 +225,7 @@ const confirmCancel = () => {
         </FormField>
 
         <ImageUploader
+            ref="imageUploaderRef"
             :initial-image="imagePreview"
             :alt-text="t('characters.image.altText')"
             :character-id="characterId ?? undefined"
