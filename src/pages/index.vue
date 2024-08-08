@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { features } from "~/data/features";
+import CreateProjectDialog from "~/components/projects/CreateProjectDialog.vue";
 
 const { t } = useI18n()
 </script>
