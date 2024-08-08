@@ -108,6 +108,12 @@ export default {
       cancel: 'Cancelar',
       confirm: 'Eliminar'
     },
+    confirmCancel: {
+      title: 'Are you sure you want to cancel?',
+      description: 'Any unsaved changes will be lost.',
+      stay: 'Stay',
+      leave: 'Leave'
+    },
     deleteSuccess: 'Personaje eliminado',
     deleteSuccessDescription: '{ name } ha sido eliminado con éxito y ya no existe en el proyecto.',
     deleteError: 'Error al eliminar personaje',

@@ -108,6 +108,12 @@ export default {
       cancel: 'Cancel',
       confirm: 'Delete'
     },
+    confirmCancel: {
+      title: 'Are you sure you want to cancel?',
+      description: 'Any unsaved changes will be lost.',
+      stay: 'Stay',
+      leave: 'Leave'
+    },
     deleteSuccess: 'Character deleted successfully.',
     deleteSuccessDescription: "{ name } has been successfully removed from your character list and no longer exists in the project.",
     deleteError: 'Error deleting character.',
