@@ -6,7 +6,14 @@
     "main"
   ],
   "permissions": [
-    "core:default",
+    "core:app:default",
+    "core:path:default",
+    "core:menu:default",
+    "core:tray:default",
+    "core:image:default",
+    "core:event:default",
+    "core:window:default",
+    "core:resources:default",
     "core:window:allow-close",
     "core:window:allow-center",
     "core:window:allow-minimize",
@@ -15,7 +22,6 @@
     "core:window:allow-set-focus",
     "core:window:allow-start-dragging",
     "core:window:allow-toggle-maximize",
-    "core:window:allow-create",
     "log:default",
     "fs:default",
     {
