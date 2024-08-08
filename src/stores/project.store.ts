@@ -123,14 +123,30 @@ export const useProjectStore = defineStore('project', () => {
 
   const updateProject = async (id: number, project: Partial<ProjectRequest>): Promise<boolean> => {
     try {
-      const setClause = Object.keys(project).map((key, index) => `${key} = $${index + 2}`).join(', ')
-      const values = Object.values(project)
-      await dbStore.executeQuery(
-          `UPDATE Projects
-           SET ${setClause}
-           WHERE ID = $1`,
-          [id, ...values]
-      )
+      const {imageID, ...otherFields} = project
+
+      // Update other fields
+      if (Object.keys(otherFields).length > 0) {
+        const setClause = Object.keys(otherFields).map((key, index) => `${key} = $${index + 2}`).join(', ')
+        const values = Object.values(otherFields)
+        await dbStore.executeQuery(
+            `UPDATE Projects
+             SET ${setClause}
+             WHERE ID = $1`,
+            [id, ...values]
+        )
+      }
+
+      // Update image ID
+      if (imageID !== undefined) {
+        await dbStore.executeQuery(
+            `UPDATE Projects
+             SET imageID = $2
+             WHERE ID = $1`,
+            [id, imageID]
+        )
+      }
+
       lastFetchTimestamp.value = 0 // Invalidate cache
       return true
     } catch (e) {
