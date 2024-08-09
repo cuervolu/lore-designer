@@ -28,6 +28,7 @@ import ImageUploader from "~/components/ImageUploader.vue";
 const router = useRouter()
 const {toast} = useToast()
 const characterStore = useCharacterStore()
+const imageStore = useImageStore()
 
 const {t} = useI18n()
 
@@ -50,7 +51,7 @@ const onSubmit = form.handleSubmit(async (values) => {
   isSubmitting.value = true
   try {
     if (values.imageID && imagePreview.value) {
-      await characterStore.saveImage({id: values.imageID, path: imagePreview.value})
+      await imageStore.saveImage({id: values.imageID, path: imagePreview.value})
     }
 
     const characterId = await characterStore.createCharacter(values as CharacterRequest)

@@ -311,10 +311,12 @@ export default {
       cancel: "Cancelar"
     },
     createSuccess: "Proyecto creado con éxito",
+    createSuccessDescription: "El proyecto se ha creado con éxito y se ha añadido a la lista de proyectos.",
     updateSuccess: "Proyecto actualizado con éxito",
     updateSuccessDescription: "El proyecto se ha actualizado con éxito y se ha guardado.",
     deleteSuccess: "Proyecto eliminado con éxito",
     createError: "Error al crear el proyecto",
+    createErrorDescription: "No se pudo crear el proyecto. Por favor, inténtalo de nuevo.",
     updateError: "Error al actualizar el proyecto",
     updateErrorDescription: "No se pudo actualizar el proyecto. Por favor, inténtalo de nuevo.",
     deleteError: "Error al eliminar el proyecto",

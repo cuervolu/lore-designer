@@ -311,10 +311,12 @@ export default {
       cancel: "Cancel"
     },
     createSuccess: "Project created successfully",
+    createSuccessDescription: "The project has been successfully created and added to the project list.",
     updateSuccess: "Project updated successfully",
     updateSuccessDescription: "The project has been successfully updated and saved.",
     deleteSuccess: "Project deleted successfully",
     createError: "Error creating project",
+    createErrorDescription: "Failed to create project. Please try again.",
     updateError: "Error updating project",
     updateErrorDescription: "Failed to update project. Please try again.",
     deleteError: "Error deleting project",

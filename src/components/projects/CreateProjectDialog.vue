@@ -23,6 +23,7 @@ import {
 } from '~/components/ui/form'
 import {Input} from '~/components/ui/input'
 import {useProjectStore} from '~/stores/project.store'
+import {info} from "@tauri-apps/plugin-log";
 
 const {t} = useI18n()
 const localeRoute = useLocaleRoute()
@@ -38,7 +39,7 @@ const form = useForm({
 })
 
 const isSubmitting = ref(false)
-
+const {locale} = useI18n()
 const onSubmit = form.handleSubmit(async (values) => {
   isSubmitting.value = true
   try {
@@ -48,11 +49,9 @@ const onSubmit = form.handleSubmit(async (values) => {
         title: t('projects.createSuccess'),
         description: t('projects.createSuccessDescription', {name: values.name}),
       })
-      const route = localeRoute({
-        name: 'projects',
-        params: {projectId},
-      })
+      const route = localeRoute(`projects/${projectId}`, locale.value)
       if (route) {
+        await info("Navigating to route: " + route.fullPath)
         return navigateTo(route.fullPath)
       }
     } else {
