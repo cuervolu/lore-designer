@@ -8,6 +8,7 @@ import {error} from "@tauri-apps/plugin-log";
 
 export const useCharacterStore = defineStore('character', () => {
   const dbStore = useDbStore();
+  const projectStore = useProjectStore()
   const {handleError} = useErrorHandler();
   const characters = ref<Character[]>([]);
   const totalCharacters = ref(0);
@@ -18,7 +19,7 @@ export const useCharacterStore = defineStore('character', () => {
   const isCacheValid = computed(() => {
     return Date.now() - lastFetchTimestamp.value < CACHE_DURATION;
   });
-  
+
   const getCharactersNames = async (page: number = 1, pageSize: number = 10): Promise<{
     characters: CharacterForNode[],
     total: number
@@ -59,35 +60,63 @@ export const useCharacterStore = defineStore('character', () => {
   };
 
 
-  const createCharacter = async (character: CharacterRequest): Promise<number | null> => {
+  const createCharacter = async (character: CharacterRequest, projectId: number): Promise<number | null> => {
     try {
       const result = await dbStore.executeQuery(
           'INSERT INTO Characters (Name, Description, Role, ImageID, AdditionalNotes) VALUES ($1, $2, $3, $4, $5)',
           [character.name, character.description, character.role, character.imageID, character.additionalNotes]
-      );
-
-      const id = result.lastInsertId as number;
+      )
+      const id = result.lastInsertId as number
 
       if (character.imageID) {
         await dbStore.executeQuery(
             'UPDATE Images SET CharacterID = $1 WHERE UUID = $2',
             [id, character.imageID]
-        );
+        )
       }
 
-      // Invalidate cache
-      lastFetchTimestamp.value = 0;
+      // Associate character with project
+      await projectStore.associateCharacterWithProject(id, projectId)
 
-      return id;
+      // Invalidate cache
+      lastFetchTimestamp.value = 0
+
+      return id
     } catch (e) {
       handleError(new DatabaseError({
         name: 'DB_QUERY_ERROR',
         message: 'Failed to create character',
         cause: e
-      }));
-      return null;
+      }))
+      return null
     }
-  };
+  }
+
+  const associateOrphanCharacters = async (): Promise<void> => {
+    try {
+      const orphanCharacters = await dbStore.select<any[]>(
+          `SELECT ID
+           FROM Characters
+           WHERE ID NOT IN (SELECT CharacterID FROM ProjectCharacters)`
+      )
+
+      if (orphanCharacters.length > 0) {
+        const projects = await projectStore.getProjectsForSelection()
+        if (projects.length > 0) {
+          const defaultProjectId = projects[0].id
+          for (const character of orphanCharacters) {
+            await projectStore.associateCharacterWithProject(character.ID, defaultProjectId)
+          }
+        }
+      }
+    } catch (e) {
+      handleError(new DatabaseError({
+        name: 'DB_QUERY_ERROR',
+        message: 'Failed to associate orphan characters',
+        cause: e
+      }))
+    }
+  }
 
   const fetchCharacters = async (page: number = 1, pageSize: number = 20, forceRefresh: boolean = false) => {
     if (!forceRefresh && isCacheValid.value && characters.value.length > 0) {
@@ -237,6 +266,7 @@ export const useCharacterStore = defineStore('character', () => {
     getCharacterById,
     getCharactersName,
     updateCharacter,
-    deleteCharacter
+    deleteCharacter,
+    associateOrphanCharacters
   };
 });

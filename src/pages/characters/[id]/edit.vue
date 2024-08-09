@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import {ref, onMounted} from 'vue'
 import { toTypedSchema } from '@vee-validate/zod'
 import * as z from 'zod'
 import { useForm } from 'vee-validate'
@@ -17,28 +17,22 @@ import {
   SelectGroup,
   SelectItem,
   SelectTrigger,
-  SelectValue
+  SelectValue,
 } from '@/components/ui/select'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle
-} from '@/components/ui/dialog'
 import { useToast } from '@/components/ui/toast'
 import { useCharacterStore } from '@/stores/character.store'
+import {useProjectStore} from '@/stores/project.store'
 import {useImageStore} from '@/stores/image.store'
-import type {CharacterRequest, Character, ImageInfo} from '@/interfaces'
+import type {Character, CharacterRequest} from '@/interfaces'
 import ImageUploader from "~/components/ImageUploader.vue"
-import {info} from "@tauri-apps/plugin-log"
 
 const route = useRoute()
 const router = useRouter()
+const localePath = useLocalePath()
 const { toast } = useToast()
 const characterStore = useCharacterStore()
 const imageStore = useImageStore()
+const projectStore = useProjectStore()
 
 const { t } = useI18n()
 
@@ -46,8 +40,9 @@ const schema = toTypedSchema(z.object({
   name: z.string().min(1, 'Name is required'),
   description: z.string().optional(),
   role: z.enum(['Primary', 'Secondary', 'Tertiary', 'Undefined']),
-  imageID: z.string().optional().nullable(),
+  imageID: z.string().optional(),
   additionalNotes: z.string().optional().nullable(),
+  projectId: z.string().min(1, 'Project is required'),
 }))
 
 const form = useForm({
@@ -56,55 +51,56 @@ const form = useForm({
 
 const isSubmitting = ref(false)
 const imagePreview = ref<string | null>(null)
-const originalCharacter = ref<Character | null>(null)
-const showConfirmDialog = ref(false)
-const characterId = ref<number | null>(null)
-const imageUploaderRef = ref<InstanceType<typeof ImageUploader> | null>(null)
-
-const hasChanges = computed(() => {
-  if (!originalCharacter.value) return false
-  const currentValues = form.values
-  return Object.keys(currentValues).some(key => {
-    return currentValues[key as keyof typeof currentValues] !==
-        (originalCharacter.value as any)[key]
-  }) || imagePreview.value !== originalCharacter.value.imagePath
-})
+const projects = ref<{ id: number; name: string }[]>([])
+const character = ref<Character | null>(null)
 
 onMounted(async () => {
-  const id = Number(route.params.id)
-  if (!isNaN(id)) {
-    characterId.value = id
-    originalCharacter.value = await characterStore.getCharacterById(id)
-    if (originalCharacter.value) {
+  const characterId = Number(route.params.id)
+  if (!isNaN(characterId)) {
+    character.value = await characterStore.getCharacterById(characterId)
+    if (character.value) {
       form.setValues({
-        name: originalCharacter.value.name,
-        description: originalCharacter.value.description || '',
-        role: originalCharacter.value.role,
-        imageID: originalCharacter.value.imageID || undefined,
-        additionalNotes: originalCharacter.value.additionalNotes || '',
+        name: character.value.name,
+        description: character.value.description,
+        role: character.value.role,
+        imageID: character.value.imageID || undefined,
+        additionalNotes: character.value.additionalNotes,
+        projectId: '', // We'll set this once we fetch the projects
       })
-      if (originalCharacter.value.imagePath) {
-        imagePreview.value = originalCharacter.value.imagePath
-      }
+      imagePreview.value = character.value.imagePath || null
+    }
+  }
+
+  projects.value = await projectStore.getProjectsForSelection()
+  if (projects.value.length > 0) {
+    // Set the project ID if we have it
+    const characterProject = await projectStore.getProjectForCharacter(characterId)
+    if (characterProject) {
+      form.setFieldValue('projectId', characterProject.id.toString())
+    } else {
+      form.setFieldValue('projectId', projects.value[0].id.toString())
     }
   }
 })
 
 const onSubmit = form.handleSubmit(async (values) => {
+  if (!character.value) return
+
   isSubmitting.value = true
   try {
     if (values.imageID && imagePreview.value) {
       await imageStore.saveImage({id: values.imageID, path: imagePreview.value})
     }
 
-    const characterId = Number(route.params.id)
-    await characterStore.updateCharacter(characterId, values as Partial<CharacterRequest>)
+    const {projectId, ...characterData} = values
+    await characterStore.updateCharacter(character.value.id, characterData as CharacterRequest)
+    await projectStore.updateCharacterProject(character.value.id, +projectId)
 
     toast({
       title: t('characters.updateSuccess'),
       description: t('characters.updateSuccessDescription', {name: values.name}),
     })
-    router.back()
+    await router.push(localePath(`/characters/${character.value.id}`))
   } catch (error) {
     console.error('Error updating character:', error)
     toast({
@@ -117,42 +113,12 @@ const onSubmit = form.handleSubmit(async (values) => {
   }
 })
 
-const handleImageUpdate = async (image: ImageInfo) => {
+const handleImageUpdate = (image: { id: string, path: string }) => {
   form.setFieldValue('imageID', image.id)
   imagePreview.value = image.path
 }
-
-
-const revertChanges = async () => {
-  if (originalCharacter.value) {
-    form.setValues({
-      name: originalCharacter.value.name,
-      description: originalCharacter.value.description || '',
-      role: originalCharacter.value.role,
-      imageID: originalCharacter.value.imageID || undefined,
-      additionalNotes: originalCharacter.value.additionalNotes || '',
-    })
-    if (imageUploaderRef.value && originalCharacter.value.imageID && originalCharacter.value.imagePath) {
-      await imageUploaderRef.value.revertImage(originalCharacter.value.imageID, originalCharacter.value.imagePath)
-    }
-  }
-}
-
-const handleCancel = async () => {
-  if (hasChanges.value) {
-    showConfirmDialog.value = true
-  } else {
-    await revertChanges()
-    router.back()
-  }
-}
-
-const confirmCancel = async () => {
-  showConfirmDialog.value = false
-  await revertChanges()
-  router.back()
-}
 </script>
+
 <template>
   <div class="flex items-center justify-center min-h-screen bg-muted/60">
     <div class="w-full max-w-2xl p-6 space-y-8">
@@ -199,6 +165,29 @@ const confirmCancel = async () => {
           </FormField>
         </div>
 
+        <FormField v-slot="{ componentField }" name="projectId">
+          <FormItem>
+            <FormLabel>{{ t("characters.project") }}</FormLabel>
+            <Select v-bind="componentField">
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue :placeholder="t('characters.projectPlaceholder')"/>
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem v-for="project in projects" :key="project.id"
+                              :value="project.id.toString()">
+                    {{ project.name }}
+                  </SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+            <FormDescription>{{ t("characters.projectDescription") }}</FormDescription>
+            <FormMessage/>
+          </FormItem>
+        </FormField>
+
         <FormField v-slot="{ componentField }" name="description">
           <FormItem>
             <FormLabel>{{ t("characters.description") }}</FormLabel>
@@ -225,40 +214,15 @@ const confirmCancel = async () => {
         </FormField>
 
         <ImageUploader
-            ref="imageUploaderRef"
-            :initial-image="imagePreview"
-            :alt-text="t('characters.image.altText')"
-            :character-id="characterId ?? undefined"
             @update:image="handleImageUpdate"
+            :alt-text="t('imageUploader.defaultAlt')"
+            :initial-image="imagePreview"
         />
-        <div class="flex justify-between">
-          <Button type="button" variant="outline" @click="handleCancel">
-            {{ t('characters.cancel') }}
-          </Button>
-          <Button type="submit" :disabled="isSubmitting">
-            {{ isSubmitting ? t('characters.isSubmitting') : t('characters.updateCharacter') }}
-          </Button>
-        </div>
+
+        <Button type="submit" class="w-full" :disabled="isSubmitting">
+          {{ isSubmitting ? t('characters.isSubmitting') : t('characters.updateCharacter') }}
+        </Button>
       </form>
     </div>
   </div>
-
-  <Dialog v-model:open="showConfirmDialog">
-    <DialogContent>
-      <DialogHeader>
-        <DialogTitle>{{ t('characters.confirmCancel.title') }}</DialogTitle>
-        <DialogDescription>
-          {{ t('characters.confirmCancel.description') }}
-        </DialogDescription>
-      </DialogHeader>
-      <DialogFooter>
-        <Button variant="outline" @click="showConfirmDialog = false">
-          {{ t('characters.confirmCancel.stay') }}
-        </Button>
-        <Button variant="destructive" @click="confirmCancel">
-          {{ t('characters.confirmCancel.leave') }}
-        </Button>
-      </DialogFooter>
-    </DialogContent>
-  </Dialog>
 </template>

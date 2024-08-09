@@ -121,7 +121,10 @@ export default {
     noDescription: 'No description available',
     noAdditionalNotes: 'No additional notes available',
     noRole: "Undefined",
-    noName: "Unnamed Character"
+    noName: "Unnamed Character",
+    project: "What project does this character belong to?",
+    projectDescription: "Select the project that this character belongs to in order to save it.",
+    projectPlaceholder: "Select a project",
   },
   imageUploader: {
     title: "Character Image",
@@ -287,6 +290,7 @@ export default {
   projects: {
     title: "Projects",
     loading: "Loading projects...",
+    selectProject: "Select a project",
     noProjects: "No projects found. Create your first project!",
     name: "Project Name",
     namePlaceholder: "What's the name of your project?",

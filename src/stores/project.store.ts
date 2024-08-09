@@ -597,7 +597,87 @@ export const useProjectStore = defineStore('project', () => {
       return false
     }
   }
-  
+
+  const getProjectsForSelection = async (): Promise<{ id: number; name: string }[]> => {
+    try {
+      const result = await dbStore.select<any[]>(
+          'SELECT ID, Name FROM Projects ORDER BY CreatedAt DESC'
+      )
+      return result.map(row => ({id: row.ID, name: row.Name}))
+    } catch (e) {
+      handleError(new DatabaseError({
+        name: 'DB_QUERY_ERROR',
+        message: 'Failed to fetch projects for selection',
+        cause: e
+      }))
+      return []
+    }
+  }
+
+  const getProjectForCharacter = async (characterId: number): Promise<{
+    id: number;
+    name: string
+  } | null> => {
+    try {
+      const result = await dbStore.select<any[]>(
+          `SELECT p.ID, p.Name
+           FROM Projects p
+                    JOIN ProjectCharacters pc ON p.ID = pc.ProjectID
+           WHERE pc.CharacterID = $1`,
+          [characterId]
+      );
+      if (result.length > 0) {
+        return {id: result[0].ID, name: result[0].Name};
+      }
+      return null;
+    } catch (e) {
+      handleError(new DatabaseError({
+        name: 'DB_QUERY_ERROR',
+        message: 'Failed to fetch project for character',
+        cause: e
+      }));
+      return null;
+    }
+  };
+
+  const updateCharacterProject = async (characterId: number, projectId: number): Promise<boolean> => {
+    try {
+      // First, check if an association already exists
+      const existingAssociation = await dbStore.select<any[]>(
+          'SELECT ProjectID FROM ProjectCharacters WHERE CharacterID = $1',
+          [characterId]
+      );
+
+      if (existingAssociation.length > 0) {
+        // If an association exists, update it
+        await dbStore.executeQuery(
+            'UPDATE ProjectCharacters SET ProjectID = $1 WHERE CharacterID = $2',
+            [projectId, characterId]
+        );
+      } else {
+        // If no association exists, create a new one
+        await dbStore.executeQuery(
+            'INSERT INTO ProjectCharacters (ProjectID, CharacterID) VALUES ($1, $2)',
+            [projectId, characterId]
+        );
+      }
+      return true;
+    } catch (e) {
+      handleError(new DatabaseError({
+        name: 'DB_QUERY_ERROR',
+        message: 'Failed to update character project association',
+        cause: e
+      }));
+      return false;
+    }
+  };
+
+  // This method can now handle both creation and update of associations
+  const associateCharacterWithProject = async (characterId: number, projectId: number): Promise<boolean> => {
+    return updateCharacterProject(characterId, projectId);
+  };
+
+
   return {
     getProjectById,
     getProjects,
@@ -624,6 +704,10 @@ export const useProjectStore = defineStore('project', () => {
     createProjectMetric,
     updateProjectMetric,
     deleteProjectMetric,
-    checkIfProjectsExist
+    checkIfProjectsExist,
+    getProjectsForSelection,
+    getProjectForCharacter,
+    updateCharacterProject,
+    associateCharacterWithProject
   }
 })

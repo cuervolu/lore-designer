@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import {ref} from 'vue'
-import {useRouter} from 'vue-router'
+import {ref, onMounted} from 'vue'
 import {toTypedSchema} from '@vee-validate/zod'
 import * as z from 'zod'
 import {useForm} from 'vee-validate'
@@ -22,13 +21,17 @@ import {
 } from '@/components/ui/select'
 import {useToast} from '@/components/ui/toast'
 import {useCharacterStore} from '@/stores/character.store'
+import {useProjectStore} from '@/stores/project.store'
+import {useImageStore} from '@/stores/image.store'
 import type {CharacterRequest} from '@/interfaces'
-import ImageUploader from "~/components/ImageUploader.vue";
+import ImageUploader from "~/components/ImageUploader.vue"
 
 const router = useRouter()
+const localePath = useLocalePath()
 const {toast} = useToast()
 const characterStore = useCharacterStore()
 const imageStore = useImageStore()
+const projectStore = useProjectStore()
 
 const {t} = useI18n()
 
@@ -38,7 +41,8 @@ const schema = toTypedSchema(z.object({
   role: z.enum(['Primary', 'Secondary', 'Tertiary', 'Undefined']),
   imageID: z.string().optional(),
   additionalNotes: z.string().optional(),
-}));
+  projectId: z.string().min(1, 'Project is required'),
+}))
 
 const form = useForm({
   validationSchema: schema,
@@ -46,6 +50,14 @@ const form = useForm({
 
 const isSubmitting = ref(false)
 const imagePreview = ref<string | null>(null)
+const projects = ref<{ id: number; name: string }[]>([])
+
+onMounted(async () => {
+  projects.value = await projectStore.getProjectsForSelection()
+  if (projects.value.length > 0) {
+    form.setFieldValue('projectId', projects.value[0].id.toString())
+  }
+})
 
 const onSubmit = form.handleSubmit(async (values) => {
   isSubmitting.value = true
@@ -54,13 +66,15 @@ const onSubmit = form.handleSubmit(async (values) => {
       await imageStore.saveImage({id: values.imageID, path: imagePreview.value})
     }
 
-    const characterId = await characterStore.createCharacter(values as CharacterRequest)
+    const {projectId, ...characterData} = values
+    const characterId = await characterStore.createCharacter(characterData as CharacterRequest, +projectId)
+
     if (characterId) {
       toast({
         title: t('characters.createSuccess'),
         description: t('characters.createSuccessDescription', {name: values.name}),
       })
-      await router.push('/characters')
+      await router.push(localePath("/characters"))
     } else {
       toast({
         title: t('characters.createError'),
@@ -131,6 +145,29 @@ const handleImageUpdate = (image: { id: string, path: string }) => {
             </FormItem>
           </FormField>
         </div>
+
+        <FormField v-slot="{ componentField }" name="projectId">
+          <FormItem>
+            <FormLabel>{{ t("characters.project") }}</FormLabel>
+            <Select v-bind="componentField">
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue :placeholder="t('characters.projectPlaceholder')"/>
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem v-for="project in projects" :key="project.id"
+                              :value="project.id.toString()">
+                    {{ project.name }}
+                  </SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+            <FormDescription>{{ t("characters.projectDescription") }}</FormDescription>
+            <FormMessage/>
+          </FormItem>
+        </FormField>
 
         <FormField v-slot="{ componentField }" name="description">
           <FormItem>

@@ -121,7 +121,10 @@ export default {
     noDescription: 'No hay descripción disponible',
     noAdditionalNotes: 'No hay notas adicionales disponibles',
     noRole: "Indefinido",
-    noName: "Personaje sin nombre"
+    noName: "Personaje sin nombre",
+    project: "¿A qué proyecto pertenece este personaje?",
+    projectDescription: "Selecciona el proyecto al que pertenece este personaje para vincularlo.",
+    projectPlaceholder: "Selecciona un proyecto",
   },
   imageUploader: {
     title: "Imagen del Personaje",
@@ -287,6 +290,7 @@ export default {
   projects: {
     title: "Proyectos",
     loading: "Cargando proyectos...",
+    selectProject: "Selecciona un proyecto",
     noProjects: "No se encontraron proyectos. ¡Crea tu primer proyecto!",
     name: "Nombre del proyecto",
     namePlaceholder: "¿Cómo se llama tu proyecto?",
