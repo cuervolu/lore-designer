@@ -586,6 +586,18 @@ export const useProjectStore = defineStore('project', () => {
     }
   }
 
+  const checkIfProjectsExist = async (): Promise<boolean> => {
+    try {
+      const result = await dbStore.select<[{ count: number }]>(
+          'SELECT COUNT(*) as count FROM Projects'
+      )
+      return result[0]?.count > 0
+    } catch (error) {
+      console.error('Error al verificar si existen proyectos:', error)
+      return false
+    }
+  }
+  
   return {
     getProjectById,
     getProjects,
@@ -612,5 +624,6 @@ export const useProjectStore = defineStore('project', () => {
     createProjectMetric,
     updateProjectMetric,
     deleteProjectMetric,
+    checkIfProjectsExist
   }
 })

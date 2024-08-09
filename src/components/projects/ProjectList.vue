@@ -70,6 +70,16 @@ const visiblePages = computed(() => {
 
 const { t } = useI18n()
 const localePath = useLocalePath()
+const router = useRouter()
+
+const navigateToProject = (projectId: number) => {
+  router.push(localePath(`/projects/${projectId}`))
+}
+
+const onProjectCreated = (projectId: number) => {
+  fetchProjects(true)
+  router.push(localePath(`/projects/${projectId}`))
+}
 </script>
 
 <template>
@@ -78,10 +88,7 @@ const localePath = useLocalePath()
 
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-3xl font-bold">{{ t('projects.title') }}</h1>
-    </div>
-
-    <div class="absolute top-6 right-6">
-      <CreateProjectDialog>
+      <CreateProjectDialog @project-created="onProjectCreated">
         <Button>{{ t('projects.createProject') }}</Button>
       </CreateProjectDialog>
     </div>
@@ -92,14 +99,19 @@ const localePath = useLocalePath()
 
     <div v-else-if="projects.length === 0" class="flex flex-col items-center justify-center h-[50vh]">
       <p class="text-xl mb-4">{{ t('projects.noProjects') }}</p>
-      <CreateProjectDialog>
+      <CreateProjectDialog @project-created="onProjectCreated">
         <Button>{{ t('projects.createProject') }}</Button>
       </CreateProjectDialog>
     </div>
 
     <div v-else>
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        <ProjectCard v-for="project in projects" :key="project.id" v-bind="project" />
+        <ProjectCard
+            v-for="project in projects"
+            :key="project.id"
+            v-bind="project"
+            @click="navigateToProject(project.id)"
+        />
       </div>
     </div>
 

@@ -12,7 +12,7 @@ const {t} = useI18n()
 
 const project = ref<Project | null>(null)
 const loading = ref(true)
-
+const localePath = useLocalePath()
 onMounted(async () => {
   const projectId = parseInt(route.params.id as string)
   if (!isNaN(projectId)) {
@@ -23,7 +23,7 @@ onMounted(async () => {
 
 const handleProjectUpdate = (updatedProject: Project) => {
   project.value = updatedProject
-  router.push(`/projects/${updatedProject.id}`)
+  router.push(localePath(`/projects/${updatedProject.id}`))
 }
 </script>
 

@@ -355,6 +355,12 @@ export default {
       expenses: "Expense tracking information will be displayed here."
     }
   },
+  projectOverlay: {
+    title: "No Projects Found",
+    message: "You need to create a project before accessing this feature.",
+    createProject: "Create Project",
+    goBack: "Go Back"
+  },
   createProjectDialog: {
     title: "Create a New Project",
     description: "Enter the name for your new project.",

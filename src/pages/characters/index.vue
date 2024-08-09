@@ -15,6 +15,7 @@ import {
 import {useCharacterStore} from "~/stores";
 import {useErrorHandler} from '~/composables/useErrorHandler';
 import {DatabaseError} from '~/exceptions/db.error';
+import ProjectRequiredOverlay from "~/components/projects/ProjectRequiredOverlay.vue";
 
 
 const {t} = useI18n()
@@ -97,6 +98,7 @@ const visiblePages = computed((): PageItem[] => {
 
 <template>
   <div class="p-6 max-w-7xl mx-auto">
+    <ProjectRequiredOverlay/>
     <custom-breadcrumb new-route="/characters" from="home" to="characters.title" old-route="/"/>
 
     <div class="flex justify-between items-center mb-6">

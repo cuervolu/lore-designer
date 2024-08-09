@@ -355,6 +355,12 @@ export default {
       expenses: "La información de seguimiento de gastos se mostrará aquí."
     }
   },
+  projectOverlay: {
+    title: "No se encontraron proyectos",
+    message: "No tienes ningún proyecto creado para usar esta función. ¿Por qué no creas uno ahora?",
+    createProject: "Crear Proyecto",
+    goBack: "Volver"
+  },
   createProjectDialog: {
     title: "Crear un Nuevo Proyecto",
     description: "Ingresa el nombre para tu nuevo proyecto.",

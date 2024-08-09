@@ -23,12 +23,12 @@ import {
 } from '~/components/ui/form'
 import {Input} from '~/components/ui/input'
 import {useProjectStore} from '~/stores/project.store'
-import {info} from "@tauri-apps/plugin-log";
 
 const {t} = useI18n()
-const localeRoute = useLocaleRoute()
 const projectStore = useProjectStore()
 const {toast} = useToast()
+
+const emit = defineEmits(['projectCreated'])
 
 const formSchema = toTypedSchema(z.object({
   name: z.string({required_error: t('createProjectDialog.name.required_error')}),
@@ -39,7 +39,8 @@ const form = useForm({
 })
 
 const isSubmitting = ref(false)
-const {locale} = useI18n()
+const isOpen = ref(false)
+
 const onSubmit = form.handleSubmit(async (values) => {
   isSubmitting.value = true
   try {
@@ -49,11 +50,8 @@ const onSubmit = form.handleSubmit(async (values) => {
         title: t('projects.createSuccess'),
         description: t('projects.createSuccessDescription', {name: values.name}),
       })
-      const route = localeRoute(`projects/${projectId}`, locale.value)
-      if (route) {
-        await info("Navigating to route: " + route.fullPath)
-        return navigateTo(route.fullPath)
-      }
+      isOpen.value = false
+      emit('projectCreated', projectId)
     } else {
       toast({
         title: t('projects.createError'),
@@ -72,14 +70,25 @@ const onSubmit = form.handleSubmit(async (values) => {
     isSubmitting.value = false
   }
 })
+
+const openDialog = () => {
+  isOpen.value = true
+}
+
+const closeDialog = () => {
+  isOpen.value = false
+  form.resetForm()
+}
 </script>
 
 <template>
-  <Dialog>
-    <DialogTrigger as-child>
-      <Button class="flex mx-auto mt-16">
-        {{ t('projects.createProject') }}
-      </Button>
+  <Dialog v-model:open="isOpen">
+    <DialogTrigger as-child @click="openDialog">
+      <slot>
+        <Button>
+          {{ t('projects.createProject') }}
+        </Button>
+      </slot>
     </DialogTrigger>
     <DialogContent class="sm:max-w-[425px]">
       <form @submit="onSubmit">
@@ -103,6 +112,9 @@ const onSubmit = form.handleSubmit(async (values) => {
           </FormField>
         </div>
         <DialogFooter>
+          <Button type="button" variant="outline" @click="closeDialog">
+            {{ t('cancel') }}
+          </Button>
           <Button type="submit" :disabled="isSubmitting">
             {{ isSubmitting ? t('submitting') : t('createProjectDialog.submit') }}
           </Button>
@@ -111,6 +123,3 @@ const onSubmit = form.handleSubmit(async (values) => {
     </DialogContent>
   </Dialog>
 </template>
-
-<style scoped>
-</style>
