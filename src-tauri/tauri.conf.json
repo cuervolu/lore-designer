@@ -25,11 +25,11 @@
     ],
     "security": {
       "csp": {
-        "default-src": "'self' http://asset.localhost asset:",
-        "media-src": "'self' http://asset.localhost asset:",
-        "img-src": "'self' http://asset.localhost blob: data:",
-        "style-src": "'unsafe-inline' 'self'",
-        "connect-src": "'ipc: http://ipc.localhost"
+        "default-src": "'self' blob: data: filesystem: ws: wss: http: https: tauri: 'unsafe-inline' asset: https://asset.localhost",
+        "script-src": "'self' 'unsafe-eval'",
+        "connect-src": "'self' ipc: http://ipc.localhost tauri: asset: https://asset.localhost",
+        "img-src": "'self' asset: http://asset.localhost blob: data:",
+        "style-src": "'unsafe-inline' 'self'"
       },
       "assetProtocol": {
         "enable": true,
