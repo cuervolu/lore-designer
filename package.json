@@ -5,6 +5,7 @@
   "version": "1.0.0+4",
   "scripts": {
     "build": "tauri build",
+    "debug": "tauri build -d -b appimage",
     "dev": "cross-env RUST_BACKTRACE=1 RUST_LOG=info tauri dev",
     "nuxt:build": "nuxt build",
     "nuxt:dev": "nuxt dev",
