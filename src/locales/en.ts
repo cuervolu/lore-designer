@@ -407,4 +407,13 @@ export default {
       boolean: 'BOOLEAN'
     }
   },
+  helpPopover: {
+    open: 'Open Help',
+    checkUpdates: 'Check for Updates',
+    reportBug: 'Report Bugs / Issues',
+    giveFeedback: 'Send Feedback',
+    version: 'Version {version}',
+    noUpdatesTitle: 'No Updates Available',
+    updateCheckError: 'Error checking for updates',
+  }
 };

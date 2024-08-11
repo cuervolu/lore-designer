@@ -1,8 +1,8 @@
-import { check } from '@tauri-apps/plugin-updater'
-import { relaunch } from '@tauri-apps/plugin-process'
-import { error, info } from "@tauri-apps/plugin-log";
-import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import {check} from '@tauri-apps/plugin-updater'
+import {relaunch} from '@tauri-apps/plugin-process'
+import {error, info} from "@tauri-apps/plugin-log";
+import {defineStore} from 'pinia'
+import {ref} from 'vue'
 
 export const useUpdaterStore = defineStore('updater', () => {
   const isUpdateAvailable = ref(false)
@@ -11,7 +11,7 @@ export const useUpdaterStore = defineStore('updater', () => {
   const isUpdating = ref(false)
   const updateError = ref<string | null>(null)
 
-  const checkForUpdates = async () => {
+  const checkForUpdates = async (manual = false) => {
     try {
       await info("Checking for updates");
       const update = await check()
@@ -20,14 +20,20 @@ export const useUpdaterStore = defineStore('updater', () => {
         isUpdateAvailable.value = true
         updateVersion.value = update.version
         updateNotes.value = update.body || ''
+        return true
       } else {
         await info("No updates available");
+        if (manual) {
+          return false
+        }
       }
     } catch (e) {
       await error(`Error checking for updates: ${e}`);
       updateError.value = 'Failed to check for updates'
+      throw e
     }
   }
+
 
   const installUpdate = async () => {
     if (!isUpdateAvailable.value) {
