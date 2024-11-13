@@ -1,0 +1,49 @@
+{
+  "name": "lore-designer",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "build": "tauri build",
+    "debug": "tauri build -d -b appimage",
+    "dev": "cross-env RUST_BACKTRACE=1 RUST_LOG=debug tauri dev",
+    "android:dev": "cross-env RUST_BACKTRACE=1 RUST_LOG=debug tauri android dev",
+    "vite:dev": "vite",
+    "vite:build": "vue-tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "tauri": "tauri"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-clipboard-manager": "^2.0.0",
+    "@tauri-apps/plugin-dialog": "~2",
+    "@tauri-apps/plugin-fs": "~2",
+    "@tauri-apps/plugin-log": "~2",
+    "@tauri-apps/plugin-os": "~2",
+    "@tauri-apps/plugin-process": "~2",
+    "@tauri-apps/plugin-shell": "^2",
+    "@tauri-apps/plugin-sql": "~2",
+    "@tauri-apps/plugin-store": "~2",
+    "@tauri-apps/plugin-updater": "~2",
+    "@tauri-apps/plugin-window-state": "~2",
+    "@vueuse/core": "^11.2.0",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.1",
+    "lucide-vue-next": "^0.456.0",
+    "radix-vue": "^1.9.9",
+    "tailwind-merge": "^2.5.4",
+    "tailwindcss-animate": "^1.0.7",
+    "vue": "^3.3.4"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2",
+    "@types/bun": "^1.1.13",
+    "@vitejs/plugin-vue": "^5.0.5",
+    "autoprefixer": "^10.4.20",
+    "cross-env": "^7.0.3",
+    "tailwindcss": "^3.4.14",
+    "typescript": "^5.2.2",
+    "vite": "^5.3.1",
+    "vue-tsc": "^2.0.22"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "identifier": "desktop-capability",
+  "platforms": [
+    "macOS",
+    "windows",
+    "linux"
+  ],
+  "windows": [
+    "main"
+  ],
+  "permissions": [
+    "updater:allow-download-and-install",
+    "updater:allow-check",
+    "window-state:allow-restore-state",
+    "window-state:allow-save-window-state",
+    "process:allow-exit",
+    "process:allow-restart",
+    "log:default"
+  ]
+}
