@@ -16,6 +16,7 @@
     "shadcn": "bunx --bun shadcn-vue@latest"
   },
   "dependencies": {
+    "@fontsource-variable/inter": "^5.2.5",
     "@tailwindcss/vite": "^4.1.3",
     "@tauri-apps/api": "^2.4.1",
     "@tauri-apps/plugin-clipboard-manager": "~2",

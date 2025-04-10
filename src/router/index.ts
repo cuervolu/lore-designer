@@ -17,6 +17,7 @@ export const router = createRouter({
       children: [
         {
           path: '',
+          name: 'wizard-index',
           redirect: { name: 'workspaces' }
         },
         {

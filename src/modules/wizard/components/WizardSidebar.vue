@@ -1,6 +1,8 @@
 ﻿<script setup lang="ts">
-import { computed } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
+import { getVersion } from '@tauri-apps/api/app'
+import { error } from '@tauri-apps/plugin-log'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import {
   Sidebar,
   SidebarContent,
@@ -8,45 +10,64 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-} from '@/components/ui/sidebar';
+} from '@/components/ui/sidebar'
 
-const router = useRouter();
-const route = useRoute();
-const logoPath = new URL('@/assets/logo.webp', import.meta.url).href;
-
+const router = useRouter()
+const route = useRoute()
+const logoPath = new URL('@/assets/logo.webp', import.meta.url).href
 const menuItems = [
   { name: 'Workspaces', route: { name: 'workspaces' } },
   { name: 'Plugins', route: { name: 'plugins' } },
   { name: 'Settings', route: { name: 'settings' } },
   { name: 'Learn', route: { name: 'learn' } },
-];
+]
 
-const currentRouteName = computed(() => route.name);
+const currentRouteName = computed(() => route.name)
+const appVersion = ref('0.1.0') // Default value until loaded
+
+onMounted(async () => {
+  try {
+    appVersion.value = await getVersion()
+  } catch (err) {
+    await error(`Failed to get app version: ${err}`)
+  }
+})
 
 const navigateTo = (routeName: string) => {
-  router.push({ name: routeName });
-};
+  router.push({ name: routeName })
+}
 </script>
 
 <template>
   <Sidebar>
-    <SidebarHeader class="p-4">
-      <div class="flex items-center space-x-2">
-        <div class="w-10 h-10 rounded bg-gray-200 flex items-center justify-center">
-          <img :src="logoPath" alt="Logo" class="w-8 h-8" />
+    <SidebarHeader class="p-6">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shadow-sm">
+          <img :src="logoPath" alt="Logo" class="w-7 h-7" />
         </div>
         <div>
           <h1 class="text-lg font-semibold">Lore Designer</h1>
-          <p class="text-sm text-gray-500">v1.0</p>
+          <p class="text-xs text-muted-foreground">v{{ appVersion }}</p>
         </div>
       </div>
     </SidebarHeader>
-    <SidebarContent>
-      <SidebarMenu>
-        <SidebarMenuItem v-for="item in menuItems" :key="item.name">
+
+    <SidebarContent class="px-3">
+      <SidebarMenu class="space-y-1.5">
+        <SidebarMenuItem
+          v-for="item in menuItems"
+          :key="item.name"
+          class="transition-colors"
+        >
           <SidebarMenuButton
             :isActive="currentRouteName === item.route.name"
             @click="navigateTo(item.route.name)"
+            class="px-4 py-2.5 font-medium rounded-md transition-all"
+            :class="[
+              currentRouteName === item.route.name
+                ? 'bg-primary text-primary-foreground'
+                : 'hover:bg-muted'
+            ]"
           >
             {{ item.name }}
           </SidebarMenuButton>
