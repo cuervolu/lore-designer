@@ -1,3 +1,6 @@
+mod system_info;
+
+use log::error;
 use tauri_plugin_log::{fern::colors::ColoredLevelConfig, RotationStrategy};
 
 fn setup_logger(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
@@ -78,6 +81,9 @@ pub fn run() {
         .plugin(tauri_plugin_clipboard_manager::init())
         .setup(|app| {
             setup_logger(app)?;
+            if let Err(e) = system_info::log_system_info(app.handle()) {
+                error!("Failed to log system info: {}", e);
+            }
             Ok(())
         })
         .run(tauri::generate_context!())

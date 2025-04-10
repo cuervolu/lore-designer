@@ -25,6 +25,7 @@
         "reka-ui": "^2.2.0",
         "tailwind-merge": "^3.1.0",
         "tailwindcss": "^4.1.3",
+        "tauri-plugin-drpc": "^1.0.3",
         "tw-animate-css": "^1.2.5",
         "vue": "^3.5.13",
         "vue-router": "^4.5.0",
@@ -804,6 +805,8 @@
     "tailwindcss": ["tailwindcss@4.1.3", "", {}, "sha512-2Q+rw9vy1WFXu5cIxlvsabCwhU2qUwodGq03ODhLJ0jW4ek5BUtoCsnLB0qG+m8AHgEsSJcJGDSDe06FXlP74g=="],
 
     "tapable": ["tapable@2.2.1", "", {}, "sha512-GNzQvQTOIP6RyTfE2Qxb8ZVlNmw0n88vp1szwWRimP02mnTsx3Wtn5qRdqY9w2XduFNUgvOwhNnQsjwCp+kqaQ=="],
+
+    "tauri-plugin-drpc": ["tauri-plugin-drpc@1.0.3", "", { "peerDependencies": { "typescript": "^5.0.0" } }, "sha512-vl5dXhjKbl7+Nf9veW12usdmIUtZXwEf91SzxQPZlbRRJ/sjizbbQlnkUTtx6baJuGzz0KXXgP9xUhF39BdiXQ=="],
 
     "to-regex-range": ["to-regex-range@5.0.1", "", { "dependencies": { "is-number": "^7.0.0" } }, "sha512-65P7iz6X5yEr1cwcgvQxbbIw7Uk3gOy5dIdtZ4rDveLqhrdJP+Li/Hx6tyK0NEb+2GCyneCMJiGqrADCSNk8sQ=="],
 
