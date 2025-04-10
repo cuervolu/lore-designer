@@ -13,7 +13,8 @@
     "paths": {
       "@/*": ["./src/*"],
       "@modules/*": ["./src/modules/*"],
-      "@common/*": ["./src/modules/common/*"]
+      "@common/*": ["./src/modules/common/*"],
+      "@wizard/*": ["./src/modules/wizard/*"],
     }
   }
 }
