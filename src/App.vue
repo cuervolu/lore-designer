@@ -1,13 +1,11 @@
 <script setup lang="ts">
-import { useColorMode } from '@vueuse/core';
+import { onMounted } from 'vue';
+import { usePreferencesStore } from '@common/stores/preferences.store';
 
-useColorMode({
-  attribute: 'class',
-  storageKey: 'lore-designer-theme',
-  modes: {
-    light: '',
-    dark: 'dark',
-  },
+const preferencesStore = usePreferencesStore();
+
+onMounted(async () => {
+  await preferencesStore.loadPreferences();
 });
 </script>
 

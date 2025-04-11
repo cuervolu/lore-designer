@@ -6,7 +6,7 @@ use tauri_plugin_store::StoreExt;
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct AppPreferences {
     // Appearance
-    pub theme: String,    // "system", "dark", "light"
+    pub theme: String,    // 'dark' | 'light' | 'auto'
     pub language: String, // "en", "es", etc.
     // Last project
     pub last_project_path: Option<String>,
