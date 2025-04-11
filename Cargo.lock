@@ -2291,6 +2291,7 @@ dependencies = [
 name = "lore_designer"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "chrono",
  "log",
  "serde",
@@ -2309,6 +2310,7 @@ dependencies = [
  "tauri-plugin-store",
  "tauri-plugin-updater",
  "tauri-plugin-window-state",
+ "thiserror 2.0.12",
 ]
 
 [[package]]

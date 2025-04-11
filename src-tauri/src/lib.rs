@@ -1,5 +1,7 @@
 mod system_info;
+mod core;
 
+use core::config::{preferences, commands};
 use log::error;
 use tauri_plugin_log::{fern::colors::ColoredLevelConfig, RotationStrategy};
 
@@ -84,8 +86,16 @@ pub fn run() {
             if let Err(e) = system_info::log_system_info(app.handle()) {
                 error!("Failed to log system info: {}", e);
             }
+            preferences::init_preferences(app.handle())?;
             Ok(())
         })
+        .invoke_handler(tauri::generate_handler![
+            commands::get_preferences,
+            commands::save_preferences,
+            commands::set_theme,
+            commands::set_language,
+            commands::update_last_project,
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
