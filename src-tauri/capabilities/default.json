@@ -20,6 +20,20 @@
     "clipboard-manager:allow-read-text",
     "clipboard-manager:allow-write-html",
     "clipboard-manager:allow-write-image",
-    "clipboard-manager:allow-write-text"
+    "clipboard-manager:allow-write-text",
+    "store:allow-clear",
+    "store:allow-delete",
+    "store:allow-entries",
+    "store:allow-get",
+    "store:allow-get-store",
+    "store:allow-has",
+    "store:allow-keys",
+    "store:allow-length",
+    "store:allow-load",
+    "store:allow-reload",
+    "store:allow-reset",
+    "store:allow-set",
+    "store:allow-save",
+    "store:allow-values"
   ]
 }
