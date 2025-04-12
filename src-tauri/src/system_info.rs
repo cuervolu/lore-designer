@@ -24,8 +24,8 @@ pub fn log_system_info(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>
 
     #[cfg(target_os = "linux")]
     {
-        // Información específica de Linux
         let id_like = System::distribution_id_like().join(", ");
+        let distribution_id = System::distribution_id();
         if !id_like.is_empty() {
             info!(
                 "Linux distribution: {} (based on: {})",
