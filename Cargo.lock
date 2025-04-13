@@ -2311,6 +2311,8 @@ dependencies = [
  "tauri-plugin-updater",
  "tauri-plugin-window-state",
  "thiserror 2.0.12",
+ "toml",
+ "uuid 1.16.0",
 ]
 
 [[package]]
