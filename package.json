@@ -1,0 +1,20 @@
+{
+  "name": "lore-designer",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:desktop": "cd apps/desktop && bun run dev",
+    "build:desktop": "cd apps/desktop && bun run build",
+    "shadcn": "cd apps/desktop && bunx --bun shadcn-vue@latest"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/node": "^22.14.1"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}

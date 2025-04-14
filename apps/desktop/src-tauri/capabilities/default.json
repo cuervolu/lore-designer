@@ -1,0 +1,41 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "enables the default permissions",
+  "windows": [
+    "main"
+  ],
+  "permissions": [
+    "core:default",
+    "clipboard-manager:default",
+    "dialog:default",
+    "fs:default",
+    "log:default",
+    "os:default",
+    "process:default",
+    "opener:default",
+    "store:default",
+    "clipboard-manager:allow-clear",
+    "clipboard-manager:allow-read-image",
+    "clipboard-manager:allow-read-text",
+    "clipboard-manager:allow-write-html",
+    "clipboard-manager:allow-write-image",
+    "clipboard-manager:allow-write-text",
+    "store:allow-clear",
+    "store:allow-delete",
+    "store:allow-entries",
+    "store:allow-get",
+    "store:allow-get-store",
+    "store:allow-has",
+    "store:allow-keys",
+    "store:allow-length",
+    "store:allow-load",
+    "store:allow-reload",
+    "store:allow-reset",
+    "store:allow-set",
+    "store:allow-save",
+    "store:allow-values",
+    "log:default",
+    "fs:default"
+  ]
+}
