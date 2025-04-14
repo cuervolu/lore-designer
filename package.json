@@ -10,7 +10,10 @@
     "dev:docs": "cd apps/docs && bun run dev",
     "build:desktop": "cd apps/desktop && bun run build",
     "build:docs": "cd apps/docs && bun run build",
-    "shadcn": "cd apps/desktop && bunx --bun shadcn-vue@latest"
+    "preview:docs": "cd apps/docs && bun run preview",
+    "start:docs": "cd apps/docs && bun run start",
+    "shadcn": "cd apps/desktop && bunx --bun shadcn-vue@latest",
+    "astro": "cd apps/docs && bun run astro"
   },
   "devDependencies": {
     "@types/bun": "latest",
