@@ -64,7 +64,7 @@
     "publisher": "Cuervolu",
     "copyright": "Copyright © 2025",
     "license": "AGPL-3.0",
-    "licenseFile": "../LICENSE",
+    "licenseFile": "../../LICENSE",
     "category": "DeveloperTool",
     "shortDescription": "A streamlined game narrative and worldbuilding tool for indie developers",
     "longDescription": "Create and manage your game's story, dialogues, and world in one unified workspace. Built by indie developers for indie developers.",
