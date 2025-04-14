@@ -16,6 +16,7 @@
     "astro": "cd apps/docs && bun run astro"
   },
   "devDependencies": {
+    "@biomejs/biome": "1.9.4",
     "@types/bun": "latest",
     "@types/node": "^22.14.1"
   },
