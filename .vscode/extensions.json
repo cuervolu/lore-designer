@@ -6,6 +6,7 @@
     "EditorConfig.EditorConfig",
     "oxc.oxc-vscode",
     "tauri-apps.tauri-vscode",
-    "esbenp.prettier-vscode"
+    "esbenp.prettier-vscode",
+    "astro-build.astro-vscode"
   ]
 }

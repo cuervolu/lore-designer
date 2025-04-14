@@ -7,7 +7,9 @@
   ],
   "scripts": {
     "dev:desktop": "cd apps/desktop && bun run dev",
+    "dev:docs": "cd apps/docs && bun run dev",
     "build:desktop": "cd apps/desktop && bun run build",
+    "build:docs": "cd apps/docs && bun run build",
     "shadcn": "cd apps/desktop && bunx --bun shadcn-vue@latest"
   },
   "devDependencies": {
