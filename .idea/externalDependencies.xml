@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ExternalDependencies">
+    <plugin id="com.github.biomejs.intellijbiome" />
+    <plugin id="com.github.lppedd.idea-conventional-commit" />
+    <plugin id="com.intellij.tailwindcss" />
+    <plugin id="com.jetbrains.rust" />
+    <plugin id="mdx.js" />
+    <plugin id="org.intellij.plugins.markdown" />
+    <plugin id="org.jetbrains.plugins.astro" />
+    <plugin id="org.jetbrains.plugins.vue" />
+  </component>
+</project>
