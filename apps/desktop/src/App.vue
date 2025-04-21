@@ -11,7 +11,7 @@ onMounted(async () => {
 
 <template>
   <div class="app-container">
-    <div class="main-content min-h-screen bg-background text-foreground hide-scrollbar">
+    <div class="main-content hide-scrollbar bg-background text-foreground">
       <router-view />
     </div>
   </div>
