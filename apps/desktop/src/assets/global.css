@@ -158,3 +158,15 @@
     font-family: 'Inter Variable', sans-serif;
   }
 }
+
+.app-container {
+  @apply pt-12;
+}
+
+div[data-tauri-decorum-tb] {
+  @apply h-10 flex items-center px-4 bg-sidebar text-sidebar-foreground;
+}
+
+.main-content {
+  @apply px-6 py-4;
+}
