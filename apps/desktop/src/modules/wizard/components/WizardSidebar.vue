@@ -40,7 +40,7 @@ const navigateTo = (routeName: string) => {
 
 <template>
   <Sidebar>
-    <SidebarHeader class="p-6">
+    <SidebarHeader class="p-6 mt-10">
       <div class="flex items-center space-x-3">
         <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shadow-sm">
           <img :src="logoPath" alt="Logo" class="w-7 h-7" />

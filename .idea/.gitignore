@@ -10,4 +10,7 @@
 # Some plugins
 git_toolbox_prj.xml
 
-/developer-tools.xml
+/conventionalCommit.xml
+/encodings.xml
+/codeStyles/Project.xml
+/codeStyles/codeStyleConfig.xml
