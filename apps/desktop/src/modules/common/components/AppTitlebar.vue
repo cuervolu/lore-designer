@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
 import { getCurrentWindow } from '@tauri-apps/api/window';
+import { ref, onMounted, computed } from 'vue';
 import { cn } from '@/lib/utils';
-import { Minimize, X, Square, Maximize2 } from 'lucide-vue-next';
+import { Minus, X, Square } from 'lucide-vue-next';
+import WindowRestoreIcon from '@common/icons/WindowRestoreIcon.vue'
 
 interface Props {
   /**
@@ -125,7 +126,7 @@ const displayTitle = computed(() => {
         @click="minimizeWindow"
         title="Minimize"
       >
-        <Minimize class="h-4 w-4" />
+        <Minus class="h-4 w-4" />
       </button>
 
       <button
@@ -133,8 +134,8 @@ const displayTitle = computed(() => {
         @click="toggleMaximize"
         title="Maximize"
       >
-        <Maximize2 v-if="!isMaximized" class="h-4 w-4" />
-        <Square v-else class="h-4 w-4" />
+        <Square v-if="!isMaximized" class="h-4 w-4" />
+        <WindowRestoreIcon v-else class="h-4 w-4" />
       </button>
 
       <button

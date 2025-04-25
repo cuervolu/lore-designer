@@ -159,58 +159,51 @@
   }
 }
 
-/* Hide scrollbars but keep scrolling functionality */
-.hide-scrollbar {
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
-}
-
-.hide-scrollbar::-webkit-scrollbar {
-  display: none; /* Chrome, Safari and Opera */
-}
-
-/* Main content padding to avoid titlebar overlap */
-.main-content {
-  margin-top: 65px; /* Adjust value to match your titlebar height */
-  height: 100vh;
-  overflow-y: auto;
-  box-sizing: border-box;
-}
-
-/* For Windows-specific adjustments */
-@media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {
-  .main-content {
-    margin-top: 40px; /* Potentially different value for Windows */
-  }
-}
-
-/* Container to ensure proper layout */
-.app-container {
-  position: relative;
-  height: 100vh;
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
   overflow: hidden;
 }
 
-/* Style for the Tauri decorum titlebar */
-div[data-tauri-decorum-tb] {
-  z-index: 100; /* Ensure titlebar is above other content */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(128, 128, 128, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(128, 128, 128, 0.5);
+}
+
+/* Hide scrollbar but keep functionality */
+.hide-scrollbar {
+  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;  /* IE and Edge */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari, Opera */
+}
+
+.titlebar-fixed {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  backdrop-filter: blur(5px);
+  z-index: 50;
+  width: 100%;
 }
 
-/* Specific styling for window control buttons */
-button.decorum-tb-btn {
-  opacity: 0.8;
-  transition: opacity 0.2s ease;
+.content-below-titlebar {
+  padding-top: 36px;
 }
 
-button.decorum-tb-btn:hover {
-  opacity: 1;
-}
-
-button#decorum-tb-close:hover {
-  background-color: rgb(232, 17, 35);
-}
