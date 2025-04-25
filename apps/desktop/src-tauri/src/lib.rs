@@ -4,10 +4,7 @@ mod workspace;
 
 use core::config::{commands, preferences};
 use log::error;
-use tauri::Manager;
 use tauri_plugin_log::{fern::colors::ColoredLevelConfig, RotationStrategy};
-#[cfg(not(target_os = "linux"))]
-use tauri_plugin_decorum::WebviewWindowExt;
 
 fn setup_logger(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     // Set base log level based on environment
@@ -75,7 +72,7 @@ fn setup_logger(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> 
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let mut builder = tauri::Builder::default()
+         tauri::Builder::default()
         .plugin(tauri_plugin_window_state::Builder::new().build())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_store::Builder::new().build())
@@ -84,41 +81,13 @@ pub fn run() {
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
-        .plugin(tauri_plugin_clipboard_manager::init());
-
-    // Solo incluir el plugin decorum si NO estamos en Linux
-    #[cfg(not(target_os = "linux"))]
-    {
-        builder = builder.plugin(tauri_plugin_decorum::init());
-    }
-
-    builder
+        .plugin(tauri_plugin_clipboard_manager::init())
         .setup(|app| {
             setup_logger(app)?;
             if let Err(e) = system_info::log_system_info(app.handle()) {
                 error!("Failed to log system info: {}", e);
             }
             preferences::init_preferences(app.handle())?;
-
-            // Solo configurar el overlay titlebar si NO estamos en Linux
-            #[cfg(not(target_os = "linux"))]
-            {
-                let main_window = app.get_webview_window("main").unwrap();
-                main_window.create_overlay_titlebar().unwrap();
-
-                #[cfg(target_os = "macos")]
-                {
-                    // Set a custom inset to the traffic lights
-                    main_window.set_traffic_lights_inset(12.0, 16.0).unwrap();
-
-                    // Make window transparent without privateApi
-                    main_window.make_transparent().unwrap();
-
-                    // Set window level
-                    // NSWindowLevel: https://developer.apple.com/documentation/appkit/nswindowlevel
-                    main_window.set_window_level(25).unwrap();
-                }
-            }
 
             Ok(())
         })

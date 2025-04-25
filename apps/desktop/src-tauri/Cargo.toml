@@ -37,7 +37,6 @@ anyhow = "1.0.95"
 thiserror = "2.0.12"
 toml = "0.8"
 uuid = { version = "1", features = ["v4"] }
-tauri-plugin-decorum = "1.1.1"
 
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
