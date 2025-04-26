@@ -60,7 +60,19 @@
     }
   },
   "bundle": {
+    "fileAssociations": [ 
+      {
+        "ext": [
+          "lore"
+        ],
+        "name": "Lore Designer File",
+        "description": "Lore Designer file format",
+        "role": "Editor",
+        "mimeType": "'text/plain'"
+      }
+    ],
     "publisher": "Cuervolu",
+    "homepage": "loredesigner.app",
     "copyright": "Copyright © 2025",
     "license": "AGPL-3.0",
     "licenseFile": "../../LICENSE",
