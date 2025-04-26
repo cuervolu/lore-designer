@@ -37,13 +37,12 @@ const defaultIcon = new URL('@/assets/logo.webp', import.meta.url).href;
 
 onMounted(async () => {
   try {
-    const iconPath = await invoke<string>('get_workspace_icon', {
+    workspaceIcon.value = await invoke<string>('get_workspace_icon', {
       workspacePath: props.workspace.path
     });
-
-    workspaceIcon.value = convertFileSrc(iconPath);
     isIconLoaded.value = true;
   } catch (error) {
+    await logError(`Failed to load workspace icon: ${error}`);
     workspaceIcon.value = defaultIcon;
     isIconError.value = true;
   }

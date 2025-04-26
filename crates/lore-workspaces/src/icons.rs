@@ -14,7 +14,6 @@ pub fn copy_default_icon_to_workspace(
     app: &AppHandle,
     workspace_path: &Path,
 ) -> Result<PathBuf, WorkspaceError> {
-    // Resolve the resource path to the default icon
     let icon_resource_path = app
         .path()
         .resolve("../../../icon.webp", BaseDirectory::Resource)

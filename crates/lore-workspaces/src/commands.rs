@@ -4,6 +4,8 @@ use crate::recent::{
     RecentWorkspace, add_recent_workspace, check_workspace_exists, get_recent_workspaces,
     remove_recent_workspace,
 };
+use base64::Engine;
+use base64::engine::general_purpose;
 use log::{error, info};
 use std::path::Path;
 use tauri::AppHandle;
@@ -37,12 +39,37 @@ pub async fn create_workspace(
 pub fn get_workspace_icon(workspace_path: String) -> Result<String, String> {
     let path = Path::new(&workspace_path);
 
+    // This is a workaround for the issue where the asset protocol does not allow the path
+    // The problem is that the user can have a workspace wherever they want, how could I predict that?
+    // The Tauri docs aren't clear on this, but it seems that the asset protocol is not meant to be
+    // used for arbitrary file paths. See <https://v2.tauri.app/reference/config/#assetprotocolconfig>
+    // and <https://v2.tauri.app/reference/config/#fsscope>
+    // So, I ask Claude how to fix this thing, and he came up with this solution, it's not perfect,
+    // but it works for now. Maybe in the future I can find a better solution.
+    // One potential drawback is that for very large images, the base64 encoding will increase the
+    // size by about 33%, but for small UI icons this shouldn't be an issue. Unless the user has
+    // a big ass image as an icon, but I don't think that's a common use case.
     if let Some(icon_path) = get_workspace_icon_path(path) {
-        return Ok(icon_path.to_string_lossy().to_string());
-    }
+        return match std::fs::read(&icon_path) {
+            Ok(bytes) => {
+                // Determine MIME type based on file extension
+                let mime_type = match icon_path.extension().and_then(|e| e.to_str()) {
+                    Some("webp") => "image/webp",
+                    Some("png") => "image/png",
+                    Some("jpg") | Some("jpeg") => "image/jpeg",
+                    Some("svg") => "image/svg+xml",
+                    _ => "application/octet-stream",
+                };
 
-    // If the icon is not found, return an error. In the frontend we will
-    // use the default application icon.
+                let base64 = general_purpose::STANDARD.encode(&bytes);
+
+                let data_url = format!("data:{};base64,{}", mime_type, base64);
+
+                Ok(data_url)
+            }
+            Err(e) => Err(format!("Failed to read icon file: {}", e)),
+        };
+    }
     Err("Workspace icon not found, use application default icon".to_string())
 }
 
