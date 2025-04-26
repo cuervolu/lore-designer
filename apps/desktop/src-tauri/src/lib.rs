@@ -1,6 +1,5 @@
 mod core;
 mod system_info;
-mod workspace;
 
 use core::config::{commands, preferences};
 use log::error;
@@ -97,7 +96,7 @@ pub fn run() {
             commands::set_theme,
             commands::set_language,
             commands::update_last_project,
-            workspace::commands::create_workspace,
+            lore_workspaces::create_workspace
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

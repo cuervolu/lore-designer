@@ -10,18 +10,6 @@ pub enum AppError {
 
     #[error("Filesystem error: {0}")]
     Io(#[from] std::io::Error),
-
-    #[error("TOML serialization error: {0}")]
-    Toml(#[from] toml::ser::Error),
-
-    #[error("Invalid path provided: {0}")]
-    InvalidPath(String),
-
-    #[error("Workspace directory already exists at: {0}")]
-    DirectoryExists(String),
-
-    #[error("Error creating workspace: {0}")]
-    Creation(#[from] anyhow::Error),
 }
 
 impl serde::Serialize for AppError {

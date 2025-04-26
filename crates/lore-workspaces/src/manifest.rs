@@ -1,11 +1,10 @@
-use crate::core::error::AppError;
-use crate::workspace::{LORE_DESIGNER_EXT, SETTINGS_FILE_NAME, WORKSPACE_VERSION};
+use crate::model::WorkspaceError;
+use crate::{LORE_DESIGNER_EXT, SETTINGS_FILE_NAME, WORKSPACE_VERSION};
 use anyhow::Context;
 use log::info;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
-use toml::toml;
 use uuid::Uuid;
 
 /// Structure representing the project manifest file
@@ -46,7 +45,7 @@ pub fn create_manifest(
     workspace_path: &Path,
     name: &str,
     app_version: &str,
-) -> Result<PathBuf, AppError> {
+) -> Result<PathBuf, WorkspaceError> {
     let manifest_file_name = format!("{}.lore", name);
     let manifest_path = workspace_path.join(&manifest_file_name);
 
@@ -61,7 +60,7 @@ pub fn create_manifest(
         authors: None,
     };
 
-    let toml_string = toml::to_string_pretty(&manifest_content).map_err(AppError::Toml)?;
+    let toml_string = toml::to_string_pretty(&manifest_content).map_err(WorkspaceError::Toml)?;
 
     fs::write(&manifest_path, toml_string).context(format!(
         "Failed to write manifest file: {}",
@@ -73,13 +72,13 @@ pub fn create_manifest(
 }
 
 /// Create a default settings.toml file in the .lore directory
-pub fn create_default_settings(workspace_path: &Path) -> Result<PathBuf, AppError> {
+pub fn create_default_settings(workspace_path: &Path) -> Result<PathBuf, WorkspaceError> {
     let settings_path = workspace_path
         .join(LORE_DESIGNER_EXT)
         .join(SETTINGS_FILE_NAME);
 
     // Basic settings structure - can be expanded later
-    let settings = toml! {
+    let settings = toml::toml! {
         [editor]
         theme = "system"
         font_size = 14
@@ -89,7 +88,7 @@ pub fn create_default_settings(workspace_path: &Path) -> Result<PathBuf, AppErro
         auto_save_interval_seconds = 60
     };
 
-    let toml_string = toml::to_string_pretty(&settings).map_err(AppError::Toml)?;
+    let toml_string = toml::to_string_pretty(&settings).map_err(WorkspaceError::Toml)?;
 
     fs::write(&settings_path, toml_string).context(format!(
         "Failed to write settings file: {}",

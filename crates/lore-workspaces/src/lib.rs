@@ -1,14 +1,18 @@
-pub(crate) mod commands;
+mod commands;
 mod manifest;
+mod model;
 
-use crate::core::error::AppError;
 use anyhow::Context;
 use log::{debug, info, warn};
 use std::fs;
 use std::path::{Path, PathBuf};
 
-/// Core constants for workspace structure
-pub const WORKSPACE_VERSION: u32 = 1;
+pub use commands::*;
+pub use manifest::*;
+pub use model::*;
+
+pub use crate::model::{WorkspaceError, WORKSPACE_VERSION};
+
 pub const DEFAULT_FOLDERS: [&str; 4] = ["Characters", "Lore", "Story", "Notes"];
 pub const INTERNAL_DIR: &str = ".lore";
 pub const INTERNAL_SUBDIRS: [&str; 2] = ["trash", "logs"];
@@ -29,10 +33,10 @@ impl WorkspaceManager {
         name: &str,
         base_path: impl AsRef<Path>,
         app_version: &str,
-    ) -> Result<PathBuf, AppError> {
+    ) -> Result<PathBuf, WorkspaceError> {
         let base_path = base_path.as_ref();
         if !base_path.is_dir() {
-            return Err(AppError::InvalidPath(base_path.display().to_string()));
+            return Err(WorkspaceError::InvalidPath(base_path.display().to_string()));
         }
 
         let workspace_path = base_path.join(name);
@@ -44,7 +48,7 @@ impl WorkspaceManager {
                 "Workspace directory already exists: {}",
                 workspace_path.display()
             );
-            return Err(AppError::DirectoryExists(
+            return Err(WorkspaceError::DirectoryExists(
                 workspace_path.display().to_string(),
             ));
         }
@@ -53,7 +57,7 @@ impl WorkspaceManager {
         Self::create_directory_structure(&workspace_path)?;
 
         // Create the manifest file
-        manifest::create_manifest(&workspace_path, name, app_version)?;
+        create_manifest(&workspace_path, name, app_version)?;
 
         info!(
             "Workspace '{}' created successfully at {}",
@@ -64,7 +68,7 @@ impl WorkspaceManager {
     }
 
     /// Create the directory structure for a new workspace
-    fn create_directory_structure(workspace_path: &Path) -> Result<(), AppError> {
+    fn create_directory_structure(workspace_path: &Path) -> Result<(), WorkspaceError> {
         // Create main workspace directory
         fs::create_dir_all(workspace_path).context(format!(
             "Failed to create workspace directory: {}",

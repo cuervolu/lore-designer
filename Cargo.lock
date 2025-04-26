@@ -2288,12 +2288,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "lore-workspaces"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "log",
+ "serde",
+ "tauri",
+ "thiserror 2.0.12",
+ "toml",
+ "uuid 1.16.0",
+]
+
+[[package]]
 name = "lore_designer"
 version = "0.1.0"
 dependencies = [
  "anyhow",
  "chrono",
  "log",
+ "lore-workspaces",
  "serde",
  "serde_json",
  "sysinfo",

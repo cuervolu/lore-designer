@@ -18,10 +18,10 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2.1.1", features = [] }
 
 [dependencies]
-serde_json = "1.0"
-serde = { version = "1.0", features = ["derive"] }
-log = "0.4"
-tauri = { version = "2.4.1", features = ["protocol-asset"] }
+serde_json ={workspace = true}
+serde = {workspace = true}
+log = {workspace = true}
+tauri = {workspace = true}
 tauri-plugin-log = { version = "2", features = ["colored"] }
 tauri-plugin-clipboard-manager = "2"
 tauri-plugin-dialog = "2"
@@ -30,14 +30,15 @@ tauri-plugin-os = "2"
 tauri-plugin-process = "2"
 tauri-plugin-opener = "2"
 tauri-plugin-store = "2"
+tauri-plugin-drpc = "0.1.4"
 chrono = { version = "0.4" }
 sysinfo = "0.34.2"
-tauri-plugin-drpc = "0.1.4"
-anyhow = "1.0.95"
-thiserror = "2.0.12"
-toml = "0.8"
-uuid = { version = "1", features = ["v4"] }
+anyhow = {workspace = true}
+thiserror ={workspace = true}
+toml = {workspace = true}
+uuid = {workspace = true}
 
+lore-workspaces = { path = "../../../crates/lore-workspaces" }
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-updater = "2"
