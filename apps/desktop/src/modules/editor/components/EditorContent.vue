@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import {User, Home, Image, Upload, type LucideIcon} from 'lucide-vue-next';
-import { Button } from '@/components/ui/button';
+import {User, Home, Upload, type LucideIcon} from 'lucide-vue-next';
+import {Button} from '@/components/ui/button';
 
 const props = defineProps<{
   file: {
@@ -81,59 +81,86 @@ const iconMap: Record<string, LucideIcon> = {
 const getIconComponent = (iconName: string) => {
   return iconMap[iconName] || User;
 };
+const renderMarkdown = (markdown: string | null) => {
+  if (!markdown) return "";
+  return markdown
+  .split("\n\n")
+  .map((p) => {
+    if (p.startsWith("## ")) {
+      return `<h2 class="text-xl font-semibold mt-6 mb-2">${p.substring(
+        3
+      )}</h2>`;
+    }
+    if (p.startsWith("#")) {
+      return `<h1 class="text-2xl font-bold mt-8 mb-4">${p.substring(
+        2
+      )}</h1>`;
+    }
+    return `<p class="mb-4">${p}</p>`;
+  })
+  .join("");
+};
 </script>
 
 <template>
-  <div class="p-4">
-    <!-- Cover Image Area -->
-    <div class="w-full h-40 bg-muted/30 rounded-md flex flex-col items-center justify-center mb-6">
-      <p class="font-medium text-xl text-center">PORTADA</p>
-      <Button v-if="false" variant="outline" class="mt-3">
-        <Upload class="h-4 w-4 mr-2" />
-        Upload Cover Image
+  <div class="flex flex-col h-full">
+    <div
+      class="w-full h-48 bg-muted/30 flex-shrink-0 relative group"
+    >
+      <img
+        :src="'https://placehold.co/1200x300/222/555?text=+'"
+        alt="Cover"
+        class="w-full h-full object-cover"
+      />
+
+      <div class="absolute top-4 left-4 flex items-center space-x-3">
+        <div
+          class="w-12 h-12 rounded-lg bg-background/80 backdrop-blur-sm border shadow-md flex items-center justify-center p-2"
+        >
+          <component
+            :is="getIconComponent(file.icon)"
+            class="h-full w-full text-muted-foreground"
+          />
+        </div>
+        <h1
+          class="text-2xl font-bold text-white"
+          style="text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7)"
+        >
+          {{ content.title }}
+        </h1>
+      </div>
+
+      <Button
+        v-if="false"
+        variant="outline"
+        class="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity"
+      >
+        <Upload class="h-4 w-4 mr-2"/>
+        Upload Cover
       </Button>
     </div>
 
-    <!-- Main Content -->
-    <div class="max-w-3xl mx-auto">
-      <!-- File icon and title -->
-      <div class="flex items-center mb-6">
-        <div class="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center">
-          <component :is="getIconComponent(file.icon)" class="h-6 w-6" />
+    <div class="flex-1 overflow-y-auto p-6">
+      <div class="max-w-4xl mx-auto">
+        <div
+          v-if="content.canvas"
+          class="border rounded-md p-4 min-h-[400px] flex items-center justify-center bg-muted/10"
+        >
+          <div class="flex items-center gap-8">
+            <div class="w-32 h-32 bg-foreground rounded-full"></div>
+            <div
+              class="w-40 h-40 bg-foreground"
+              style="clip-path: polygon(50% 0%, 0% 100%, 100% 100%)"
+            ></div>
+          </div>
         </div>
-        <h1 class="text-2xl font-bold ml-3">{{ content.title }}</h1>
-      </div>
 
-      <!-- Canvas content -->
-      <div v-if="content.canvas" class="border rounded-md p-4 h-96 flex items-center justify-center">
-        <div class="flex items-center gap-8">
-          <div class="w-32 h-32 bg-black rounded-full"></div>
-          <div class="w-40 h-40 bg-black" style="clip-path: polygon(50% 0%, 0% 100%, 100% 100%);"></div>
-        </div>
-      </div>
-
-      <!-- Text content -->
-      <div v-else class="prose lg:prose-xl max-w-none">
-        <p v-for="(paragraph, index) in content.content.split('\n\n')" :key="index" class="mb-4">
-          {{ paragraph }}
-        </p>
+        <div
+          v-else
+          class="prose dark:prose-invert lg:prose-xl max-w-none"
+          v-html="renderMarkdown(content.content)"
+        />
       </div>
     </div>
   </div>
 </template>
-
-<style scoped>
-.prose h1 {
-  font-size: 1.5rem;
-  font-weight: bold;
-  margin-top: 1.5rem;
-  margin-bottom: 1rem;
-}
-
-.prose h2 {
-  font-size: 1.25rem;
-  font-weight: bold;
-  margin-top: 1.5rem;
-  margin-bottom: 0.75rem;
-}
-</style>

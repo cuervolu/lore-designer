@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import {ref, computed} from 'vue';
-import {SidebarProvider, SidebarTrigger} from '@/components/ui/sidebar';
+import {ref, computed, watch} from "vue";
+import {SidebarProvider, SidebarTrigger} from "@/components/ui/sidebar";
 import EditorMenubar from "@editor/components/EditorMenubar.vue";
 import FilesystemSidebar from "@editor/components/FilesystemSidebar.vue";
 import EditorTabs from "@editor/components/EditorTabs.vue";
@@ -8,7 +8,7 @@ import EditorContent from "@editor/components/EditorContent.vue";
 import ConsolePanel from "@editor/components/ConsolePanel.vue";
 import InspectorPanel from "@editor/components/InspectorPanel.vue";
 import StatusFooter from "@editor/components/StatusFooter.vue";
-import {ResizableHandle, ResizablePanel, ResizablePanelGroup} from '@/components/ui/resizable';
+import {useAppTitle} from "@common/composables/useAppTitle";
 
 const props = defineProps<{
   activeTab: string;
@@ -19,6 +19,7 @@ const props = defineProps<{
     path: string;
     icon: string;
   }[];
+  workspaceName?: string;
 }>();
 
 const showConsole = ref(false);
@@ -33,10 +34,24 @@ const indexingInterval = setInterval(() => {
 }, 500);
 
 const activeFile = computed(() => {
-  return props.files.find(file => file.id === props.activeTab);
+  return props.files.find((file) => file.id === props.activeTab);
 });
 
-// Toggle console visibility
+const {setEditorTitle, resetTitle} = useAppTitle();
+watch(
+  activeFile,
+  (newFile) => {
+    if (newFile) {
+      const currentWorkspaceName = props.workspaceName || "My Workspace";
+      setEditorTitle(newFile.name, newFile.extension, currentWorkspaceName);
+    } else {
+      resetTitle();
+    }
+  },
+  {immediate: true}
+);
+
+
 const toggleConsole = () => {
   showConsole.value = !showConsole.value;
 };
@@ -44,56 +59,55 @@ const toggleConsole = () => {
 
 <template>
   <SidebarProvider>
-    <!-- Main wrapper with fixed height to account for titlebar -->
     <div class="flex flex-col h-full w-full overflow-hidden">
-      <!-- Editor Menubar at the top -->
-      <EditorMenubar @toggle-console="toggleConsole"/>
+      <EditorMenubar
+        @toggle-console="toggleConsole"
+        class="flex-shrink-0 z-10"
+      />
 
-      <!-- Main editor area with resizable panels -->
-      <div class="flex-1 flex overflow-hidden">
-        <!-- Sidebar Trigger (visible on mobile) -->
+      <div class="flex flex-1 overflow-hidden">
         <div class="lg:hidden absolute top-4 left-4 z-20">
-          <SidebarTrigger/>
+          <SidebarTrigger />
         </div>
 
+        <FilesystemSidebar class="flex-shrink-0" />
 
-        <!-- Left Sidebar - Filesystem -->
-        <FilesystemSidebar/>
-
-
-        <!-- Main Editor Content -->
-
-        <div class="flex flex-col h-full overflow-hidden">
-          <!-- Editor Tabs -->
+        <div class="flex flex-col flex-1 h-full overflow-hidden min-h-0">
           <EditorTabs
             :files="files"
             :active-tab="activeTab"
+            class="flex-shrink-0"
           />
 
-          <!-- Editor Content -->
-          <div class="flex-1 overflow-auto">
+          <div class="flex-1 overflow-auto bg-background">
             <EditorContent
               v-if="activeFile"
+              :key="activeFile.id"
               :file="activeFile"
             />
+            <div
+              v-else
+              class="flex items-center justify-center h-full text-muted-foreground"
+            >
+              Select a file to view its content.
+            </div>
           </div>
 
-          <!-- Console Panel (conditionally shown) -->
-          <ConsolePanel v-if="showConsole" @close="toggleConsole"/>
+          <ConsolePanel
+            v-if="showConsole"
+            @close="toggleConsole"
+            class="flex-shrink-0"
+          />
         </div>
 
-
-        <!-- Right Sidebar - Inspector -->
-
-        <InspectorPanel :file="activeFile"/>
-
+        <InspectorPanel :file="activeFile" class="flex-shrink-0" />
       </div>
-      <!-- Status Footer -->
+
       <StatusFooter
         :is-indexing="isIndexing"
         :progress="progress"
+        class="flex-shrink-0"
       />
-
     </div>
   </SidebarProvider>
 </template>
