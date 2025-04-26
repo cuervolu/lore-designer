@@ -1,16 +1,17 @@
 mod commands;
 mod manifest;
 mod model;
+mod icons;
 
 use anyhow::Context;
 use log::{debug, info, warn};
 use std::fs;
 use std::path::{Path, PathBuf};
-
+use tauri::AppHandle;
 pub use commands::*;
 pub use manifest::*;
 pub use model::*;
-
+use crate::icons::copy_default_icon_to_workspace;
 pub use crate::model::{WorkspaceError, WORKSPACE_VERSION};
 
 pub const DEFAULT_FOLDERS: [&str; 4] = ["Characters", "Lore", "Story", "Notes"];
@@ -30,6 +31,7 @@ impl WorkspaceManager {
     /// * `base_path` - Base directory where the workspace should be created
     /// * `app_version` - Current application version
     pub fn create_workspace(
+        app: &AppHandle,
         name: &str,
         base_path: impl AsRef<Path>,
         app_version: &str,
@@ -58,6 +60,8 @@ impl WorkspaceManager {
 
         // Create the manifest file
         create_manifest(&workspace_path, name, app_version)?;
+
+        copy_default_icon_to_workspace(app, &workspace_path)?;
 
         info!(
             "Workspace '{}' created successfully at {}",

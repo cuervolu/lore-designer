@@ -96,7 +96,8 @@ pub fn run() {
             commands::set_theme,
             commands::set_language,
             commands::update_last_project,
-            lore_workspaces::create_workspace
+            lore_workspaces::create_workspace,
+            lore_workspaces::get_workspace_icon
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

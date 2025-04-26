@@ -18,7 +18,7 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2.1.1", features = [] }
 
 [dependencies]
-serde_json ={workspace = true}
+serde_json = {workspace = true}
 serde = {workspace = true}
 log = {workspace = true}
 tauri = {workspace = true}
@@ -34,7 +34,7 @@ tauri-plugin-drpc = "0.1.4"
 chrono = { version = "0.4" }
 sysinfo = "0.34.2"
 anyhow = {workspace = true}
-thiserror ={workspace = true}
+thiserror = {workspace = true}
 toml = {workspace = true}
 uuid = {workspace = true}
 

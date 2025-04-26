@@ -1,6 +1,9 @@
 ﻿<script setup lang="ts">
+import {convertFileSrc, invoke} from "@tauri-apps/api/core";
 import { writeText } from '@tauri-apps/plugin-clipboard-manager';
+import {onMounted, ref} from "vue";
 import { Folder, EllipsisVertical, ExternalLink, Copy, Trash } from 'lucide-vue-next';
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,6 +20,26 @@ const props = defineProps<{
     path: string;
   }
 }>();
+
+const workspaceIcon = ref<string>('');
+const isIconLoaded = ref<boolean>(false);
+const isIconError = ref<boolean>(false);
+
+const defaultIcon = new URL('@/assets/logo.webp', import.meta.url).href;
+
+onMounted(async () => {
+  try {
+    const iconPath = await invoke<string>('get_workspace_icon', {
+      workspacePath: props.workspace.path
+    });
+
+    workspaceIcon.value = convertFileSrc(iconPath);
+    isIconLoaded.value = true;
+  } catch (error) {
+    workspaceIcon.value = defaultIcon;
+    isIconError.value = true;
+  }
+});
 
 const handleOpen = () => {
   console.log('Open workspace');
@@ -41,7 +64,17 @@ const handleRemove = () => {
 <template>
   <div class="flex items-center p-4 hover:bg-accent/60 hover:text-accent-foreground rounded-md cursor-pointer group">
     <div class="mr-4 bg-muted w-10 h-10 rounded-md flex items-center justify-center">
-      <Folder class="w-6 h-6 text-muted-foreground" />
+      <img
+        v-if="isIconLoaded"
+        :src="workspaceIcon"
+        alt="Workspace Icon"
+        class="w-6 h-6 object-contain"
+        @error="isIconError = true"
+      />
+      <template v-else-if="isIconError">
+        <img :src="defaultIcon" alt="Default Icon" class="w-6 h-6 object-contain" />
+      </template>
+      <Folder v-else class="w-6 h-6 text-muted-foreground" />
     </div>
     <div class="flex-1">
       <h3 class="font-medium">{{ workspace.name }}</h3>
