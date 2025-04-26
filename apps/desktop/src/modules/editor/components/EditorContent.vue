@@ -113,7 +113,7 @@ const getIconComponent = (iconName: string) => {
       </div>
 
       <!-- Text content -->
-      <div v-else class="prose max-w-none">
+      <div v-else class="prose lg:prose-xl max-w-none">
         <p v-for="(paragraph, index) in content.content.split('\n\n')" :key="index" class="mb-4">
           {{ paragraph }}
         </p>

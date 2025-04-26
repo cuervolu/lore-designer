@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import EditorMenubar from "@editor/components/EditorMenubar.vue";
 import FilesystemSidebar from "@editor/components/FilesystemSidebar.vue";
 import EditorTabs from "@editor/components/EditorTabs.vue";
@@ -9,6 +8,7 @@ import EditorContent from "@editor/components/EditorContent.vue";
 import ConsolePanel from "@editor/components/ConsolePanel.vue";
 import InspectorPanel from "@editor/components/InspectorPanel.vue";
 import StatusFooter from "@editor/components/StatusFooter.vue";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 
 const props = defineProps<{
   activeTab: string;
@@ -44,27 +44,29 @@ const toggleConsole = () => {
 
 <template>
   <SidebarProvider>
-    <div class="flex flex-col h-full">
-      <!-- Editor Menubar -->
+    <!-- Main wrapper with fixed height to account for titlebar -->
+    <div class="flex flex-col h-full w-full overflow-hidden">
+      <!-- Editor Menubar at the top -->
       <EditorMenubar @toggle-console="toggleConsole" />
 
+      <!-- Main editor area with resizable panels -->
       <div class="flex-1 flex overflow-hidden">
         <!-- Sidebar Trigger (visible on mobile) -->
         <div class="lg:hidden absolute top-4 left-4 z-20">
           <SidebarTrigger />
         </div>
 
-        <ResizablePanelGroup direction="horizontal" class="w-full overflow-hidden">
+        <ResizablePanelGroup direction="horizontal" class="w-full">
           <!-- Left Sidebar - Filesystem -->
-          <ResizablePanel :defaultSize="20" :minSize="15" :maxSize="30" class="h-full">
+          <ResizablePanel :defaultSize="20" :minSize="15" :maxSize="30">
             <FilesystemSidebar />
           </ResizablePanel>
 
-          <ResizableHandle />
+          <ResizableHandle withHandle />
 
-          <!-- Main Editor Area -->
-          <ResizablePanel :defaultSize="60" class="h-full">
-            <div class="flex-1 flex flex-col h-full overflow-hidden">
+          <!-- Main Editor Content -->
+          <ResizablePanel :defaultSize="60">
+            <div class="flex flex-col h-full overflow-hidden">
               <!-- Editor Tabs -->
               <EditorTabs
                 :files="files"
@@ -80,14 +82,14 @@ const toggleConsole = () => {
               </div>
 
               <!-- Console Panel (conditionally shown) -->
-              <ConsolePanel v-if="showConsole" />
+              <ConsolePanel v-if="showConsole" @close="toggleConsole" />
             </div>
           </ResizablePanel>
 
-          <ResizableHandle />
+          <ResizableHandle withHandle />
 
           <!-- Right Sidebar - Inspector -->
-          <ResizablePanel :defaultSize="20" :minSize="15" :maxSize="30" class="h-full">
+          <ResizablePanel :defaultSize="20" :minSize="15" :maxSize="30">
             <InspectorPanel :file="activeFile" />
           </ResizablePanel>
         </ResizablePanelGroup>
