@@ -2294,7 +2294,9 @@ dependencies = [
  "anyhow",
  "log",
  "serde",
+ "serde_json",
  "tauri",
+ "tauri-plugin-store",
  "thiserror 2.0.12",
  "toml",
  "uuid 1.16.0",
@@ -2304,7 +2306,6 @@ dependencies = [
 name = "lore_designer"
 version = "0.1.0"
 dependencies = [
- "anyhow",
  "chrono",
  "log",
  "lore-workspaces",
@@ -2325,8 +2326,6 @@ dependencies = [
  "tauri-plugin-updater",
  "tauri-plugin-window-state",
  "thiserror 2.0.12",
- "toml",
- "uuid 1.16.0",
 ]
 
 [[package]]

@@ -2,6 +2,7 @@ mod commands;
 mod manifest;
 mod model;
 mod icons;
+mod recent;
 
 use anyhow::Context;
 use log::{debug, info, warn};
@@ -11,6 +12,7 @@ use tauri::AppHandle;
 pub use commands::*;
 pub use manifest::*;
 pub use model::*;
+pub use recent::*;
 use crate::icons::copy_default_icon_to_workspace;
 pub use crate::model::{WorkspaceError, WORKSPACE_VERSION};
 

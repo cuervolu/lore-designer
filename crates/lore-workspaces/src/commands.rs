@@ -1,5 +1,9 @@
 use super::{WorkspaceError, WorkspaceManager, WorkspaceResponse, create_default_settings};
 use crate::icons::get_workspace_icon_path;
+use crate::recent::{
+    RecentWorkspace, add_recent_workspace, check_workspace_exists, get_recent_workspaces,
+    remove_recent_workspace,
+};
 use log::{error, info};
 use std::path::Path;
 use tauri::AppHandle;
@@ -40,4 +44,28 @@ pub fn get_workspace_icon(workspace_path: String) -> Result<String, String> {
     // If the icon is not found, return an error. In the frontend we will
     // use the default application icon.
     Err("Workspace icon not found, use application default icon".to_string())
+}
+
+#[tauri::command]
+pub async fn get_recent_workspaces_command(app: AppHandle) -> Result<Vec<RecentWorkspace>, String> {
+    get_recent_workspaces(&app)
+}
+
+#[tauri::command]
+pub async fn add_recent_workspace_command(
+    app: AppHandle,
+    name: String,
+    path: String,
+) -> Result<(), String> {
+    add_recent_workspace(&app, name, path)
+}
+
+#[tauri::command]
+pub async fn remove_recent_workspace_command(app: AppHandle, path: String) -> Result<(), String> {
+    remove_recent_workspace(&app, path)
+}
+
+#[tauri::command]
+pub fn check_workspace_exists_command(path: String) -> bool {
+    check_workspace_exists(&path)
 }

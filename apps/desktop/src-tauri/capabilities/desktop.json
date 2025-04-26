@@ -19,6 +19,9 @@
     "core:window:allow-set-focus",
     "core:window:allow-is-maximized",
     "core:window:allow-start-dragging",
-    "core:window:allow-toggle-maximize"
+    "core:window:allow-toggle-maximize",
+    "opener:allow-open-path",
+    "opener:allow-reveal-item-in-dir",
+    "opener:allow-default-urls"
   ]
 }

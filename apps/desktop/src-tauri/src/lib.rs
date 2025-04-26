@@ -71,7 +71,7 @@ fn setup_logger(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> 
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-         tauri::Builder::default()
+    tauri::Builder::default()
         .plugin(tauri_plugin_window_state::Builder::new().build())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_store::Builder::new().build())
@@ -97,7 +97,11 @@ pub fn run() {
             commands::set_language,
             commands::update_last_project,
             lore_workspaces::create_workspace,
-            lore_workspaces::get_workspace_icon
+            lore_workspaces::get_workspace_icon,
+            lore_workspaces::get_recent_workspaces_command,
+            lore_workspaces::add_recent_workspace_command,
+            lore_workspaces::remove_recent_workspace_command,
+            lore_workspaces::check_workspace_exists_command,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import { Toaster } from '@/components/ui/sonner'
 import { usePreferencesStore } from '@common/stores/preferences.store'
 import { useAppTitle } from '@common/composables/useAppTitle.ts'
 import AppTitlebar from '@common/components/AppTitlebar.vue'
@@ -47,6 +48,7 @@ onMounted(async () => {
   </div>
 
   <div class="h-screen w-screen pt-9">
+    <Toaster />
     <div class="h-full bg-background text-foreground">
       <router-view />
     </div>

@@ -5,9 +5,11 @@ edition = "2024"
 
 [dependencies]
 tauri = {workspace = true}
+tauri-plugin-store = {workspace = true}
 anyhow = {workspace = true}
 thiserror ={workspace = true}
 toml = {workspace = true}
 uuid = {workspace = true}
 serde = {workspace = true}
+serde_json = {workspace = true}
 log = {workspace = true}

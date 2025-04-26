@@ -12,9 +12,11 @@ import { Label } from '@/components/ui/label'
 
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { usePreferencesStore } from '@common/stores/preferences.store'
+import {useRecentWorkspacesStore} from "@wizard/stores/recent-workspaces.store.ts";
 
 const router = useRouter()
 const preferencesStore = usePreferencesStore()
+const recentWorkspacesStore = useRecentWorkspacesStore()
 const workspaceName = ref('')
 const workspacePath = ref('')
 const isCreating = ref(false)
@@ -65,6 +67,8 @@ const createWorkspace = async () => {
 
     if (result.path) {
       await preferencesStore.updateLastProject(result.path)
+
+      await recentWorkspacesStore.addRecentWorkspace(workspaceName.value, result.path)
     }
 
     goBack()
