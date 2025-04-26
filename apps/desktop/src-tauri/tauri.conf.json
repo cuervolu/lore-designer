@@ -81,7 +81,13 @@
     "longDescription": "Create and manage your game's story, dialogues, and world in one unified workspace. Built by indie developers for indie developers.",
     "active": true,
     "createUpdaterArtifacts": true,
-    "targets": "all",
+    "targets": [
+      "appimage",
+      "nsis", 
+      "msi", 
+      "deb",
+      "rpm"
+    ],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
