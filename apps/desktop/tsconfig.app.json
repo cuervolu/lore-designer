@@ -18,6 +18,7 @@
       "@modules/*": ["./src/modules/*"],
       "@common/*": ["./src/modules/common/*"],
       "@wizard/*": ["./src/modules/wizard/*"],
+      "@editor/*": ["./src/modules/editor/*"]
     }
   }
 }

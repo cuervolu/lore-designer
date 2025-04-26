@@ -19,6 +19,7 @@ export default defineConfig({
       '@modules': fileURLToPath(new URL('./src/modules', import.meta.url)),
       '@common': fileURLToPath(new URL('./src/modules/common', import.meta.url)),
       '@wizard': fileURLToPath(new URL('./src/modules/wizard', import.meta.url)),
+      '@editor': fileURLToPath(new URL('./src/modules/editor', import.meta.url)),
     }
   },
   // prevent vite from obscuring rust errors

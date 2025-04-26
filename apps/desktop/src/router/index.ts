@@ -44,15 +44,27 @@ export const router = createRouter({
           path: 'learn',
           name: 'learn',
           component: () => import('@wizard/views/LearnView.vue'),
+        },
+        {
+          path: 'editor-prototype',
+          name: 'editor-prototype',
+          redirect: { name: 'editor' }
         }
       ]
+    },
+
+    // Editor module
+    {
+      path: '/editor',
+      name: 'editor',
+      component: () => import('@editor/views/EditorView.vue'),
     },
 
     // Not Found - Add this when you have a 404 page
     {
       path: '/:pathMatch(.*)*',
       redirect: '/wizard'
-      // Uncomment when you create a 404 page
+      // Uncomment when you create a 404-page
       // component: () => import('@/modules/common/pages/NotFound404.vue'),
     }
   ]
