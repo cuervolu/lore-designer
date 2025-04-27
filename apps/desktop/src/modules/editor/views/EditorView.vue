@@ -1,22 +1,109 @@
+<!-- apps/desktop/src/modules/stores/views/EditorView.vue -->
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted, watch, onBeforeUnmount, computed } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { useEditorStore } from '@editor/stores/editor.store';
+import { useAppTitle } from '@common/composables/useAppTitle';
 import EditorLayout from '@editor/layouts/EditorLayout.vue';
+import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
 
-const activeTab = ref('protagonist');
-const workspaceName = ref('My Fantasy Novel');
-const files = ref([
-  { id: 'protagonist', name: 'Protagonist', extension: 'md', path: 'Characters/Protagonist.md', icon: 'User' },
-  { id: 'kingdom', name: 'Kingdom', extension: 'md', path: 'Lore/Kingdom.md', icon: 'Home' },
-  { id: 'canvas', name: 'Canvas', extension: 'canvas', path: 'Story/Canvas.canvas', icon: 'PenTool' }
-]);
+const route = useRoute();
+const router = useRouter();
+const editorStore = useEditorStore();
+const { setEditorTitle, resetTitle } = useAppTitle();
 
+const workspacePath = ref('');
+const isLoadingWorkspace = ref(true);
+const errorMessage = ref('');
 
+const indexProgress = computed(() => {
+  if (!editorStore.indexingProgress) return 0;
+
+  const { processed, total } = editorStore.indexingProgress;
+  if (total === 0) return 0;
+
+  return Math.floor((processed / total) * 100);
+});
+
+// Watch for changes in the active tab
+watch(
+  () => editorStore.activeTab,
+  (newTab) => {
+    if (newTab && editorStore.currentWorkspace) {
+      setEditorTitle(
+        newTab.name,
+        newTab.extension,
+        editorStore.currentWorkspace.name
+      );
+    } else if (editorStore.currentWorkspace) {
+      setEditorTitle('', '', editorStore.currentWorkspace.name);
+    } else {
+      resetTitle();
+    }
+  },
+  { immediate: true }
+);
+
+// Load workspace data when component mounts
+onMounted(async () => {
+  // Get workspace path from query parameter
+  const workspacePathParam = route.query.path;
+
+  if (!workspacePathParam || typeof workspacePathParam !== 'string') {
+    errorMessage.value = 'No workspace path provided';
+    isLoadingWorkspace.value = false;
+    return;
+  }
+
+  workspacePath.value = workspacePathParam;
+
+  try {
+    // Open the workspace
+    await editorStore.openWorkspace(workspacePathParam);
+    isLoadingWorkspace.value = false;
+  } catch (err) {
+    errorMessage.value = `Failed to open workspace: ${err}`;
+    isLoadingWorkspace.value = false;
+  }
+});
+
+// Cleanup on component unmount
+onBeforeUnmount(() => {
+  resetTitle();
+});
+
+// Navigate back to wizard
+const goToWizard = () => {
+  router.push({ name: 'workspaces' });
+};
 </script>
 
 <template>
-  <EditorLayout
-    :active-tab="activeTab"
-    :files="files"
-    :workspace-name="workspaceName"
-  />
+  <div class="h-[calc(100vh-36px)] w-full flex flex-col">
+    <!-- Loading state -->
+    <div v-if="isLoadingWorkspace" class="flex-1 flex flex-col items-center justify-center">
+      <div class="w-72 space-y-4 text-center">
+        <h2 class="text-xl font-semibold">Opening Workspace</h2>
+        <div class="space-y-2">
+          <Progress :model-value="indexProgress" class="w-full" />
+          <p class="text-muted-foreground text-sm">
+            {{ editorStore.indexingProgress?.current_file || 'Initializing...' }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error state -->
+    <div v-else-if="errorMessage" class="flex-1 flex flex-col items-center justify-center">
+      <div class="w-96 space-y-4 text-center">
+        <h2 class="text-xl font-semibold text-destructive">Error</h2>
+        <p>{{ errorMessage }}</p>
+        <Button @click="goToWizard">Return to Workspaces</Button>
+      </div>
+    </div>
+
+    <!-- Editor layout -->
+    <EditorLayout v-else />
+  </div>
 </template>

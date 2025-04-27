@@ -1,76 +1,161 @@
+<!-- apps/desktop/src/modules/editor/components/InspectorPanel.vue -->
 <script setup lang="ts">
-import {computed, ref} from 'vue';
+import { computed, ref, watch } from 'vue';
 import { Search } from 'lucide-vue-next';
 import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { useEditorStore } from '@editor/stores/editor.store';
+import { lstat } from '@tauri-apps/plugin-fs';
+import { error as logError } from '@tauri-apps/plugin-log';
+import type {EditorFile} from "@editor/types/editor.types.ts";
 
 const props = defineProps<{
-  file?: {
-    id: string;
-    name: string;
-    extension: string;
-    path: string;
-    icon: string;
-  } | null;
+  file?: EditorFile | null;
 }>();
 
+const editorStore = useEditorStore();
 const searchQuery = ref('');
+const properties = ref<Array<{ name: string; value: string }>>([]);
+const isLoading = ref(false);
 
-// Mock properties based on file
-const getFileProperties = () => {
-  if (!props.file) return [];
+// Load file properties when file changes
+watch(() => props.file, async (newFile) => {
+  if (newFile) {
+    await loadFileProperties(newFile);
+  } else {
+    properties.value = [];
+  }
+}, { immediate: true });
 
-  // Common properties
-  const properties = [
-    { name: 'Filename', value: `${props.file.name}.${props.file.extension}` },
-    { name: 'Created At', value: '17/04/2025 10:22' },
-    { name: 'Updated At', value: '18/04/2025 16:22' },
-    { name: 'Word Count', value: '1,548' },
-  ];
+// Load file properties from the system
+async function loadFileProperties(file: EditorFile) {
+  if (!editorStore.currentWorkspace) return;
 
-  // Add file-specific properties
-  if (props.file.id === 'protagonist') {
-    return [
-      ...properties,
-      { name: 'Character Type', value: 'Protagonist' },
-      { name: 'Age', value: '28' },
-      { name: 'Occupation', value: 'Warrior' },
-      { name: 'Home', value: 'Kingdom Valley' },
-      { name: 'Status', value: 'Alive' },
+  isLoading.value = true;
+  properties.value = [];
+
+  try {
+    // Common properties
+    properties.value = [
+      { name: 'Filename', value: `${file.name}.${file.extension}` },
+      { name: 'Path', value: file.path },
+      { name: 'File Type', value: getFileTypeLabel(file) },
     ];
+
+    // Add file metadata (use the Tauri fs plugin to get file info)
+    const fullPath = `${editorStore.currentWorkspace.path}/${file.path}`;
+
+    try {
+      // Use lstat to get file metadata
+      const metadata = await lstat(fullPath);
+
+      if (metadata) {
+        // Format creation time
+        if (metadata.birthtime) {
+          properties.value.push({
+            name: 'Created',
+            value: metadata.birthtime.toLocaleString()
+          });
+        }
+
+        // Format modification time
+        if (metadata.mtime) {
+          properties.value.push({
+            name: 'Modified',
+            value: metadata.mtime.toLocaleString()
+          });
+        }
+
+        // Last access time
+        if (metadata.atime) {
+          properties.value.push({
+            name: 'Last Access',
+            value: metadata.atime.toLocaleString()
+          });
+        }
+
+        // File size
+        properties.value.push({
+          name: 'Size',
+          value: formatFileSize(metadata.size)
+        });
+
+        // Is directory?
+        properties.value.push({
+          name: 'Type',
+          value: metadata.isDirectory ? 'Directory' : metadata.isFile ? 'File' : 'Other'
+        });
+
+        // Readonly
+        properties.value.push({
+          name: 'Read Only',
+          value: metadata.readonly ? 'Yes' : 'No'
+        });
+      }
+    } catch (err) {
+      await logError(`Failed to get file metadata: ${err}`);
+    }
+
+    // Add file type specific properties
+    if (file.extension === 'md') {
+      properties.value.push({ name: 'Type', value: 'Markdown Document' });
+    } else if (file.extension === 'character') {
+      properties.value.push({ name: 'Type', value: 'Character' });
+    } else if (file.extension === 'canvas') {
+      properties.value.push({ name: 'Type', value: 'Canvas' });
+    }
+
+  } catch (err) {
+    await logError(`Failed to load file properties: ${err}`);
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+// Helper function to format file size
+function formatFileSize(bytes: number): string {
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  let size = bytes;
+  let unitIndex = 0;
+
+  while (size >= 1024 && unitIndex < units.length - 1) {
+    size /= 1024;
+    unitIndex++;
   }
 
-  if (props.file.id === 'kingdom') {
-    return [
-      ...properties,
-      { name: 'Type', value: 'Location' },
-      { name: 'Region', value: 'Central Lands' },
-      { name: 'Population', value: '25,000' },
-      { name: 'Ruler', value: 'King Edmund' },
-      { name: 'Climate', value: 'Temperate' },
-    ];
+  return `${size.toFixed(1)} ${units[unitIndex]}`;
+}
+
+// Helper function to get file type label
+function getFileTypeLabel(file: EditorFile): string {
+  const extension = file.extension.toLowerCase();
+
+  switch (extension) {
+    case 'md':
+      return 'Markdown';
+    case 'character':
+      return 'Character';
+    case 'canvas':
+      return 'Canvas';
+    case 'json':
+      return 'JSON';
+    case 'jpg':
+    case 'jpeg':
+    case 'png':
+    case 'webp':
+    case 'svg':
+      return 'Image';
+    default:
+      return extension.toUpperCase();
   }
-
-  if (props.file.id === 'canvas') {
-    return [
-      ...properties,
-      { name: 'Type', value: 'Canvas' },
-      { name: 'Elements', value: '2' },
-      { name: 'Connections', value: '1' },
-      { name: 'Version', value: '1.0' },
-    ];
-  }
-
-  return properties;
-};
-
-const properties = getFileProperties();
+}
 
 // Filter properties based on search
 const filteredProperties = computed(() => {
-  if (!searchQuery.value) return properties;
+  if (!searchQuery.value) return properties.value;
 
   const query = searchQuery.value.toLowerCase();
-  return properties.filter(prop =>
+  return properties.value.filter(prop =>
     prop.name.toLowerCase().includes(query) ||
     prop.value.toLowerCase().includes(query)
   );
@@ -95,16 +180,31 @@ const filteredProperties = computed(() => {
     </div>
 
     <!-- Properties -->
-    <div class="flex-1 overflow-auto p-2">
-      <div v-if="file">
-        <div v-for="(property, index) in filteredProperties" :key="index" class="mb-3">
-          <div class="text-xs text-muted-foreground">{{ property.name }}</div>
-          <div>{{ property.value }}</div>
+    <ScrollArea class="flex-1">
+      <div class="p-2">
+        <div v-if="isLoading" class="flex items-center justify-center h-20">
+          <span class="text-muted-foreground">Loading properties...</span>
+        </div>
+
+        <div v-else-if="file && filteredProperties.length > 0">
+          <div v-for="(property, index) in filteredProperties" :key="index" class="mb-3">
+            <div class="text-xs text-muted-foreground">{{ property.name }}</div>
+            <div>{{ property.value }}</div>
+          </div>
+        </div>
+
+        <div v-else-if="file && searchQuery" class="flex items-center justify-center h-20 text-muted-foreground">
+          No properties matching "{{ searchQuery }}"
+        </div>
+
+        <div v-else-if="!file" class="flex items-center justify-center h-full text-muted-foreground">
+          Select a file to view properties
+        </div>
+
+        <div v-else class="flex items-center justify-center h-20 text-muted-foreground">
+          No properties available for this file
         </div>
       </div>
-      <div v-else class="flex items-center justify-center h-full text-muted-foreground">
-        Select a file to view properties
-      </div>
-    </div>
+    </ScrollArea>
   </div>
 </template>

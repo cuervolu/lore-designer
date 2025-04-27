@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import {useRouter} from 'vue-router';
+import {open} from '@tauri-apps/plugin-dialog';
+import {useEditorStore} from '@editor/stores/editor.store';
+import {toast} from 'vue-sonner';
 import {
   Menubar,
   MenubarCheckboxItem,
@@ -14,9 +18,111 @@ import {
 } from '@/components/ui/menubar';
 
 const emit = defineEmits(['toggleConsole']);
+const router = useRouter();
+const editorStore = useEditorStore();
 
+// Toggle console panel
 const handleToggleConsole = () => {
   emit('toggleConsole');
+};
+
+// Toggle inspector panel
+const handleToggleInspector = () => {
+  editorStore.toggleInspector();
+};
+
+// Navigate back to workspaces
+const goToWorkspaces = () => {
+  router.push({name: 'workspaces'});
+};
+
+// Create a new file
+const handleNewFile = async () => {
+  if (!editorStore.currentWorkspace) return;
+
+  try {
+    // Open folder selection dialog
+    const folderPath = await open({
+      directory: true,
+      title: 'Select location for new file',
+      defaultPath: editorStore.currentWorkspace.path,
+    });
+
+    if (!folderPath) return;
+
+    // Get relative path within workspace
+    const relativePath = folderPath.replace(`${editorStore.currentWorkspace.path}/`, '');
+
+    // Prompt for file name
+    const fileName = window.prompt('Enter file name (with extension):', 'untitled.md');
+    if (!fileName) return;
+
+    // Create default content based on extension
+    let initialContent = '';
+    const ext = fileName.split('.').pop()?.toLowerCase();
+
+    if (ext === 'md') {
+      initialContent = `# ${fileName.split('.')[0]}\n\nWrite your content here...`;
+    } else if (ext === 'json' || ext === 'canvas') {
+      initialContent = '{\n  \n}';
+    }
+
+    // Create the file
+    const filePath = await editorStore.createNewFile(relativePath, fileName, initialContent);
+    if (filePath) {
+      toast.success('File created successfully');
+      // Auto-open the file
+      await editorStore.openFile(filePath);
+    }
+  } catch (err) {
+    console.error('Failed to create file:', err);
+    toast.error('Failed to create file');
+  }
+};
+
+// Open a file
+const handleOpenFile = async () => {
+  if (!editorStore.currentWorkspace) return;
+
+  try {
+    const filePath = await open({
+      directory: false,
+      multiple: false,
+      title: 'Open File',
+      defaultPath: editorStore.currentWorkspace.path,
+    });
+
+    if (!filePath) return;
+
+    // Get relative path within workspace
+    const relativePath = filePath.replace(`${editorStore.currentWorkspace.path}/`, '');
+
+    // Open the file
+    await editorStore.openFile(relativePath);
+  } catch (err) {
+    console.error('Failed to open file:', err);
+    toast.error('Failed to open file');
+  }
+};
+
+// Save active file
+const handleSave = async () => {
+  if (!editorStore.activeTab) {
+    toast.error('No active file to save');
+    return;
+  }
+
+  // The actual save is handled in the EditorContent component
+  // This just triggers a save action that will be implemented later
+  toast.info('Save action triggered', {
+    description: 'Save functionality will be implemented in the editor component'
+  });
+};
+
+// Reload file tree
+const handleReloadFileTree = async () => {
+  await editorStore.loadFileTree();
+  toast.success('File tree refreshed');
 };
 </script>
 
@@ -25,16 +131,16 @@ const handleToggleConsole = () => {
     <MenubarMenu>
       <MenubarTrigger>File</MenubarTrigger>
       <MenubarContent>
-        <MenubarItem>
+        <MenubarItem @click="handleNewFile">
           New File
           <MenubarShortcut>⌘N</MenubarShortcut>
         </MenubarItem>
-        <MenubarItem>
+        <MenubarItem @click="handleOpenFile">
           Open File
           <MenubarShortcut>⌘O</MenubarShortcut>
         </MenubarItem>
         <MenubarSeparator/>
-        <MenubarItem>
+        <MenubarItem @click="handleSave">
           Save
           <MenubarShortcut>⌘S</MenubarShortcut>
         </MenubarItem>
@@ -48,9 +154,8 @@ const handleToggleConsole = () => {
           <MenubarShortcut>⌘W</MenubarShortcut>
         </MenubarItem>
         <MenubarSeparator/>
-        <MenubarItem>
-          Exit
-          <MenubarShortcut>Alt+F4</MenubarShortcut>
+        <MenubarItem @click="goToWorkspaces">
+          Exit to Workspaces
         </MenubarItem>
       </MenubarContent>
     </MenubarMenu>
@@ -103,16 +208,15 @@ const handleToggleConsole = () => {
     <MenubarMenu>
       <MenubarTrigger>Workspace</MenubarTrigger>
       <MenubarContent>
-        <MenubarItem>
-          Open Workspace
-          <MenubarShortcut>⌘O</MenubarShortcut>
+        <MenubarItem @click="goToWorkspaces">
+          Workspaces Home
         </MenubarItem>
         <MenubarItem>
           New Workspace
         </MenubarItem>
         <MenubarSeparator/>
-        <MenubarItem>
-          Add Folder to Workspace
+        <MenubarItem @click="handleReloadFileTree">
+          Refresh File Tree
         </MenubarItem>
         <MenubarSeparator/>
         <MenubarItem>
@@ -124,15 +228,17 @@ const handleToggleConsole = () => {
     <MenubarMenu>
       <MenubarTrigger>View</MenubarTrigger>
       <MenubarContent>
-        <MenubarCheckboxItem @click="handleToggleConsole">
+        <MenubarCheckboxItem
+          :checked="editorStore.showConsole"
+          @click="handleToggleConsole"
+        >
           Show Console
           <MenubarShortcut>⌘J</MenubarShortcut>
         </MenubarCheckboxItem>
-        <MenubarCheckboxItem>
-          Show Explorer
-          <MenubarShortcut>⌘E</MenubarShortcut>
-        </MenubarCheckboxItem>
-        <MenubarCheckboxItem>
+        <MenubarCheckboxItem
+          :checked="editorStore.showInspector"
+          @click="handleToggleInspector"
+        >
           Show Inspector
           <MenubarShortcut>⌘I</MenubarShortcut>
         </MenubarCheckboxItem>

@@ -1,20 +1,13 @@
+<!-- apps/desktop/src/modules/editor/components/FilesystemSidebar.vue -->
 <script setup lang="ts">
-import {computed, ref} from 'vue';
-import {Input} from '@/components/ui/input';
+import { ref, computed, onMounted } from 'vue';
+import { Input } from '@/components/ui/input';
 import {
   Search,
-  ChevronDown,
-  ChevronRight,
-  FileText,
-  User,
-  Home,
-  Map,
-  Book,
-  PenTool,
-  File,
   Folder,
   LayoutTemplate,
-  Trash2
+  Trash2,
+  RefreshCw
 } from 'lucide-vue-next';
 import {
   Sidebar,
@@ -29,153 +22,132 @@ import {
   SidebarMenuButton
 } from '@/components/ui/sidebar';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useEditorStore } from '@editor/stores/editor.store';
+import { toast } from 'vue-sonner';
+import FileTreeItem from './FileTreeItem.vue';
+import type {FileTree} from "@editor/types/editor.types.ts";
 
-// Mock filesystem data
-const workspaceName = 'My Fantasy Novel';
+const editorStore = useEditorStore();
 const searchQuery = ref('');
+const expandedFolders = ref<Record<string, boolean>>({});
 
-const fileTree = ref([
-  {
-    id: 'characters',
-    name: 'Characters',
-    type: 'folder',
-    icon: Folder,
-    expanded: true,
-    children: [
-      {
-        id: 'protagonist',
-        name: 'Protagonist',
-        type: 'file',
-        icon: User,
-        extension: 'md',
-        active: true
-      },
-      {
-        id: 'antagonist',
-        name: 'Antagonist',
-        type: 'file',
-        icon: User,
-        extension: 'md',
-        active: false
-      }
-    ]
-  },
-  {
-    id: 'lore',
-    name: 'Lore',
-    type: 'folder',
-    icon: Folder,
-    expanded: true,
-    children: [
-      {
-        id: 'kingdom',
-        name: 'Kingdom',
-        type: 'file',
-        icon: Home,
-        extension: 'md',
-        active: false
-      },
-      {
-        id: 'magicSystem',
-        name: 'Magic System',
-        type: 'file',
-        icon: Book,
-        extension: 'md',
-        active: false
-      }
-    ]
-  },
-  {
-    id: 'places',
-    name: 'Places',
-    type: 'folder',
-    icon: Folder,
-    expanded: false,
-    children: [
-      {
-        id: 'castle',
-        name: 'Castle',
-        type: 'file',
-        icon: Map,
-        extension: 'md',
-        active: false
-      }
-    ]
-  },
-  {
-    id: 'story',
-    name: 'Story',
-    type: 'folder',
-    icon: Folder,
-    expanded: false,
-    children: [
-      {
-        id: 'chapter1',
-        name: 'Chapter 1',
-        type: 'file',
-        icon: FileText,
-        extension: 'md',
-        active: false
-      },
-      {
-        id: 'canvas',
-        name: 'Canvas',
-        type: 'file',
-        icon: PenTool,
-        extension: 'canvas',
-        active: false
-      }
-    ]
-  },
-  {
-    id: 'notes',
-    name: 'Notes',
-    type: 'folder',
-    icon: Folder,
-    expanded: false,
-    children: [
-      {
-        id: 'brainstorming',
-        name: 'Brainstorming',
-        type: 'file',
-        icon: FileText,
-        extension: 'md',
-        active: false
-      }
-    ]
-  },
-  {
-    id: 'icon',
-    name: 'icon.svg',
-    type: 'file',
-    icon: File,
-    extension: 'svg',
-    active: false
+// Computed property to filter file tree based on search query
+const filteredFileTree = computed(() => {
+  if (!searchQuery.value.trim()) {
+    return editorStore.fileTree;
   }
-]);
 
-const toggleFolder = (folder: any) => {
-  folder.expanded = !folder.expanded;
+  const query = searchQuery.value.toLowerCase();
+
+  // Helper function to search recursively
+  const searchInTree = (items: FileTree[]): FileTree[] => {
+    return items.filter(item => {
+      // Check if this item matches
+      const nameMatches = item.name.toLowerCase().includes(query);
+
+      // For directories, also check children
+      if (item.is_directory && item.children.length > 0) {
+        // Search in children
+        const matchingChildren = searchInTree(item.children);
+
+        // If children match, include this directory and its matching children
+        if (matchingChildren.length > 0) {
+          // Make a copy with only matching children
+          return {
+            ...item,
+            children: matchingChildren
+          };
+        }
+      }
+
+      return nameMatches;
+    });
+  };
+
+  return searchInTree(editorStore.fileTree);
+});
+
+// Refresh file tree
+const refreshFileTree = async () => {
+  await editorStore.loadFileTree();
+  toast.success('File tree refreshed');
 };
 
-// Filter files based on search query
-const filteredFileTree = computed(() => {
-  if (!searchQuery.value) return fileTree.value;
+// Handle file click to open it
+const handleFileClick = async (path: string) => {
+  await editorStore.openFile(path);
+};
 
-  // Simple filtering logic - in a real app, this would be more sophisticated
-  const query = searchQuery.value.toLowerCase();
-  return fileTree.value.filter(item =>
-    item.name.toLowerCase().includes(query) ||
-    (item.children?.some(child => child.name.toLowerCase().includes(query)))
-  );
+// Create new file
+const createNewFile = async (parentPath: string) => {
+  const fileName = window.prompt('Enter new file name (with extension)');
+  if (!fileName) return;
+
+  // Default markdown content
+  const initialContent = '# New File\n\nWrite your content here...';
+
+  try {
+    const filePath = await editorStore.createNewFile(parentPath, fileName, initialContent);
+    if (filePath) {
+      // Ensure parent folder is expanded
+      expandedFolders.value[parentPath] = true;
+    }
+  } catch (err) {
+    console.error('Failed to create file:', err);
+  }
+};
+
+// Toggle folder expansion
+const toggleFolder = (folderPath: string) => {
+  expandedFolders.value[folderPath] = !expandedFolders.value[folderPath];
+};
+
+// Recursive component for tree rendering
+const renderTree = (items: FileTree[], depth = 0) => {
+  return items.map(item => (
+    <FileTreeItem
+      key={item.path}
+  item={item}
+  depth={depth}
+  isExpanded={expandedFolders.value[item.path]}
+  onToggleFolder={toggleFolder}
+  onFileClick={handleFileClick}
+  onCreateFile={createNewFile}
+    >
+    <template v-if="item.is_directory && expandedFolders.value[item.path]" #children>
+  {renderTree(item.children, depth + 1)}
+  </template>
+  </FileTreeItem>
+));
+};
+
+// Initialize expanded folders when component mounts
+onMounted(() => {
+  // Auto-expand the standard folders
+  const standardFolders = ['Characters', 'Lore', 'Story', 'Notes'];
+
+  editorStore.fileTree.forEach(item => {
+    if (item.is_directory && standardFolders.includes(item.name)) {
+      expandedFolders.value[item.path] = true;
+    }
+  });
 });
 </script>
 
 <template>
   <Sidebar class="border-r h-full flex flex-col">
-    <!-- Added pt-9 to push the header content below the menubar -->
-    <SidebarHeader class="border-b px-2 py-1.5 pt-9">
-      <h3 class="font-semibold">FileSystem</h3>
+    <!-- Header with search -->
+    <SidebarHeader class="border-b px-2 py-1.5">
+      <div class="flex items-center justify-between">
+        <h3 class="font-semibold">Explorer</h3>
+        <button
+          @click="refreshFileTree"
+          class="text-muted-foreground hover:text-foreground p-1 rounded-md hover:bg-muted"
+          title="Refresh file tree"
+        >
+          <RefreshCw class="h-4 w-4" />
+        </button>
+      </div>
       <div class="relative mt-2">
         <Input
           v-model="searchQuery"
@@ -187,65 +159,75 @@ const filteredFileTree = computed(() => {
       </div>
     </SidebarHeader>
 
-    <!-- Wrapped SidebarContent in ScrollArea for better scrolling -->
+    <!-- Workspace content -->
     <SidebarContent class="flex-1">
       <ScrollArea class="h-full">
         <SidebarGroup>
-          <SidebarGroupLabel>
+          <SidebarGroupLabel v-if="editorStore.currentWorkspace">
             <Folder class="h-4 w-4 mr-2"/>
-            {{ workspaceName }}
+            {{ editorStore.currentWorkspace.name }}
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              <template v-for="item in filteredFileTree" :key="item.id">
-                <!-- Folder -->
-                <SidebarMenuItem v-if="item.type === 'folder'">
-                  <div class="space-y-1 w-full">
-                    <SidebarMenuButton
-                      @click="toggleFolder(item)"
-                      class="flex items-center gap-1 w-full justify-start"
+              <template v-if="filteredFileTree.length > 0">
+                <FileTreeItem
+                  v-for="item in filteredFileTree"
+                  :key="item.path"
+                  :item="item"
+                  :depth="0"
+                  :is-expanded="expandedFolders[item.path]"
+                  @toggle-folder="toggleFolder"
+                  @file-click="handleFileClick"
+                  @create-file="createNewFile"
+                >
+                  <template v-if="item.is_directory && expandedFolders[item.path] && item.children.length > 0" #children>
+                    <FileTreeItem
+                      v-for="child in item.children"
+                      :key="child.path"
+                      :item="child"
+                      :depth="1"
+                      :is-expanded="expandedFolders[child.path]"
+                      @toggle-folder="toggleFolder"
+                      @file-click="handleFileClick"
+                      @create-file="createNewFile"
                     >
-                      <component
-                        :is="item.expanded ? ChevronDown : ChevronRight"
-                        class="h-4 w-4 text-muted-foreground"
-                      />
-                      <component :is="item.icon" class="h-4 w-4"/>
-                      <span>{{ item.name }}</span>
-                    </SidebarMenuButton>
-
-                    <!-- Children -->
-                    <div v-if="item.expanded" class="pl-4 space-y-1">
-                      <SidebarMenuButton
-                        v-for="child in item.children"
-                        :key="child.id"
-                        :isActive="child.active"
-                        class="flex items-center gap-1 w-full justify-start"
-                      >
-                        <component :is="child.icon" class="h-4 w-4"/>
-                        <span>{{ child.name }}</span>
-                      </SidebarMenuButton>
-                    </div>
-                  </div>
-                </SidebarMenuItem>
-
-                <!-- File -->
-                <SidebarMenuItem v-else>
-                  <SidebarMenuButton
-                    :isActive="item.active"
-                    class="flex items-center gap-1 w-full justify-start ml-5"
-                  >
-                    <component :is="item.icon" class="h-4 w-4"/>
-                    <span>{{ item.name }}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                      <template v-if="child.is_directory && expandedFolders[child.path] && child.children.length > 0" #children>
+                        <FileTreeItem
+                          v-for="grandchild in child.children"
+                          :key="grandchild.path"
+                          :item="grandchild"
+                          :depth="2"
+                          :is-expanded="expandedFolders[grandchild.path]"
+                          @toggle-folder="toggleFolder"
+                          @file-click="handleFileClick"
+                          @create-file="createNewFile"
+                        >
+                          <!-- Podríamos seguir con más niveles de anidación si fuera necesario -->
+                        </FileTreeItem>
+                      </template>
+                    </FileTreeItem>
+                  </template>
+                </FileTreeItem>
               </template>
+              <div
+                v-else-if="searchQuery"
+                class="px-2 py-4 text-sm text-muted-foreground text-center"
+              >
+                No files matching "{{ searchQuery }}"
+              </div>
+              <div
+                v-else
+                class="px-2 py-4 text-sm text-muted-foreground text-center"
+              >
+                Loading files...
+              </div>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </ScrollArea>
     </SidebarContent>
 
-    <!-- Footer Buttons - Added padding-bottom and changed to horizontal layout -->
+    <!-- Footer Buttons -->
     <SidebarFooter class="border-t pb-8">
       <SidebarMenu>
         <div class="flex items-center justify-between px-2">

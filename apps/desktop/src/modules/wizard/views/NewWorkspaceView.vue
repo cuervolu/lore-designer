@@ -1,4 +1,5 @@
-﻿<script setup lang="ts">
+﻿<!-- apps/desktop/src/modules/wizard/views/NewWorkspaceView.vue -->
+<script setup lang="ts">
 import { invoke } from '@tauri-apps/api/core'
 import { open } from '@tauri-apps/plugin-dialog'
 import { debug, error, info } from '@tauri-apps/plugin-log'
@@ -12,7 +13,7 @@ import { Label } from '@/components/ui/label'
 
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { usePreferencesStore } from '@common/stores/preferences.store'
-import {useRecentWorkspacesStore} from "@wizard/stores/recent-workspaces.store.ts";
+import { useRecentWorkspacesStore } from "@wizard/stores/recent-workspaces.store.ts";
 
 const router = useRouter()
 const preferencesStore = usePreferencesStore()
@@ -22,6 +23,7 @@ const workspacePath = ref('')
 const isCreating = ref(false)
 const isBrowsing = ref(false)
 const errorMessage = ref('')
+const openAfterCreation = ref(true)
 
 const goBack = () => {
   router.push({ name: 'workspaces' })
@@ -67,8 +69,17 @@ const createWorkspace = async () => {
 
     if (result.path) {
       await preferencesStore.updateLastProject(result.path)
-
       await recentWorkspacesStore.addRecentWorkspace(workspaceName.value, result.path)
+
+      // If user wants to open the workspace after creation
+      if (openAfterCreation.value) {
+        // Navigate to the editor with the new workspace path
+        await router.push({
+          name: 'editor',
+          query: {path: result.path}
+        })
+        return // Return early to avoid goBack()
+      }
     }
 
     goBack()
@@ -128,6 +139,16 @@ const createWorkspace = async () => {
                 <span v-else>Browse</span>
               </Button>
             </div>
+          </div>
+
+          <div class="flex items-center space-x-2">
+            <input
+              id="open-after-creation"
+              type="checkbox"
+              v-model="openAfterCreation"
+              class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+            />
+            <Label for="open-after-creation">Open in editor after creation</Label>
           </div>
 
           <div v-if="errorMessage" class="text-destructive text-sm mt-2">

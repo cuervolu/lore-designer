@@ -1,10 +1,11 @@
 ﻿<script setup lang="ts">
-import { convertFileSrc, invoke } from "@tauri-apps/api/core";
+import { invoke } from "@tauri-apps/api/core";
 import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 import { revealItemInDir } from '@tauri-apps/plugin-opener';
 import { error as logError} from "@tauri-apps/plugin-log";
 import { onMounted, ref } from "vue";
-import { Folder, EllipsisVertical, ExternalLink, Copy, Trash } from 'lucide-vue-next';
+import { useRouter } from 'vue-router';
+import { Folder, EllipsisVertical, ExternalLink, Copy, Trash, Edit } from 'lucide-vue-next';
 
 import {
   DropdownMenu,
@@ -27,8 +28,9 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   remove: [path: string]
-}>()
+}>();
 
+const router = useRouter();
 const workspaceIcon = ref<string>('');
 const isIconLoaded = ref<boolean>(false);
 const isIconError = ref<boolean>(false);
@@ -54,9 +56,10 @@ const handleOpen = async () => {
     return;
   }
 
-  // Here we would navigate to the editor or open the workspace
-  toast.info('Opening workspace...', {
-    description: 'This functionality will be implemented later'
+  // Navigate to the editor view with the workspace path
+  await router.push({
+    name: 'editor',
+    query: {path: props.workspace.path}
   });
 };
 
@@ -112,6 +115,18 @@ const handleRemove = () => {
       <p class="text-sm text-muted-foreground">{{ workspace.path }}</p>
     </div>
     <div class="flex">
+      <!-- Open button -->
+      <Button
+        v-if="workspace.exists !== false"
+        variant="ghost"
+        size="sm"
+        class="h-8 opacity-0 group-hover:opacity-100 transition-opacity"
+        @click="handleOpen"
+      >
+        <Edit class="h-4 w-4 mr-2" />
+        Open
+      </Button>
+
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" class="p-2 hover:bg-accent/60 hover:text-accent-foreground rounded-md">
@@ -120,8 +135,8 @@ const handleRemove = () => {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem @click="handleOpen" :disabled="workspace.exists === false">
-            <Folder class="mr-2 h-4 w-4" />
-            <span>Open</span>
+            <Edit class="mr-2 h-4 w-4" />
+            <span>Open in Editor</span>
           </DropdownMenuItem>
           <DropdownMenuItem @click="handleShowInExplorer">
             <ExternalLink class="mr-2 h-4 w-4" />
