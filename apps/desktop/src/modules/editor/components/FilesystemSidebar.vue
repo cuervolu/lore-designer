@@ -122,7 +122,7 @@ onMounted(() => {
 <template>
   <Sidebar class="border-r h-full flex flex-col">
     <!-- Header with search -->
-    <SidebarHeader class="border-b px-2 py-1.5">
+    <SidebarHeader class="border-b px-2 py-1.5 pt-15">
       <div class="flex items-center justify-between">
         <h3 class="font-semibold">Explorer</h3>
         <button

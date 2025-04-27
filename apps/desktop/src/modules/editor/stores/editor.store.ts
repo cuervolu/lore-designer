@@ -216,6 +216,7 @@ export const useEditorStore = defineStore('stores', () => {
     if (!currentWorkspace.value) return null
 
     try {
+      const fullPath = `${currentWorkspace.value.path}/${filePath}`;
       // Check if already open
       const existingTab = openTabs.value.find(tab => tab.path === filePath)
       if (existingTab) {
@@ -225,7 +226,7 @@ export const useEditorStore = defineStore('stores', () => {
 
       const tab = await invoke<TabInfo>('open_file_in_editor', {
         workspacePath: currentWorkspace.value.path,
-        filePath
+        filePath: fullPath
       })
 
       // Convert to our format

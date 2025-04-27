@@ -33,9 +33,7 @@ const indexingProgress = computed(() => {
 <template>
   <!-- Wrapper with fixed height and explicit flex layout to ensure footer visibility -->
   <div class="flex flex-col h-[calc(100vh-36px)] w-full">
-    <!-- SidebarProvider goes inside the main content area -->
     <SidebarProvider class="flex flex-col flex-1 min-h-0 overflow-hidden">
-      <!-- Menubar with higher z-index -->
       <EditorMenubar
         @toggle-console="toggleConsole"
         class="flex-shrink-0 z-20 relative"
@@ -44,12 +42,13 @@ const indexingProgress = computed(() => {
       <!-- Main content area with explicit flex properties and min-height:0 to ensure proper scrolling -->
       <div class="flex flex-1 min-h-0 overflow-hidden relative">
         <!-- Mobile sidebar trigger -->
-        <div class="lg:hidden absolute top-4 left-4 z-30">
+        <div class="lg:hidden absolute top-4 left-4 z-10">
           <SidebarTrigger />
         </div>
 
         <!-- Filesystem sidebar with explicit height -->
         <FilesystemSidebar class="flex-shrink-0 h-full z-10" />
+
 
         <!-- Middle content area with correct flex properties -->
         <div class="flex flex-col flex-1 min-w-0 min-h-0 overflow-hidden relative">
