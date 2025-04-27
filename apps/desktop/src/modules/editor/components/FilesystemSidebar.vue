@@ -1,4 +1,3 @@
-<!-- apps/desktop/src/modules/editor/components/FilesystemSidebar.vue -->
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { Input } from '@/components/ui/input';
@@ -25,11 +24,14 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useEditorStore } from '@editor/stores/editor.store';
 import { toast } from 'vue-sonner';
 import FileTreeItem from './FileTreeItem.vue';
-import type {FileTree} from "@editor/types/editor.types.ts";
+import CreateFileModal from './CreateFileModal.vue';
+import type { FileTree } from "@editor/types/editor.types.ts";
 
 const editorStore = useEditorStore();
 const searchQuery = ref('');
 const expandedFolders = ref<Record<string, boolean>>({});
+const isCreateModalOpen = ref(false);
+const selectedParentPath = ref('');
 
 // Computed property to filter file tree based on search query
 const filteredFileTree = computed(() => {
@@ -78,22 +80,24 @@ const handleFileClick = async (path: string) => {
   await editorStore.openFile(path);
 };
 
-// Create new file
-const createNewFile = async (parentPath: string) => {
-  const fileName = window.prompt('Enter new file name (with extension)');
-  if (!fileName) return;
+// Open create file modal
+const openCreateFileModal = (parentPath: string) => {
+  selectedParentPath.value = parentPath;
+  isCreateModalOpen.value = true;
+};
 
-  // Default markdown content
-  const initialContent = '# New File\n\nWrite your content here...';
-
+// Create new file with data from modal
+const handleCreateFile = async (fileName: string, extension: string, initialContent: string, parentPath: string) => {
   try {
     const filePath = await editorStore.createNewFile(parentPath, fileName, initialContent);
     if (filePath) {
       // Ensure parent folder is expanded
       expandedFolders.value[parentPath] = true;
+      toast.success(`Created ${extension} file successfully`);
     }
   } catch (err) {
     console.error('Failed to create file:', err);
+    toast.error('Failed to create file');
   }
 };
 
@@ -102,35 +106,16 @@ const toggleFolder = (folderPath: string) => {
   expandedFolders.value[folderPath] = !expandedFolders.value[folderPath];
 };
 
-// Recursive component for tree rendering
-const renderTree = (items: FileTree[], depth = 0) => {
-  return items.map(item => (
-    <FileTreeItem
-      key={item.path}
-  item={item}
-  depth={depth}
-  isExpanded={expandedFolders.value[item.path]}
-  onToggleFolder={toggleFolder}
-  onFileClick={handleFileClick}
-  onCreateFile={createNewFile}
-    >
-    <template v-if="item.is_directory && expandedFolders.value[item.path]" #children>
-  {renderTree(item.children, depth + 1)}
-  </template>
-  </FileTreeItem>
-));
-};
-
 // Initialize expanded folders when component mounts
 onMounted(() => {
   // Auto-expand the standard folders
   const standardFolders = ['Characters', 'Lore', 'Story', 'Notes'];
 
-  editorStore.fileTree.forEach(item => {
+  for (const item of editorStore.fileTree) {
     if (item.is_directory && standardFolders.includes(item.name)) {
       expandedFolders.value[item.path] = true;
     }
-  });
+  }
 });
 </script>
 
@@ -178,7 +163,7 @@ onMounted(() => {
                   :is-expanded="expandedFolders[item.path]"
                   @toggle-folder="toggleFolder"
                   @file-click="handleFileClick"
-                  @create-file="createNewFile"
+                  @create-file="openCreateFileModal"
                 >
                   <template v-if="item.is_directory && expandedFolders[item.path] && item.children.length > 0" #children>
                     <FileTreeItem
@@ -189,7 +174,7 @@ onMounted(() => {
                       :is-expanded="expandedFolders[child.path]"
                       @toggle-folder="toggleFolder"
                       @file-click="handleFileClick"
-                      @create-file="createNewFile"
+                      @create-file="openCreateFileModal"
                     >
                       <template v-if="child.is_directory && expandedFolders[child.path] && child.children.length > 0" #children>
                         <FileTreeItem
@@ -200,9 +185,9 @@ onMounted(() => {
                           :is-expanded="expandedFolders[grandchild.path]"
                           @toggle-folder="toggleFolder"
                           @file-click="handleFileClick"
-                          @create-file="createNewFile"
+                          @create-file="openCreateFileModal"
                         >
-                          <!-- Podríamos seguir con más niveles de anidación si fuera necesario -->
+                          <!-- Deeper nesting levels could be added if needed -->
                         </FileTreeItem>
                       </template>
                     </FileTreeItem>
@@ -249,5 +234,12 @@ onMounted(() => {
         </div>
       </SidebarMenu>
     </SidebarFooter>
+
+    <!-- Create File Modal -->
+    <CreateFileModal
+      v-model:is-open="isCreateModalOpen"
+      :parent-path="selectedParentPath"
+      @create="handleCreateFile"
+    />
   </Sidebar>
 </template>

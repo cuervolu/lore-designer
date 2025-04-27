@@ -4,7 +4,7 @@ import {
   ChevronRight,
   FileText,
   User,
-  Map,
+  MapIcon,
   Book,
   PenTool,
   File,
@@ -37,8 +37,8 @@ const emit = defineEmits<{
 const iconMap: Record<string, LucideIcon> = {
   // Folder icons
   'characters': User,
-  'locations': Map,
-  'location': Map,
+  'locations': MapIcon,
+  'location': MapIcon,
   'lore': Book,
   'story': FileText,
   'stories': FileText,

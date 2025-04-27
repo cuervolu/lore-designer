@@ -1,8 +1,10 @@
 <script setup lang="ts">
+import {ref} from 'vue';
 import {useRouter} from 'vue-router';
 import {open} from '@tauri-apps/plugin-dialog';
 import {useEditorStore} from '@editor/stores/editor.store';
 import {toast} from 'vue-sonner';
+import CreateFileModal from './CreateFileModal.vue';
 import {
   Menubar,
   MenubarCheckboxItem,
@@ -20,6 +22,10 @@ import {
 const emit = defineEmits(['toggleConsole']);
 const router = useRouter();
 const editorStore = useEditorStore();
+
+// State for create file modal
+const isCreateModalOpen = ref(false);
+const selectedParentPath = ref('');
 
 // Toggle console panel
 const handleToggleConsole = () => {
@@ -49,28 +55,20 @@ const handleNewFile = async () => {
     });
 
     if (!folderPath) return;
+    selectedParentPath.value = folderPath.replace(`${editorStore.currentWorkspace.path}/`, '');
+    isCreateModalOpen.value = true;
+  } catch (err) {
+    console.error('Failed to select directory:', err);
+    toast.error('Failed to select directory');
+  }
+};
 
-    // Get relative path within workspace
-    const relativePath = folderPath.replace(`${editorStore.currentWorkspace.path}/`, '');
-
-    // Prompt for file name
-    const fileName = window.prompt('Enter file name (with extension):', 'untitled.md');
-    if (!fileName) return;
-
-    // Create default content based on extension
-    let initialContent = '';
-    const ext = fileName.split('.').pop()?.toLowerCase();
-
-    if (ext === 'md') {
-      initialContent = `# ${fileName.split('.')[0]}\n\nWrite your content here...`;
-    } else if (ext === 'json' || ext === 'canvas') {
-      initialContent = '{\n  \n}';
-    }
-
-    // Create the file
-    const filePath = await editorStore.createNewFile(relativePath, fileName, initialContent);
+// Handle create file from modal
+const handleCreateFile = async (fileName: string, extension: string, initialContent: string, parentPath: string) => {
+  try {
+    const filePath = await editorStore.createNewFile(parentPath, fileName, initialContent);
     if (filePath) {
-      toast.success('File created successfully');
+      toast.success(`Created ${extension} file successfully`);
       // Auto-open the file
       await editorStore.openFile(filePath);
     }
@@ -279,4 +277,11 @@ const handleReloadFileTree = async () => {
       </MenubarContent>
     </MenubarMenu>
   </Menubar>
+
+  <!-- Create File Modal -->
+  <CreateFileModal
+    v-model:is-open="isCreateModalOpen"
+    :parent-path="selectedParentPath"
+    @create="handleCreateFile"
+  />
 </template>
