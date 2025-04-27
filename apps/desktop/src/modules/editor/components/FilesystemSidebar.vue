@@ -28,6 +28,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton
 } from '@/components/ui/sidebar';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 // Mock filesystem data
 const workspaceName = 'My Fantasy Novel';
@@ -171,8 +172,9 @@ const filteredFileTree = computed(() => {
 </script>
 
 <template>
-  <Sidebar class="border-r h-full">
-    <SidebarHeader class="border-b px-2 py-1.5">
+  <Sidebar class="border-r h-full flex flex-col">
+    <!-- Added pt-9 to push the header content below the menubar -->
+    <SidebarHeader class="border-b px-2 py-1.5 pt-9">
       <h3 class="font-semibold">FileSystem</h3>
       <div class="relative mt-2">
         <Input
@@ -185,76 +187,84 @@ const filteredFileTree = computed(() => {
       </div>
     </SidebarHeader>
 
-    <SidebarContent>
-      <SidebarGroup>
-        <SidebarGroupLabel>
-          <Folder class="h-4 w-4 mr-2"/>
-          {{ workspaceName }}
-        </SidebarGroupLabel>
-        <SidebarGroupContent>
-          <SidebarMenu>
-            <template v-for="item in fileTree" :key="item.id">
-              <!-- Folder -->
-              <SidebarMenuItem v-if="item.type === 'folder'">
-                <div class="space-y-1 w-full">
+    <!-- Wrapped SidebarContent in ScrollArea for better scrolling -->
+    <SidebarContent class="flex-1">
+      <ScrollArea class="h-full">
+        <SidebarGroup>
+          <SidebarGroupLabel>
+            <Folder class="h-4 w-4 mr-2"/>
+            {{ workspaceName }}
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <template v-for="item in filteredFileTree" :key="item.id">
+                <!-- Folder -->
+                <SidebarMenuItem v-if="item.type === 'folder'">
+                  <div class="space-y-1 w-full">
+                    <SidebarMenuButton
+                      @click="toggleFolder(item)"
+                      class="flex items-center gap-1 w-full justify-start"
+                    >
+                      <component
+                        :is="item.expanded ? ChevronDown : ChevronRight"
+                        class="h-4 w-4 text-muted-foreground"
+                      />
+                      <component :is="item.icon" class="h-4 w-4"/>
+                      <span>{{ item.name }}</span>
+                    </SidebarMenuButton>
+
+                    <!-- Children -->
+                    <div v-if="item.expanded" class="pl-4 space-y-1">
+                      <SidebarMenuButton
+                        v-for="child in item.children"
+                        :key="child.id"
+                        :isActive="child.active"
+                        class="flex items-center gap-1 w-full justify-start"
+                      >
+                        <component :is="child.icon" class="h-4 w-4"/>
+                        <span>{{ child.name }}</span>
+                      </SidebarMenuButton>
+                    </div>
+                  </div>
+                </SidebarMenuItem>
+
+                <!-- File -->
+                <SidebarMenuItem v-else>
                   <SidebarMenuButton
-                    @click="toggleFolder(item)"
-                    class="flex items-center gap-1 w-full justify-start"
+                    :isActive="item.active"
+                    class="flex items-center gap-1 w-full justify-start ml-5"
                   >
-                    <component
-                      :is="item.expanded ? ChevronDown : ChevronRight"
-                      class="h-4 w-4 text-muted-foreground"
-                    />
                     <component :is="item.icon" class="h-4 w-4"/>
                     <span>{{ item.name }}</span>
                   </SidebarMenuButton>
-
-                  <!-- Children -->
-                  <div v-if="item.expanded" class="pl-4 space-y-1">
-                    <SidebarMenuButton
-                      v-for="child in item.children"
-                      :key="child.id"
-                      :isActive="child.active"
-                      class="flex items-center gap-1 w-full justify-start"
-                    >
-                      <component :is="child.icon" class="h-4 w-4"/>
-                      <span>{{ child.name }}</span>
-                    </SidebarMenuButton>
-                  </div>
-                </div>
-              </SidebarMenuItem>
-
-              <!-- File -->
-              <SidebarMenuItem v-else>
-                <SidebarMenuButton
-                  :isActive="item.active"
-                  class="flex items-center gap-1 w-full justify-start ml-5"
-                >
-                  <component :is="item.icon" class="h-4 w-4"/>
-                  <span>{{ item.name }}</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </template>
-          </SidebarMenu>
-        </SidebarGroupContent>
-      </SidebarGroup>
+                </SidebarMenuItem>
+              </template>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </ScrollArea>
     </SidebarContent>
 
-    <!-- Footer Buttons -->
-    <SidebarFooter class="border-t">
+    <!-- Footer Buttons - Added padding-bottom and changed to horizontal layout -->
+    <SidebarFooter class="border-t pb-8">
       <SidebarMenu>
-        <SidebarMenuItem>
-          <SidebarMenuButton class="gap-1">
-            <LayoutTemplate class="h-4 w-4"/>
-            Templates
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-        <SidebarMenuItem>
-          <SidebarMenuButton class="gap-1">
-            <Trash2 class="h-4 w-4"/>
-            Trash
-          </SidebarMenuButton>
-        </SidebarMenuItem>
+        <div class="flex items-center justify-between px-2">
+          <SidebarMenuItem class="flex-1">
+            <SidebarMenuButton class="gap-1 justify-center">
+              <LayoutTemplate class="h-4 w-4"/>
+              <span>Templates</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+
+          <div class="w-px h-6 bg-muted mx-1"></div>
+
+          <SidebarMenuItem class="flex-1">
+            <SidebarMenuButton class="gap-1 justify-center">
+              <Trash2 class="h-4 w-4"/>
+              <span>Trash</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </div>
       </SidebarMenu>
     </SidebarFooter>
   </Sidebar>
