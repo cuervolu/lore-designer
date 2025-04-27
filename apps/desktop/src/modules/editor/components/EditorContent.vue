@@ -112,19 +112,17 @@ const renderMarkdown = (markdown: string | null) => {
         alt="Cover"
         class="w-full h-full object-cover"
       />
-
-      <div class="absolute top-4 left-4 flex items-center space-x-3">
+      <div class="absolute bottom-0 left-10 transform translate-y-1/2 flex flex-col items-start">
         <div
-          class="w-12 h-12 rounded-lg bg-background/80 backdrop-blur-sm border shadow-md flex items-center justify-center p-2"
+          class="w-16 h-16 rounded-lg bg-background/95 backdrop-blur-sm border shadow-md flex items-center justify-center p-2"
         >
           <component
             :is="getIconComponent(file.icon)"
-            class="h-full w-full text-muted-foreground"
+            class="h-full w-full text-foreground"
           />
         </div>
         <h1
-          class="text-2xl font-bold text-white"
-          style="text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7)"
+          class="mt-2 text-xl font-bold text-foreground"
         >
           {{ content.title }}
         </h1>
@@ -140,8 +138,8 @@ const renderMarkdown = (markdown: string | null) => {
       </Button>
     </div>
 
-    <div class="flex-1 overflow-y-auto p-6">
-      <div class="max-w-4xl mx-auto">
+    <div class="flex-1 overflow-y-auto pt-16 px-6 pb-6">
+      <div class="max-w-5xl ml-10">
         <div
           v-if="content.canvas"
           class="border rounded-md p-4 min-h-[400px] flex items-center justify-center bg-muted/10"
