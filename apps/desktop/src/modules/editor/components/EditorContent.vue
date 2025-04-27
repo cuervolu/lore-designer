@@ -103,61 +103,62 @@ const renderMarkdown = (markdown: string | null) => {
 </script>
 
 <template>
-  <div class="flex flex-col h-full">
-    <div
-      class="w-full h-48 bg-muted/30 flex-shrink-0 relative group"
-    >
-      <img
-        :src="'https://placehold.co/1200x300/222/555?text=+'"
-        alt="Cover"
-        class="w-full h-full object-cover"
-      />
-      <div class="absolute bottom-0 left-10 transform translate-y-1/2 flex flex-col items-start">
-        <div
-          class="w-16 h-16 rounded-lg bg-background/95 backdrop-blur-sm border shadow-md flex items-center justify-center p-2"
-        >
-          <component
-            :is="getIconComponent(file.icon)"
-            class="h-full w-full text-foreground"
-          />
+  <div class="h-full overflow-y-auto">
+    <div class="min-h-full">
+      <!-- Sección de portada -->
+      <div class="w-full h-48 bg-muted/30 relative group">
+        <img
+          :src="'https://placehold.co/1200x300/222/555?text=+'"
+          alt="Cover"
+          class="w-full h-full object-cover"
+        />
+        <div class="absolute bottom-0 left-10 transform translate-y-1/2 flex flex-col items-start">
+          <div
+            class="w-16 h-16 rounded-lg bg-background/95 backdrop-blur-sm border shadow-md flex items-center justify-center p-2"
+          >
+            <component
+              :is="getIconComponent(file.icon)"
+              class="h-full w-full text-foreground"
+            />
+          </div>
+          <h1
+            class="mt-2 text-xl font-bold text-foreground"
+          >
+            {{ content.title }}
+          </h1>
         </div>
-        <h1
-          class="mt-2 text-xl font-bold text-foreground"
+
+        <Button
+          v-if="false"
+          variant="outline"
+          class="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity"
         >
-          {{ content.title }}
-        </h1>
+          <Upload class="h-4 w-4 mr-2"/>
+          Upload Cover
+        </Button>
       </div>
 
-      <Button
-        v-if="false"
-        variant="outline"
-        class="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity"
-      >
-        <Upload class="h-4 w-4 mr-2"/>
-        Upload Cover
-      </Button>
-    </div>
-
-    <div class="flex-1 overflow-y-auto pt-16 px-6 pb-6">
-      <div class="max-w-5xl ml-10">
-        <div
-          v-if="content.canvas"
-          class="border rounded-md p-4 min-h-[400px] flex items-center justify-center bg-muted/10"
-        >
-          <div class="flex items-center gap-8">
-            <div class="w-32 h-32 bg-foreground rounded-full"></div>
-            <div
-              class="w-40 h-40 bg-foreground"
-              style="clip-path: polygon(50% 0%, 0% 100%, 100% 100%)"
-            ></div>
+      <div class="pt-16 px-6 pb-20">
+        <div class="max-w-5xl ml-10">
+          <div
+            v-if="content.canvas"
+            class="border rounded-md p-4 min-h-[400px] flex items-center justify-center bg-muted/10"
+          >
+            <div class="flex items-center gap-8">
+              <div class="w-32 h-32 bg-foreground rounded-full"></div>
+              <div
+                class="w-40 h-40 bg-foreground"
+                style="clip-path: polygon(50% 0%, 0% 100%, 100% 100%)"
+              ></div>
+            </div>
           </div>
-        </div>
 
-        <div
-          v-else
-          class="prose dark:prose-invert lg:prose-xl max-w-none"
-          v-html="renderMarkdown(content.content)"
-        />
+          <div
+            v-else
+            class="prose dark:prose-invert lg:prose-xl max-w-none"
+            v-html="renderMarkdown(content.content)"
+          />
+        </div>
       </div>
     </div>
   </div>
