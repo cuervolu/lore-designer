@@ -13,7 +13,7 @@ pub use commands::*;
 pub use manifest::*;
 pub use model::*;
 pub use recent::*;
-use crate::icons::copy_default_icon_to_workspace;
+pub use icons::*;
 pub use crate::model::{WorkspaceError, WORKSPACE_VERSION};
 
 pub const DEFAULT_FOLDERS: [&str; 4] = ["Characters", "Lore", "Story", "Notes"];
