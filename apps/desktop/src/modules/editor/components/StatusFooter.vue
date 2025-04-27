@@ -1,11 +1,25 @@
 <script setup lang="ts">
 import { Loader2 } from 'lucide-vue-next';
 import { Progress } from '@/components/ui/progress';
+import {onMounted, ref} from "vue";
+import {getVersion} from "@tauri-apps/api/app";
+import {error} from "@tauri-apps/plugin-log";
 
 const props = defineProps<{
   isIndexing: boolean;
   progress: number;
 }>();
+
+const appVersion = ref('0.1.0')
+
+onMounted(async () => {
+  try {
+    appVersion.value = await getVersion()
+  } catch (err) {
+    await error(`Failed to get app version: ${err}`)
+  }
+})
+
 </script>
 
 <template>
@@ -21,6 +35,6 @@ const props = defineProps<{
     </div>
 
     <!-- Right side - version info -->
-    <div>Lore Designer v0.0.1</div>
+    <div>Lore Designer v{{ appVersion }}</div>
   </div>
 </template>
