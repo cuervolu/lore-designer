@@ -22,6 +22,17 @@
     "core:window:allow-toggle-maximize",
     "opener:allow-open-path",
     "opener:allow-reveal-item-in-dir",
-    "opener:allow-default-urls"
+    "opener:allow-default-urls",
+    "fs:allow-app-read-recursive",
+    "fs:allow-app-read",
+    "fs:allow-app-write-recursive",
+    "fs:allow-app-write",
+    "fs:allow-app-meta-recursive",
+    "fs:allow-app-meta",
+    "fs:scope-app-recursive",
+    "fs:scope-app",
+    "fs:scope-app-index",
+    "fs:allow-appcache-read-recursive",
+    "fs:allow-appcache-write-recursive"
   ]
 }
