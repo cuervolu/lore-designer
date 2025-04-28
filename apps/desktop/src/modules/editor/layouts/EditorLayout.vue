@@ -1,58 +1,51 @@
 <script setup lang="ts">
-import { computed } from "vue";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { useEditorStore } from "@editor/stores/editor.store";
-import EditorMenubar from "@editor/components/EditorMenubar.vue";
-import FilesystemSidebar from "@editor/components/FilesystemSidebar.vue";
-import EditorTabs from "@editor/components/EditorTabs.vue";
-import EditorContent from "@editor/components/EditorContent.vue";
-import ConsolePanel from "@editor/components/ConsolePanel.vue";
-import InspectorPanel from "@editor/components/InspectorPanel.vue";
-import StatusFooter from "@editor/components/StatusFooter.vue";
+import { computed } from 'vue'
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
+import { useEditorStore } from '@editor/stores/editor.store'
+import EditorMenubar from '@editor/components/EditorMenubar.vue'
+import FilesystemSidebar from '@editor/components/FilesystemSidebar.vue'
+import EditorTabs from '@editor/components/EditorTabs.vue'
+import EditorContent from '@editor/components/EditorContent.vue'
+import ConsolePanel from '@editor/components/ConsolePanel.vue'
+import InspectorPanel from '@editor/components/InspectorPanel.vue'
+import StatusFooter from '@editor/components/StatusFooter.vue'
 
-const editorStore = useEditorStore();
+const editorStore = useEditorStore()
 
 const toggleConsole = () => {
-  editorStore.toggleConsole();
-};
+  editorStore.toggleConsole()
+}
 
 const isIndexing = computed(() => {
-  return editorStore.indexingProgress && !editorStore.indexingProgress.completed;
-});
+  return editorStore.indexingProgress && !editorStore.indexingProgress.completed
+})
 
 const indexingProgress = computed(() => {
-  if (!editorStore.indexingProgress) return 0;
+  if (!editorStore.indexingProgress) return 0
 
-  const { processed, total } = editorStore.indexingProgress;
-  if (total === 0) return 0;
+  const { processed, total } = editorStore.indexingProgress
+  if (total === 0) return 0
 
-  return Math.floor((processed / total) * 100);
-});
+  return Math.floor((processed / total) * 100)
+})
 </script>
 
 <template>
-  <!-- Wrapper with fixed height and explicit flex layout to ensure footer visibility -->
   <div class="flex flex-col h-[calc(100vh-36px)] w-full">
-    <SidebarProvider class="flex flex-col flex-1 min-h-0 overflow-hidden">
-      <EditorMenubar
-        @toggle-console="toggleConsole"
-        class="flex-shrink-0 z-20 relative"
-      />
+    <EditorMenubar
+      @toggle-console="toggleConsole"
+      class="flex-shrink-0 z-30 relative"
+    />
 
-      <!-- Main content area with explicit flex properties and min-height:0 to ensure proper scrolling -->
+    <SidebarProvider class="flex flex-col flex-1 min-h-0 overflow-hidden">
       <div class="flex flex-1 min-h-0 overflow-hidden relative">
-        <!-- Mobile sidebar trigger -->
         <div class="lg:hidden absolute top-4 left-4 z-10">
           <SidebarTrigger />
         </div>
 
-        <!-- Filesystem sidebar with explicit height -->
         <FilesystemSidebar class="flex-shrink-0 h-full z-10" />
 
-
-        <!-- Middle content area with correct flex properties -->
         <div class="flex flex-col flex-1 min-w-0 min-h-0 overflow-hidden relative">
-          <!-- Editor tabs -->
           <EditorTabs
             :files="editorStore.openTabs"
             :active-tab="editorStore.activeTabId"
@@ -60,7 +53,6 @@ const indexingProgress = computed(() => {
             class="flex-shrink-0"
           />
 
-          <!-- Main editor content with max-height to ensure it doesn't push the footer out of view -->
           <div class="flex-1 min-h-0 overflow-hidden bg-background">
             <EditorContent
               v-if="editorStore.activeTab"
@@ -76,7 +68,6 @@ const indexingProgress = computed(() => {
             </div>
           </div>
 
-          <!-- Console panel when shown -->
           <ConsolePanel
             v-if="editorStore.showConsole"
             @close="toggleConsole"
@@ -84,7 +75,6 @@ const indexingProgress = computed(() => {
           />
         </div>
 
-        <!-- Inspector panel -->
         <InspectorPanel
           v-if="editorStore.showInspector"
           :file="editorStore.activeTab"
@@ -92,7 +82,6 @@ const indexingProgress = computed(() => {
         />
       </div>
 
-      <!-- Footer positioned at the bottom with high z-index -->
       <StatusFooter
         :is-indexing="isIndexing"
         :progress="indexingProgress"

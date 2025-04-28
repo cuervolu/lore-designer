@@ -73,7 +73,12 @@ const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
     />
     <div
       :class="cn(
-        'fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear md:flex',
+        // --- MODIFICATION START ---
+        // Replaced 'inset-y-0 h-svh' with explicit top/bottom and calculated height
+      'fixed bottom-0 z-10 hidden w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear md:flex',
+        'top-[var(--sidebar-top-offset,72px)] h-[calc(100svh-var(--sidebar-top-offset,72px))]',
+        // --- MODIFICATION END ---
+        // --- MODIFICATION END ---
         side === 'left'
           ? 'left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]'
           : 'right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]',

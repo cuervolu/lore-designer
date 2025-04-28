@@ -26,6 +26,7 @@ import { toast } from 'vue-sonner';
 import FileTreeItem from './FileTreeItem.vue';
 import CreateFileModal from './CreateFileModal.vue';
 import type { FileTree } from "@editor/types/editor.types.ts";
+import { Button } from '@/components/ui/button'
 
 const editorStore = useEditorStore();
 const searchQuery = ref('');
@@ -122,16 +123,16 @@ onMounted(() => {
 <template>
   <Sidebar class="border-r h-full flex flex-col">
     <!-- Header with search -->
-    <SidebarHeader class="border-b px-2 py-1.5 pt-15">
+    <SidebarHeader class="border-b px-2 py-1.5">
       <div class="flex items-center justify-between">
         <h3 class="font-semibold">Explorer</h3>
-        <button
+        <Button variant="ghost"
           @click="refreshFileTree"
           class="text-muted-foreground hover:text-foreground p-1 rounded-md hover:bg-muted"
           title="Refresh file tree"
         >
           <RefreshCw class="h-4 w-4" />
-        </button>
+        </Button>
       </div>
       <div class="relative mt-2">
         <Input

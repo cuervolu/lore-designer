@@ -40,40 +40,44 @@ const navigateTo = (routeName: string) => {
 </script>
 
 <template>
-  <Sidebar>
-    <SidebarHeader class="p-6 mt-10">
-      <div class="flex items-center space-x-3">
-        <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shadow-sm">
-          <img :src="logoPath" alt="Logo" class="w-7 h-7" />
-        </div>
-        <div>
-          <h1 class="text-lg font-semibold">Lore Designer</h1>
-          <p class="text-xs text-muted-foreground">v{{ appVersion }}</p>
-        </div>
+  <Sidebar
+  :style="{
+  '--sidebar-top-offset': '36px'
+  }"
+  >
+  <SidebarHeader class="p-6">
+    <div class="flex items-center space-x-3">
+      <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shadow-sm">
+        <img :src="logoPath" alt="Logo" class="w-7 h-7" />
       </div>
-    </SidebarHeader>
+      <div>
+        <h1 class="text-lg font-semibold">Lore Designer</h1>
+        <p class="text-xs text-muted-foreground">v{{ appVersion }}</p>
+      </div>
+    </div>
+  </SidebarHeader>
 
-    <SidebarContent class="px-3">
-      <SidebarMenu class="space-y-1.5">
-        <SidebarMenuItem
-          v-for="item in menuItems"
-          :key="item.name"
-          class="transition-colors"
-        >
-          <SidebarMenuButton
-            :isActive="currentRouteName === item.route.name"
-            @click="navigateTo(item.route.name)"
-            class="px-4 py-2.5 font-medium rounded-md transition-all"
-            :class="[
+  <SidebarContent class="px-3">
+    <SidebarMenu class="space-y-1.5">
+      <SidebarMenuItem
+        v-for="item in menuItems"
+        :key="item.name"
+        class="transition-colors"
+      >
+        <SidebarMenuButton
+          :isActive="currentRouteName === item.route.name"
+          @click="navigateTo(item.route.name)"
+          class="px-4 py-2.5 font-medium rounded-md transition-all"
+          :class="[
               currentRouteName === item.route.name
                 ? 'bg-primary text-primary-foreground'
                 : 'hover:bg-muted'
             ]"
-          >
-            {{ item.name }}
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      </SidebarMenu>
-    </SidebarContent>
+        >
+          {{ item.name }}
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    </SidebarMenu>
+  </SidebarContent>
   </Sidebar>
 </template>
