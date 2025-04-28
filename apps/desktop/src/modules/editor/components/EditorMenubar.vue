@@ -1,10 +1,8 @@
 <script setup lang="ts">
+import {open} from '@tauri-apps/plugin-dialog';
+import {toast} from 'vue-sonner';
 import {ref} from 'vue';
 import {useRouter} from 'vue-router';
-import {open} from '@tauri-apps/plugin-dialog';
-import {useEditorStore} from '@editor/stores/editor.store';
-import {toast} from 'vue-sonner';
-import CreateFileModal from './CreateFileModal.vue';
 import {
   Menubar,
   MenubarCheckboxItem,
@@ -18,14 +16,20 @@ import {
   MenubarSubTrigger,
   MenubarTrigger,
 } from '@/components/ui/menubar';
+import {useEditorStore} from '@editor/stores/editor.store';
+import {usePlatform} from '@common/composables/usePlatform';
+import CreateFileModal from './CreateFileModal.vue';
+import AboutModal from '@common/components/AboutModal.vue';
 
 const emit = defineEmits(['toggleConsole']);
 const router = useRouter();
 const editorStore = useEditorStore();
+const { cmdKey, shiftKey, plusSeparator } = usePlatform();
 
 // State for create file modal
 const isCreateModalOpen = ref(false);
 const selectedParentPath = ref('');
+const isAboutModalOpen = ref(false);
 
 // Toggle console panel
 const handleToggleConsole = () => {
@@ -40,6 +44,10 @@ const handleToggleInspector = () => {
 // Navigate back to workspaces
 const goToWorkspaces = () => {
   router.push({name: 'workspaces'});
+};
+
+const openAboutModal = () => {
+  isAboutModalOpen.value = true;
 };
 
 // Create a new file
@@ -131,25 +139,25 @@ const handleReloadFileTree = async () => {
       <MenubarContent>
         <MenubarItem @click="handleNewFile">
           New File
-          <MenubarShortcut>⌘N</MenubarShortcut>
+          <MenubarShortcut>{{ cmdKey }}{{ plusSeparator }}N</MenubarShortcut>
         </MenubarItem>
         <MenubarItem @click="handleOpenFile">
           Open File
-          <MenubarShortcut>⌘O</MenubarShortcut>
+          <MenubarShortcut>{{ cmdKey }}{{ plusSeparator }}O</MenubarShortcut>
         </MenubarItem>
         <MenubarSeparator/>
         <MenubarItem @click="handleSave">
           Save
-          <MenubarShortcut>⌘S</MenubarShortcut>
+          <MenubarShortcut>{{ cmdKey }}{{ plusSeparator }}S</MenubarShortcut>
         </MenubarItem>
         <MenubarItem>
           Save As
-          <MenubarShortcut>⇧⌘S</MenubarShortcut>
+          <MenubarShortcut>{{ shiftKey }}{{ plusSeparator }}{{ cmdKey }}{{ plusSeparator }}S</MenubarShortcut>
         </MenubarItem>
         <MenubarSeparator/>
         <MenubarItem>
           Close File
-          <MenubarShortcut>⌘W</MenubarShortcut>
+          <MenubarShortcut>{{ cmdKey }}{{ plusSeparator }}W</MenubarShortcut>
         </MenubarItem>
         <MenubarSeparator/>
         <MenubarItem @click="goToWorkspaces">
@@ -163,24 +171,24 @@ const handleReloadFileTree = async () => {
       <MenubarContent>
         <MenubarItem>
           Undo
-          <MenubarShortcut>⌘Z</MenubarShortcut>
+          <MenubarShortcut>{{ cmdKey }}{{ plusSeparator }}Z</MenubarShortcut>
         </MenubarItem>
         <MenubarItem>
           Redo
-          <MenubarShortcut>⇧⌘Z</MenubarShortcut>
+          <MenubarShortcut>{{ shiftKey }}{{ plusSeparator }}{{ cmdKey }}{{ plusSeparator }}Z</MenubarShortcut>
         </MenubarItem>
         <MenubarSeparator/>
         <MenubarItem>
           Cut
-          <MenubarShortcut>⌘X</MenubarShortcut>
+          <MenubarShortcut>{{ cmdKey }}{{ plusSeparator }}X</MenubarShortcut>
         </MenubarItem>
         <MenubarItem>
           Copy
-          <MenubarShortcut>⌘C</MenubarShortcut>
+          <MenubarShortcut>{{ cmdKey }}{{ plusSeparator }}C</MenubarShortcut>
         </MenubarItem>
         <MenubarItem>
           Paste
-          <MenubarShortcut>⌘V</MenubarShortcut>
+          <MenubarShortcut>{{ cmdKey }}{{ plusSeparator }}V</MenubarShortcut>
         </MenubarItem>
         <MenubarSeparator/>
         <MenubarSub>
@@ -188,15 +196,15 @@ const handleReloadFileTree = async () => {
           <MenubarSubContent>
             <MenubarItem>
               Find
-              <MenubarShortcut>⌘F</MenubarShortcut>
+              <MenubarShortcut>{{ cmdKey }}{{ plusSeparator }}F</MenubarShortcut>
             </MenubarItem>
             <MenubarItem>
               Replace
-              <MenubarShortcut>⌘H</MenubarShortcut>
+              <MenubarShortcut>{{ cmdKey }}{{ plusSeparator }}H</MenubarShortcut>
             </MenubarItem>
             <MenubarItem>
               Find in Files
-              <MenubarShortcut>⇧⌘F</MenubarShortcut>
+              <MenubarShortcut>{{ shiftKey }}{{ plusSeparator }}{{ cmdKey }}{{ plusSeparator }}F</MenubarShortcut>
             </MenubarItem>
           </MenubarSubContent>
         </MenubarSub>
@@ -231,27 +239,27 @@ const handleReloadFileTree = async () => {
           @click="handleToggleConsole"
         >
           Show Console
-          <MenubarShortcut>⌘J</MenubarShortcut>
+          <MenubarShortcut>{{ cmdKey }}{{ plusSeparator }}J</MenubarShortcut>
         </MenubarCheckboxItem>
         <MenubarCheckboxItem
           :checked="editorStore.showInspector"
           @click="handleToggleInspector"
         >
           Show Inspector
-          <MenubarShortcut>⌘I</MenubarShortcut>
+          <MenubarShortcut>{{ cmdKey }}{{ plusSeparator }}I</MenubarShortcut>
         </MenubarCheckboxItem>
         <MenubarSeparator/>
         <MenubarItem>
           Zoom In
-          <MenubarShortcut>⌘+</MenubarShortcut>
+          <MenubarShortcut>{{ cmdKey }}{{ plusSeparator }}+</MenubarShortcut>
         </MenubarItem>
         <MenubarItem>
           Zoom Out
-          <MenubarShortcut>⌘-</MenubarShortcut>
+          <MenubarShortcut>{{ cmdKey }}{{ plusSeparator }}-</MenubarShortcut>
         </MenubarItem>
         <MenubarItem>
           Reset Zoom
-          <MenubarShortcut>⌘0</MenubarShortcut>
+          <MenubarShortcut>{{ cmdKey }}{{ plusSeparator }}0</MenubarShortcut>
         </MenubarItem>
       </MenubarContent>
     </MenubarMenu>
@@ -264,14 +272,14 @@ const handleReloadFileTree = async () => {
         </MenubarItem>
         <MenubarItem>
           Keyboard Shortcuts
-          <MenubarShortcut>⌘K ⌘S</MenubarShortcut>
+          <MenubarShortcut>{{ cmdKey }}{{ plusSeparator }}K {{ cmdKey }}{{ plusSeparator }}S</MenubarShortcut>
         </MenubarItem>
         <MenubarSeparator/>
         <MenubarItem>
           Check for Updates
         </MenubarItem>
         <MenubarSeparator/>
-        <MenubarItem>
+        <MenubarItem @click="openAboutModal">
           About Lore Designer
         </MenubarItem>
       </MenubarContent>
@@ -283,5 +291,8 @@ const handleReloadFileTree = async () => {
     v-model:is-open="isCreateModalOpen"
     :parent-path="selectedParentPath"
     @create="handleCreateFile"
+  />
+  <AboutModal
+    v-model:is-open="isAboutModalOpen"
   />
 </template>
