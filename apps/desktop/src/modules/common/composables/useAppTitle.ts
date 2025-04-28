@@ -26,8 +26,13 @@ export function useAppTitle() {
    * @param workspaceName Workspace name
    */
   function setEditorTitle(fileName: string, fileExt?: string, workspaceName?: string) {
-    const extension = fileExt ? `.${fileExt}` : '';
-    let title = `${fileName}${extension}`;
+    // Fix: Check if fileName already includes the extension
+    let title = fileName;
+
+    // Only append extension if it's provided and not already included in fileName
+    if (fileExt && !fileName.toLowerCase().endsWith(`.${fileExt.toLowerCase()}`)) {
+      title = `${fileName}.${fileExt}`;
+    }
 
     if (workspaceName) {
       title += ` - ${workspaceName}`;

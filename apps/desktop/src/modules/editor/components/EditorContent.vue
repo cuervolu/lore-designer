@@ -1,4 +1,3 @@
-<!-- apps/desktop/src/modules/editor/components/EditorContent.vue -->
 <script setup lang="ts">
 import {ref, watch} from 'vue';
 import {User, Home, PenTool, FileText, Image, File, type LucideIcon, Save} from 'lucide-vue-next';
@@ -146,9 +145,9 @@ function renderMarkdown(markdown: string | null): string {
             class="h-full w-full text-foreground"
           />
         </div>
+        <!-- Fix: Display name only, since it already contains the extension -->
         <h1 class="mt-2 text-xl font-bold text-foreground">
           {{ file.name }}
-          <span class="text-muted-foreground font-normal">.{{ file.extension }}</span>
         </h1>
       </div>
 

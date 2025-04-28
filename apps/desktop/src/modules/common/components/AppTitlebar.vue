@@ -84,8 +84,7 @@ const closeWindow = async () => {
 // Computed display title based on mode (welcome or editor)
 const displayTitle = computed(() => {
   if (props.fileName && props.workspaceName) {
-    const extension = props.fileExt ? `.${props.fileExt}` : '';
-    return `${props.fileName}${extension} - ${props.workspaceName}`;
+    return `${props.fileName} - ${props.workspaceName}`;
   }
   return props.title;
 });

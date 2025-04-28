@@ -1,4 +1,3 @@
-<!-- apps/desktop/src/modules/editor/components/InspectorPanel.vue -->
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { Search } from 'lucide-vue-next';
@@ -35,9 +34,9 @@ async function loadFileProperties(file: EditorFile) {
   properties.value = [];
 
   try {
-    // Common properties
+    // Common properties - Fix: Display the name only, as it already includes the extension
     properties.value = [
-      { name: 'Filename', value: `${file.name}.${file.extension}` },
+      { name: 'Filename', value: file.name },
       { name: 'Path', value: file.path },
       { name: 'File Type', value: getFileTypeLabel(file) },
     ];

@@ -195,7 +195,7 @@ export const useEditorStore = defineStore('stores', () => {
         panels: {
           console_visible: showConsole.value,
           inspector_visible: showInspector.value,
-          explorer_width: 250, // Default or stored values
+          explorer_width: 250, // TODO: Make this dynamic somehow
           inspector_width: 300,
           console_height: 200
         },
@@ -229,12 +229,19 @@ export const useEditorStore = defineStore('stores', () => {
         filePath: fullPath
       })
 
-      // Convert to our format
+      const extension = tab.path.split('.').pop() || '';
+      let name = tab.title;
+      if (name.toLowerCase().endsWith(`.${extension.toLowerCase()}`)) {
+        // Remove the extension from the name if it already has it
+        name = name.slice(0, -(extension.length + 1));
+      }
+
+      // Convert to our format with fixed naming
       const newTab: EditorFile = {
         id: tab.id,
-        name: tab.title,
+        name: name,
         path: tab.path,
-        extension: tab.path.split('.').pop() || '',
+        extension: extension,
         icon: tab.icon || 'fileText',
         hasUnsavedChanges: tab.has_unsaved_changes
       }
