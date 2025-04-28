@@ -10,6 +10,7 @@
     "frontendDist": "../dist"
   },
   "app": {
+    "withGlobalTauri": true,
     "windows": [
       {
         "title": "Lore Designer",
@@ -36,6 +37,7 @@
         ],
         "style-src": "'unsafe-inline' 'unsafe-eval' 'self' https://unpkg.com"
       },
+      "capabilities": [],
       "assetProtocol": {
         "enable": true,
         "scope": [
