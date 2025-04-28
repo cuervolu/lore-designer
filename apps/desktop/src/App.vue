@@ -9,7 +9,7 @@ import logo from '@/assets/app_icon.webp';
 
 const preferencesStore = usePreferencesStore()
 const route = useRoute()
-const { title, setTitle } = useAppTitle()
+const { title, setWizardPageTitle, resetTitle } = useAppTitle()
 
 // Define mapping for route names to page titles
 const routeTitles: Record<string, string> = {
@@ -20,12 +20,15 @@ const routeTitles: Record<string, string> = {
   'learn': 'Learn'
 };
 
-// Update title when route changes
 watch(() => route.name, (newRouteName) => {
   if (newRouteName && typeof newRouteName === 'string' && newRouteName in routeTitles) {
-    setTitle(routeTitles[newRouteName]);
+    // Use the wizard-specific function which doesn't update the native window title
+    setWizardPageTitle(routeTitles[newRouteName]);
   } else {
-    setTitle('Lore Designer');
+    // Not in a recognized wizard route - reset the title
+    // but don't update the native window title if we're in the editor
+    const inEditor = newRouteName === 'editor';
+    resetTitle(!inEditor);
   }
 }, { immediate: true });
 
