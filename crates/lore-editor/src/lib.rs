@@ -37,7 +37,7 @@ impl EditorManager {
         IndexManager::start_indexing(path)?;
 
         // Load editor state for this workspace
-        let editor_state = EditorState::load_or_create(path)?;
+        EditorState::load_or_create(path)?;
 
         info!("Opened workspace: {}", path.display());
         Ok(workspace_info)

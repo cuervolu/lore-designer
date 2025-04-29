@@ -41,11 +41,7 @@
       "assetProtocol": {
         "enable": true,
         "scope": [
-          "$APPDATA/**",
-          "$APPDATA/images/**",
-          "$LOCALAPPDATA/**",
-          "$LOCALAPPDATA/images/**",
-          "$HOME/.local/share/dev.cuervolu.lore-designer/**"
+          "**/*"
         ]
       }
     }

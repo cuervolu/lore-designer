@@ -1,11 +1,11 @@
 ﻿<script setup lang="ts">
-import { invoke } from "@tauri-apps/api/core";
-import { writeText } from '@tauri-apps/plugin-clipboard-manager';
-import { revealItemInDir } from '@tauri-apps/plugin-opener';
-import { error as logError} from "@tauri-apps/plugin-log";
-import { onMounted, ref } from "vue";
-import { useRouter } from 'vue-router';
-import { Folder, EllipsisVertical, ExternalLink, Copy, Trash, Edit } from 'lucide-vue-next';
+import {invoke, convertFileSrc} from "@tauri-apps/api/core";
+import {writeText} from '@tauri-apps/plugin-clipboard-manager';
+import {revealItemInDir} from '@tauri-apps/plugin-opener';
+import {error as logError} from "@tauri-apps/plugin-log";
+import {onMounted, ref} from "vue";
+import {useRouter} from 'vue-router';
+import {Folder, EllipsisVertical, ExternalLink, Copy, Trash, Edit} from 'lucide-vue-next';
 
 import {
   DropdownMenu,
@@ -14,8 +14,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button'
-import { toast } from 'vue-sonner'
+import {Button} from '@/components/ui/button'
+import {toast} from 'vue-sonner'
 
 const props = defineProps<{
   workspace: {
@@ -39,17 +39,17 @@ const defaultIcon = new URL('@/assets/logo.webp', import.meta.url).href;
 
 onMounted(async () => {
   try {
-    workspaceIcon.value = await invoke<string>('get_workspace_icon', {
+    const iconPath = await invoke<string>('get_workspace_icon', {
       workspacePath: props.workspace.path
     });
+
+    workspaceIcon.value = convertFileSrc(iconPath);
     isIconLoaded.value = true;
   } catch (error) {
-    await logError(`Failed to load workspace icon: ${error}`);
     workspaceIcon.value = defaultIcon;
     isIconError.value = true;
   }
 });
-
 const handleOpen = async () => {
   if (!props.workspace.exists) {
     toast.error('Workspace no longer exists at this location');
@@ -103,9 +103,10 @@ const handleRemove = () => {
         @error="isIconError = true"
       />
       <template v-else-if="isIconError || workspace.exists === false">
-        <Folder class="w-6 h-6" :class="workspace.exists !== false ? 'text-muted-foreground' : 'text-destructive/50'" />
+        <Folder class="w-6 h-6"
+                :class="workspace.exists !== false ? 'text-muted-foreground' : 'text-destructive/50'"/>
       </template>
-      <Folder v-else class="w-6 h-6 text-muted-foreground" />
+      <Folder v-else class="w-6 h-6 text-muted-foreground"/>
     </div>
     <div class="flex-1">
       <h3 class="font-medium flex items-center gap-2">
@@ -123,32 +124,33 @@ const handleRemove = () => {
         class="h-8 opacity-0 group-hover:opacity-100 transition-opacity"
         @click="handleOpen"
       >
-        <Edit class="h-4 w-4 mr-2" />
+        <Edit class="h-4 w-4 mr-2"/>
         Open
       </Button>
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" class="p-2 hover:bg-accent/60 hover:text-accent-foreground rounded-md">
-            <EllipsisVertical class="w-5 h-5" />
+          <Button variant="ghost"
+                  class="p-2 hover:bg-accent/60 hover:text-accent-foreground rounded-md">
+            <EllipsisVertical class="w-5 h-5"/>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem @click="handleOpen" :disabled="workspace.exists === false">
-            <Edit class="mr-2 h-4 w-4" />
+            <Edit class="mr-2 h-4 w-4"/>
             <span>Open in Editor</span>
           </DropdownMenuItem>
           <DropdownMenuItem @click="handleShowInExplorer">
-            <ExternalLink class="mr-2 h-4 w-4" />
+            <ExternalLink class="mr-2 h-4 w-4"/>
             <span>Show in Explorer</span>
           </DropdownMenuItem>
           <DropdownMenuItem @click="handleCopyPath">
-            <Copy class="mr-2 h-4 w-4" />
+            <Copy class="mr-2 h-4 w-4"/>
             <span>Copy Path</span>
           </DropdownMenuItem>
-          <DropdownMenuSeparator />
+          <DropdownMenuSeparator/>
           <DropdownMenuItem variant="destructive" @click="handleRemove">
-            <Trash class="mr-2 h-4 w-4" />
+            <Trash class="mr-2 h-4 w-4"/>
             <span>Remove from List</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
