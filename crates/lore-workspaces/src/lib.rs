@@ -1,20 +1,20 @@
 mod commands;
+mod icons;
 mod manifest;
 mod model;
-mod icons;
 mod recent;
 
+pub use crate::model::{WORKSPACE_VERSION, WorkspaceError};
 use anyhow::Context;
-use log::{debug, info, warn};
-use std::fs;
-use std::path::{Path, PathBuf};
-use tauri::AppHandle;
 pub use commands::*;
+pub use icons::*;
+use log::{debug, info, warn};
 pub use manifest::*;
 pub use model::*;
 pub use recent::*;
-pub use icons::*;
-pub use crate::model::{WorkspaceError, WORKSPACE_VERSION};
+use std::fs;
+use std::path::{Path, PathBuf};
+use tauri::AppHandle;
 
 pub const DEFAULT_FOLDERS: [&str; 4] = ["Characters", "Lore", "Story", "Notes"];
 pub const INTERNAL_DIR: &str = ".lore";
@@ -42,8 +42,8 @@ impl WorkspaceManager {
         if !base_path.is_dir() {
             return Err(WorkspaceError::InvalidPath(base_path.display().to_string()));
         }
-
-        let workspace_path = base_path.join(name);
+        let sanitized_name = Self::sanitize_workspace_name(name);
+        let workspace_path = base_path.join(&sanitized_name);
         debug!("Full workspace path: {}", workspace_path.display());
 
         // Check if the target directory already exists
@@ -60,8 +60,9 @@ impl WorkspaceManager {
         // Create the main workspace directory
         Self::create_directory_structure(&workspace_path)?;
 
-        // Create the manifest file
-        create_manifest(&workspace_path, name, app_version)?;
+        // Create the manifest file -- pass the original name for display purposes, but use
+        // the sanitized name for the path
+        create_manifest(&workspace_path, name, &sanitized_name, app_version)?;
 
         copy_default_icon_to_workspace(app, &workspace_path)?;
 
@@ -109,5 +110,21 @@ impl WorkspaceManager {
 
         info!("Created default user content folders");
         Ok(())
+    }
+
+    /// Sanitize a workspace name for filesystem use
+    ///
+    /// Converts to lowercase, replaces spaces with underscores, and removes special characters
+    pub fn sanitize_workspace_name(name: &str) -> String {
+        let lowercase = name.to_lowercase();
+
+        let with_underscores = lowercase.replace(' ', "_");
+
+        let sanitized: String = with_underscores
+            .chars()
+            .filter(|c| c.is_alphanumeric() || *c == '_' || *c == '-')
+            .collect();
+
+        sanitized
     }
 }

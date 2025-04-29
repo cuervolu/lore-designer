@@ -20,7 +20,6 @@ const menuItems = [
   { name: 'Plugins', route: { name: 'plugins' } },
   { name: 'Settings', route: { name: 'settings' } },
   { name: 'Learn', route: { name: 'learn' } },
-  { name: 'Editor Prototype', route: { name: 'editor-prototype' } },
 ]
 
 const currentRouteName = computed(() => route.name)

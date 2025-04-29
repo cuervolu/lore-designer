@@ -16,8 +16,11 @@ pub struct ProjectManifest {
     /// Unique identifier for the project
     pub project_id: String,
 
-    /// User-defined name of the project
+    /// User-defined name of the project (display name)
     pub project_name: String,
+
+    /// Sanitized name used for the folder
+    pub folder_name: String,
 
     /// Version of Lore Designer that created the project
     pub created_with_version: String,
@@ -39,20 +42,23 @@ pub struct ProjectManifest {
 ///
 /// # Arguments
 /// * `workspace_path` - Path to the workspace directory
-/// * `name` - Name of the workspace/project
+/// * `display_name` - User-friendly display name of the workspace/project
+/// * `folder_name` - Sanitized folder name
 /// * `app_version` - Current application version
 pub fn create_manifest(
     workspace_path: &Path,
-    name: &str,
+    display_name: &str,
+    folder_name: &str,
     app_version: &str,
 ) -> Result<PathBuf, WorkspaceError> {
-    let manifest_file_name = format!("{}.lore", name);
+    let manifest_file_name = format!("{}.lore", folder_name);
     let manifest_path = workspace_path.join(&manifest_file_name);
 
     let manifest_content = ProjectManifest {
         lore_version: WORKSPACE_VERSION,
         project_id: Uuid::new_v4().to_string(),
-        project_name: name.to_string(),
+        project_name: display_name.to_string(),
+        folder_name: folder_name.to_string(),
         created_with_version: app_version.to_string(),
         last_opened_with_version: app_version.to_string(),
         template_id: None,

@@ -27,9 +27,14 @@ pub async fn create_workspace(
         error!("Failed to create default settings: {}", e);
     }
 
+    let sanitized_name = WorkspaceManager::sanitize_workspace_name(&name);
+
     Ok(WorkspaceResponse {
         path: result.display().to_string(),
-        message: format!("Workspace '{}' created successfully.", name),
+        message: format!(
+            "Workspace '{}' created successfully as folder '{}'.",
+            name, sanitized_name
+        ),
     })
 }
 
@@ -40,7 +45,7 @@ pub fn get_workspace_icon(workspace_path: String) -> Result<String, String> {
     if let Some(icon_path) = get_workspace_icon_path(path) {
         return Ok(icon_path.to_string_lossy().to_string());
     }
-    
+
     Err("Workspace icon not found, use application default icon".to_string())
 }
 

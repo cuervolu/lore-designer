@@ -1,19 +1,19 @@
 ﻿<!-- apps/desktop/src/modules/wizard/views/NewWorkspaceView.vue -->
 <script setup lang="ts">
-import { invoke } from '@tauri-apps/api/core'
-import { open } from '@tauri-apps/plugin-dialog'
-import { debug, error, info } from '@tauri-apps/plugin-log'
+import {invoke} from '@tauri-apps/api/core'
+import {open} from '@tauri-apps/plugin-dialog'
+import {debug, error, info} from '@tauri-apps/plugin-log'
 
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { ChevronLeft } from 'lucide-vue-next'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import {ref} from 'vue'
+import {useRouter} from 'vue-router'
+import {ChevronLeft} from 'lucide-vue-next'
+import {Button} from '@/components/ui/button'
+import {Input} from '@/components/ui/input'
+import {Label} from '@/components/ui/label'
 
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { usePreferencesStore } from '@common/stores/preferences.store'
-import { useRecentWorkspacesStore } from "@wizard/stores/recent-workspaces.store.ts";
+import {Card, CardContent, CardFooter, CardHeader, CardTitle} from '@/components/ui/card'
+import {usePreferencesStore} from '@common/stores/preferences.store'
+import {useRecentWorkspacesStore} from "@wizard/stores/recent-workspaces.store.ts";
 
 const router = useRouter()
 const preferencesStore = usePreferencesStore()
@@ -26,7 +26,7 @@ const errorMessage = ref('')
 const openAfterCreation = ref(true)
 
 const goBack = () => {
-  router.push({ name: 'workspaces' })
+  router.push({name: 'workspaces'})
 }
 
 const browseDirectory = async () => {
@@ -34,7 +34,7 @@ const browseDirectory = async () => {
     isBrowsing.value = true
     errorMessage.value = ''
 
-    const selectedPath = await open({ directory: true, title: 'Select Workspace Directory' })
+    const selectedPath = await open({directory: true, title: 'Select Workspace Directory'})
 
     if (selectedPath) {
       workspacePath.value = selectedPath
@@ -71,9 +71,7 @@ const createWorkspace = async () => {
       await preferencesStore.updateLastProject(result.path)
       await recentWorkspacesStore.addRecentWorkspace(workspaceName.value, result.path)
 
-      // If user wants to open the workspace after creation
       if (openAfterCreation.value) {
-        // Navigate to the editor with the new workspace path
         await router.push({
           name: 'editor',
           query: {path: result.path}
@@ -96,11 +94,11 @@ const createWorkspace = async () => {
   <div class="container mx-auto p-8 max-w-2xl">
     <header class="mb-6">
       <Button variant="ghost" @click="goBack" class="mb-2">
-        <chevron-left class="w-4 h-4 mr-2" />
+        <chevron-left class="w-4 h-4 mr-2"/>
         Back
       </Button>
       <h1 class="text-2xl font-bold">Create a New Workspace</h1>
-      <p class="text-gray-600">Set up a new workspace for your project</p>
+      <p class="text-muted-foreground">Set up a new workspace for your project</p>
     </header>
 
     <Card>
@@ -114,9 +112,13 @@ const createWorkspace = async () => {
             <Input
               id="workspace-name"
               v-model="workspaceName"
-              placeholder="My Awesome Project"
+              placeholder="The Gray Garden"
               required
             />
+            <p class="text-xs text-muted-foreground mt-1">
+              The display name for your workspace. Spaces and special characters will be converted
+              to underscores for the folder name.
+            </p>
           </div>
 
           <div class="space-y-2">
