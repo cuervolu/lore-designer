@@ -6,10 +6,13 @@ import { getVersion } from "@tauri-apps/api/app";
 import { error } from "@tauri-apps/plugin-log";
 import { useEditorStore } from '@editor/stores/editor.store';
 
-const props = defineProps<{
-  isIndexing: boolean;
-  progress: number;
-}>();
+const props = withDefaults(defineProps<{
+  isIndexing?: boolean;
+  progress?: number;
+}>(), {
+  isIndexing: false,
+  progress: 0
+});
 
 const editorStore = useEditorStore();
 const appVersion = ref('0.1.0');

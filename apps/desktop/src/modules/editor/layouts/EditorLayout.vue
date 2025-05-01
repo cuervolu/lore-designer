@@ -83,7 +83,7 @@ const indexingProgress = computed(() => {
       </div>
 
       <StatusFooter
-        :is-indexing="isIndexing"
+        :is-indexing="!!isIndexing"
         :progress="indexingProgress"
         class="flex-shrink-0 z-20"
       />

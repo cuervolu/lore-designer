@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import { Input } from '@/components/ui/input';
+import {ref, computed, onMounted} from 'vue';
+import {Input} from '@/components/ui/input';
 import {
   Search,
   Folder,
@@ -20,13 +20,13 @@ import {
   SidebarMenuItem,
   SidebarMenuButton
 } from '@/components/ui/sidebar';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { useEditorStore } from '@editor/stores/editor.store';
-import { toast } from 'vue-sonner';
+import {ScrollArea} from '@/components/ui/scroll-area';
+import {useEditorStore} from '@editor/stores/editor.store';
+import {toast} from 'vue-sonner';
 import FileTreeItem from './FileTreeItem.vue';
 import CreateFileModal from './CreateFileModal.vue';
-import type { FileTree } from "@editor/types/editor.types.ts";
-import { Button } from '@/components/ui/button'
+import type {FileTree} from "@editor/types/editor.types.ts";
+import {Button} from '@/components/ui/button'
 
 const editorStore = useEditorStore();
 const searchQuery = ref('');
@@ -86,11 +86,11 @@ const openCreateFileModal = (parentPath: string) => {
 };
 
 const handleCreateFile = async (fileName: string, extension: string, initialContent: string, parentPath: string) => {
-    const filePath = await editorStore.createNewFile(parentPath, fileName, initialContent);
-    if (filePath) {
-      // Ensure parent folder is expanded
-      expandedFolders.value[parentPath] = true;
-    }
+  const filePath = await editorStore.createNewFile(parentPath, fileName, initialContent);
+  if (filePath) {
+    // Ensure parent folder is expanded
+    expandedFolders.value[parentPath] = true;
+  }
 };
 
 // Toggle folder expansion
@@ -100,6 +100,7 @@ const toggleFolder = (folderPath: string) => {
 
 onMounted(() => {
   const standardFolders = ['Characters', 'Lore', 'Story', 'Notes'];
+  console.log('File tree:', editorStore.fileTree);
 
   for (const item of editorStore.fileTree) {
     if (item.is_directory && standardFolders.includes(item.name)) {
@@ -121,7 +122,7 @@ onMounted(() => {
                 title="Refresh file tree"
                 :disabled="isRefreshing"
         >
-          <RefreshCw class="h-4 w-4" :class="{ 'animate-spin': isRefreshing }" />
+          <RefreshCw class="h-4 w-4" :class="{ 'animate-spin': isRefreshing }"/>
         </Button>
       </div>
       <div class="relative mt-2">
@@ -155,35 +156,7 @@ onMounted(() => {
                   @toggle-folder="toggleFolder"
                   @file-click="handleFileClick"
                   @create-file="openCreateFileModal"
-                >
-                  <template v-if="item.is_directory && expandedFolders[item.path] && item.children.length > 0" #children>
-                    <FileTreeItem
-                      v-for="child in item.children"
-                      :key="child.path"
-                      :item="child"
-                      :depth="1"
-                      :is-expanded="expandedFolders[child.path]"
-                      @toggle-folder="toggleFolder"
-                      @file-click="handleFileClick"
-                      @create-file="openCreateFileModal"
-                    >
-                      <template v-if="child.is_directory && expandedFolders[child.path] && child.children.length > 0" #children>
-                        <FileTreeItem
-                          v-for="grandchild in child.children"
-                          :key="grandchild.path"
-                          :item="grandchild"
-                          :depth="2"
-                          :is-expanded="expandedFolders[grandchild.path]"
-                          @toggle-folder="toggleFolder"
-                          @file-click="handleFileClick"
-                          @create-file="openCreateFileModal"
-                        >
-                          <!-- Deeper nesting levels could be added if needed -->
-                        </FileTreeItem>
-                      </template>
-                    </FileTreeItem>
-                  </template>
-                </FileTreeItem>
+                />
               </template>
               <div
                 v-else-if="searchQuery"

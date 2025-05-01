@@ -301,58 +301,37 @@ impl IndexManager {
     }
 
     pub fn build_file_tree(workspace_path: &Path) -> Result<Vec<FileTreeItem>, EditorError> {
+        debug!(
+            "Building file tree for workspace: {}",
+            workspace_path.display()
+        );
+
         let (files, directories) = Self::load_index(workspace_path)?;
+        debug!(
+            "Loaded index: {} files, {} directories",
+            files.len(),
+            directories.len()
+        );
 
         let mut tree_map: HashMap<String, FileTreeItem> = HashMap::new();
 
-        tree_map.insert(
-            "".to_string(),
-            FileTreeItem {
-                name: workspace_path
-                    .file_name()
-                    .and_then(|n| n.to_str())
-                    .unwrap_or("Workspace")
-                    .to_string(),
-                path: "".to_string(),
-                is_directory: true,
-                icon: None,
-                children: Vec::new(),
-            },
-        );
-
         for dir in &directories {
-            let parts: Vec<&str> = dir.path.split('/').collect();
-            let parent_path = parts[..parts.len() - 1].join("/");
-
+            debug!(
+                "Creating directory node: {} at path: {}",
+                dir.name, dir.path
+            );
             let dir_item = FileTreeItem {
                 name: dir.name.clone(),
                 path: dir.path.clone(),
                 is_directory: true,
                 icon: dir.icon.clone(),
-                children: Vec::new(),
+                children: Vec::new(), // Initially empty, will be filled later
             };
-
             tree_map.insert(dir.path.clone(), dir_item);
-
-            if let Some(parent) = tree_map.get_mut(&parent_path) {
-                parent.children.push(FileTreeItem {
-                    name: dir.name.clone(),
-                    path: dir.path.clone(),
-                    is_directory: true,
-                    icon: dir.icon.clone(),
-                    children: Vec::new(),
-                });
-            }
         }
 
         for file in &files {
-            let parts: Vec<&str> = file.path.split('/').collect();
-            let parent_path = if parts.len() > 1 {
-                parts[..parts.len() - 1].join("/")
-            } else {
-                "".to_string()
-            };
-
+            debug!("Creating file node: {} at path: {}", file.name, file.path);
             let icon = match file.file_type {
                 FileType::Markdown => Some("markdown".to_string()),
                 FileType::Canvas => Some("canvas".to_string()),
@@ -360,22 +339,78 @@ impl IndexManager {
                 FileType::Image => Some("image".to_string()),
                 FileType::Unknown => None,
             };
+            let file_item = FileTreeItem {
+                name: file.name.clone(),
+                path: file.path.clone(),
+                is_directory: false,
+                icon,
+                children: Vec::new(), // Files don't have children
+            };
+            tree_map.insert(file.path.clone(), file_item);
+        }
 
-            if let Some(parent) = tree_map.get_mut(&parent_path) {
-                parent.children.push(FileTreeItem {
-                    name: file.name.clone(),
-                    path: file.path.clone(),
-                    is_directory: false,
-                    icon,
-                    children: Vec::new(),
-                });
+        let paths: Vec<String> = tree_map.keys().cloned().collect();
+        let mut root_children_paths: Vec<String> = Vec::new();
+
+        for path in paths {
+            let parts: Vec<&str> = path.split('/').collect();
+
+            let parent_path = if parts.len() <= 1 {
+                root_children_paths.push(path.clone());
+                continue;
+            } else {
+                parts[..parts.len() - 1].join("/")
+            };
+
+            if let Some(child_item) = tree_map.remove(&path) {
+                debug!(
+                    "Linking item: {} to parent: {}",
+                    child_item.path, parent_path
+                );
+                if let Some(parent) = tree_map.get_mut(&parent_path) {
+                    parent.children.push(child_item);
+                    debug!(
+                        "Added item {} to parent {}, parent now has {} children",
+                        path,
+                        parent_path,
+                        parent.children.len()
+                    );
+                } else {
+                    warn!(
+                        "Parent directory not found in tree_map for item: {} (parent: {}) - Re-inserting item.",
+                        path, parent_path
+                    );
+                    tree_map.insert(path, child_item);
+                    if !parent_path.is_empty() {
+                        warn!("Parent path not found in tree_map: {}", parent_path);
+                    }
+                }
+            } else {
+                warn!("Item path not found during linking phase: {}", path);
             }
         }
 
-        if let Some(root) = tree_map.get("") {
-            return Ok(root.children.clone());
+        let mut result: Vec<FileTreeItem> = Vec::new();
+        for root_child_path in root_children_paths {
+            if let Some(item) = tree_map.remove(&root_child_path) {
+                result.push(item);
+            } else {
+                warn!(
+                    "Root child path not found in final map: {}",
+                    root_child_path
+                );
+            }
         }
+        result.sort_by(|a, b| match (a.is_directory, b.is_directory) {
+            (true, false) => std::cmp::Ordering::Less,
+            (false, true) => std::cmp::Ordering::Greater,
+            _ => a.name.cmp(&b.name),
+        });
 
-        Ok(Vec::new())
+        debug!(
+            "Returning final tree structure with {} root items.",
+            result.len()
+        );
+        Ok(result)
     }
 }
