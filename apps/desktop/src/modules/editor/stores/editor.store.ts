@@ -1,8 +1,9 @@
 import {defineStore} from 'pinia'
 import {ref, computed} from 'vue'
 import {invoke} from '@tauri-apps/api/core'
-import {error as logError} from '@tauri-apps/plugin-log'
+import {debug, error as logError, warn} from '@tauri-apps/plugin-log'
 import {toast} from 'vue-sonner'
+import {listen, type UnlistenFn} from '@tauri-apps/api/event'
 import {usePreferencesStore} from '@common/stores/preferences.store'
 import type {
   WorkspaceInfo,
@@ -26,6 +27,7 @@ export const useEditorStore = defineStore('stores', () => {
   const indexingProgress = ref<IndexingProgress | null>(null)
   const isLoading = ref(false)
   const editorError = ref<string | null>(null)
+  const fileSystemUnlistener = ref<UnlistenFn | null>(null)
 
   const activeTab = computed(() => {
     return openTabs.value.find(tab => tab.id === activeTabId.value) || null
@@ -33,9 +35,6 @@ export const useEditorStore = defineStore('stores', () => {
 
   // Actions
 
-  /**
-   * Open a workspace in the stores
-   */
   async function openWorkspace(workspacePath: string) {
     try {
       isLoading.value = true
@@ -47,17 +46,12 @@ export const useEditorStore = defineStore('stores', () => {
 
       currentWorkspace.value = workspace
 
-      // Load file tree
       await loadFileTree()
-
-      // Start polling for indexing progress
       startIndexingProgressPoll()
-
-      // Load stores state
       await loadEditorState()
-
-      // Update preferences
       await preferencesStore.updateLastProject(workspacePath)
+
+      await setupFileSystemListener()
 
       return workspace
     } catch (err) {
@@ -75,9 +69,56 @@ export const useEditorStore = defineStore('stores', () => {
     }
   }
 
+  async function setupFileSystemListener() {
+    if (fileSystemUnlistener.value) {
+      fileSystemUnlistener.value()
+      fileSystemUnlistener.value = null
+    }
+
+    // Only set up if we have a workspace
+    if (!currentWorkspace.value) return
+
+    try {
+      fileSystemUnlistener.value = await listen('file-system-changed', async (event) => {
+        await debug(`File system changed: ${JSON.stringify(event)}`)
+        const eventData = event.payload as { workspace_path: string, timestamp: number }
+
+        if (eventData.workspace_path === currentWorkspace.value?.path) {
+          await debug('Refreshing file tree due to filesystem change')
+          await loadFileTree()
+        }
+      })
+    } catch (err) {
+      await logError(`Failed to set up file system listener: ${err}`)
+    }
+  }
+
   /**
-   * Load the file tree for the current workspace
+   * Clean up resources when closing a workspace
    */
+  async function closeWorkspace() {
+    await warn(`Closing workspace: ${currentWorkspace.value?.path}!`)
+    if (fileSystemUnlistener.value) {
+      fileSystemUnlistener.value()
+      fileSystemUnlistener.value = null
+    }
+
+    if (currentWorkspace.value) {
+      try {
+        await invoke('stop_watching_workspace', {
+          workspacePath: currentWorkspace.value.path
+        })
+      } catch (err) {
+        await logError(`Failed to stop file watcher: ${err}`)
+      }
+    }
+
+    currentWorkspace.value = null
+    fileTree.value = []
+    openTabs.value = []
+    activeTabId.value = null
+  }
+
   async function loadFileTree() {
     if (!currentWorkspace.value) {
       return []
@@ -102,9 +143,25 @@ export const useEditorStore = defineStore('stores', () => {
     }
   }
 
-  /**
-   * Start polling for indexing progress
-   */
+  async function refreshFileTree() {
+    if (!currentWorkspace.value) return []
+
+    try {
+      const tree = await invoke<FileTree[]>('refresh_file_tree', {
+        workspacePath: currentWorkspace.value.path
+      })
+
+      fileTree.value = tree
+      return tree
+    } catch (err) {
+      const errorMessage = `Failed to refresh file tree: ${err}`
+      await logError(errorMessage)
+
+      toast.error('Failed to refresh file tree')
+      return []
+    }
+  }
+
   function startIndexingProgressPoll() {
     if (!currentWorkspace.value) return
 
@@ -133,9 +190,6 @@ export const useEditorStore = defineStore('stores', () => {
     return () => clearInterval(pollInterval)
   }
 
-  /**
-   * Load the stores state for the current workspace
-   */
   async function loadEditorState() {
     if (!currentWorkspace.value) return
 
@@ -173,9 +227,6 @@ export const useEditorStore = defineStore('stores', () => {
     }
   }
 
-  /**
-   * Save the current stores state
-   */
   async function saveEditorState() {
     if (!currentWorkspace.value) return
 
@@ -209,9 +260,6 @@ export const useEditorStore = defineStore('stores', () => {
     }
   }
 
-  /**
-   * Open a file in the stores
-   */
   async function openFile(filePath: string) {
     if (!currentWorkspace.value) return null
 
@@ -249,7 +297,6 @@ export const useEditorStore = defineStore('stores', () => {
       openTabs.value.push(newTab)
       activeTabId.value = newTab.id
 
-      // Save state
       await saveEditorState()
 
       return newTab
@@ -265,15 +312,10 @@ export const useEditorStore = defineStore('stores', () => {
     }
   }
 
-  /**
-   * Close a tab
-   */
   async function closeTab(tabId: string) {
-    // Find tab index
     const index = openTabs.value.findIndex(tab => tab.id === tabId)
     if (index === -1) return
 
-    // If active tab, switch to another
     if (activeTabId.value === tabId) {
       // Try to select the tab to the left, if not available, try right
       if (index > 0) {
@@ -285,18 +327,14 @@ export const useEditorStore = defineStore('stores', () => {
       }
     }
 
-    // Remove the tab
     openTabs.value.splice(index, 1)
 
-    // Save state
     await saveEditorState()
   }
 
-  /**
-   * Get content of a file
-   */
   async function getFileContent(filePath: string): Promise<FileContent> {
     if (!currentWorkspace.value) {
+      await logError('No workspace open, cannot get file content. This should not happen.')
       throw new Error('No workspace open')
     }
 
@@ -306,11 +344,9 @@ export const useEditorStore = defineStore('stores', () => {
     })
   }
 
-  /**
-   * Save content to a file
-   */
   async function saveFileContent(filePath: string, content: string, isJson = false) {
     if (!currentWorkspace.value) {
+      await logError('No workspace open, cannot get file content. This should not happen.')
       throw new Error('No workspace open')
     }
 
@@ -330,8 +366,6 @@ export const useEditorStore = defineStore('stores', () => {
       if (tab) {
         tab.hasUnsavedChanges = false
       }
-
-      // Save state
       await saveEditorState()
 
       toast.success('File saved successfully')
@@ -348,9 +382,6 @@ export const useEditorStore = defineStore('stores', () => {
     }
   }
 
-  /**
-   * Create a new file
-   */
   async function createNewFile(parentDir: string, fileName: string, initialContent = '') {
     if (!currentWorkspace.value) {
       throw new Error('No workspace open')
@@ -364,10 +395,6 @@ export const useEditorStore = defineStore('stores', () => {
         initialContent
       })
 
-      // Reload file tree
-      await loadFileTree()
-
-      // Open the new file
       await openFile(filePath)
 
       toast.success('File created successfully')
@@ -384,25 +411,16 @@ export const useEditorStore = defineStore('stores', () => {
     }
   }
 
-  /**
-   * Toggle console visibility
-   */
   async function toggleConsole() {
     showConsole.value = !showConsole.value
     await saveEditorState()
   }
 
-  /**
-   * Toggle inspector visibility
-   */
   async function toggleInspector() {
     showInspector.value = !showInspector.value
     await saveEditorState()
   }
 
-  /**
-   * Get welcome text for a new workspace
-   */
   async function getWelcomeText(workspaceName: string): Promise<string> {
     return await invoke<string>('get_welcome_text', {workspaceName})
   }
@@ -424,7 +442,9 @@ export const useEditorStore = defineStore('stores', () => {
 
     // Actions
     openWorkspace,
+    closeWorkspace,
     loadFileTree,
+    refreshFileTree,
     openFile,
     closeTab,
     getFileContent,

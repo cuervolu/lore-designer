@@ -1,4 +1,3 @@
-<!-- apps/desktop/src/modules/stores/views/EditorView.vue -->
 <script setup lang="ts">
 import { ref, onMounted, watch, onBeforeUnmount, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -26,7 +25,6 @@ const indexProgress = computed(() => {
   return Math.floor((processed / total) * 100);
 });
 
-// Watch for changes in the active tab
 watch(
   () => editorStore.activeTab,
   (newTab) => {
@@ -45,7 +43,6 @@ watch(
   { immediate: true }
 );
 
-// Load workspace data when component mounts
 onMounted(async () => {
   // Get workspace path from query parameter
   const workspacePathParam = route.query.path;
@@ -69,11 +66,12 @@ onMounted(async () => {
 });
 
 // Cleanup on component unmount
-onBeforeUnmount(() => {
-  resetTitle();
+onBeforeUnmount(async () => {
+  await resetTitle();
+  // Clean up workspace resources
+  await editorStore.closeWorkspace();
 });
 
-// Navigate back to wizard
 const goToWizard = () => {
   router.push({ name: 'workspaces' });
 };

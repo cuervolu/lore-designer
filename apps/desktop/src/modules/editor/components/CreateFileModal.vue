@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import {ref} from 'vue';
 import {FileText, User, MapIcon, Book, PenTool, File, type LucideIcon} from 'lucide-vue-next';
 import {
   Dialog,
@@ -8,9 +8,10 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import {Button} from '@/components/ui/button';
+import {Input} from '@/components/ui/input';
+import {ScrollArea} from '@/components/ui/scroll-area';
+import {useEditorStore} from '@editor/stores/editor.store';
 
 interface FileTypeOption {
   id: string;
@@ -31,9 +32,11 @@ const emit = defineEmits<{
   'create': [fileName: string, extension: string, initialContent: string, parentPath: string];
 }>();
 
+const editorStore = useEditorStore();
 const fileName = ref('');
 const selectedType = ref<string>('markdown');
 const errorMessage = ref('');
+const isCreating = ref(false);
 
 // Define the available file types
 const fileTypes: FileTypeOption[] = [
@@ -48,16 +51,10 @@ const fileTypes: FileTypeOption[] = [
   {
     id: 'character',
     name: 'Character',
-    extension: 'character.json',
+    extension: 'character.md',
     icon: User,
     description: 'Character sheet with details, background, and relationships',
-    initialContent: JSON.stringify({
-      name: '',
-      background: '',
-      description: '',
-      traits: [],
-      relationships: []
-    }, null, 2)
+    initialContent: '# Character Sheet\n\n## Name\n\n## Description\n\n## Background\n\n## Relationships\n'
   },
   {
     id: 'location',
@@ -106,7 +103,6 @@ const fileTypes: FileTypeOption[] = [
   }
 ];
 
-// Close the modal
 const closeModal = () => {
   fileName.value = '';
   selectedType.value = 'markdown';
@@ -114,14 +110,13 @@ const closeModal = () => {
   emit('update:isOpen', false);
 };
 
-// Create the file
-const createFile = () => {
+const createFile = async () => {
+  if (isCreating.value) return;
+
   if (!fileName.value.trim()) {
     errorMessage.value = 'Please enter a file name.';
     return;
   }
-
-  // Get the selected file type
   const fileType = fileTypes.find(t => t.id === selectedType.value);
   if (!fileType) {
     errorMessage.value = 'Please select a file type.';
@@ -161,8 +156,21 @@ const createFile = () => {
     ? `${finalFileName}.${extension}`
     : `${finalFileName}.${extension}`;
 
-  emit('create', fullFileName, extension, fileType.initialContent, props.parentPath);
-  closeModal();
+  try {
+    isCreating.value = true;
+    emit('create', fullFileName, extension, fileType.initialContent, props.parentPath);
+
+    // Wait a bit to ensure file is created, then refresh the file tree
+    setTimeout(async () => {
+      await editorStore.refreshFileTree();
+      isCreating.value = false;
+    }, 500);
+
+    closeModal();
+  } catch (error) {
+    isCreating.value = false;
+    errorMessage.value = `Error creating file: ${error}`;
+  }
 };
 
 // Get a displayable path name
@@ -197,7 +205,11 @@ const getPathDisplay = (path: string) => {
             @keydown.enter="createFile"
           />
           <p class="text-xs text-muted-foreground">
-            File will be saved as: <span class="font-mono">{{ fileName || 'filename' }}{{ selectedType !== 'custom' ? '.' + fileTypes.find(t => t.id === selectedType)?.extension : '' }}</span>
+            File will be saved as: <span class="font-mono">{{
+              fileName || 'filename'
+            }}{{
+              selectedType !== 'custom' ? '.' + fileTypes.find(t => t.id === selectedType)?.extension : ''
+            }}</span>
           </p>
         </div>
 
@@ -213,7 +225,7 @@ const getPathDisplay = (path: string) => {
                 @click="selectedType = type.id"
               >
                 <div class="bg-muted/40 p-2 rounded-md">
-                  <component :is="type.icon" class="h-5 w-5" />
+                  <component :is="type.icon" class="h-5 w-5"/>
                 </div>
                 <div>
                   <h4 class="font-medium">{{ type.name }}</h4>
@@ -230,8 +242,11 @@ const getPathDisplay = (path: string) => {
       </div>
 
       <DialogFooter>
-        <Button variant="outline" @click="closeModal">Cancel</Button>
-        <Button @click="createFile">Create</Button>
+        <Button variant="outline" @click="closeModal" :disabled="isCreating">Cancel</Button>
+        <Button @click="createFile" :disabled="isCreating">
+          <span v-if="isCreating">Creating...</span>
+          <span v-else>Create</span>
+        </Button>
       </DialogFooter>
     </DialogContent>
   </Dialog>

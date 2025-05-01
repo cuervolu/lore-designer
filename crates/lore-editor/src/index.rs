@@ -1,6 +1,6 @@
 use super::{EditorError, FileTreeItem, FileType, IndexedDirectory, IndexedFile};
 use ignore::Walk;
-use log::{error, info, warn};
+use log::{debug, error, info, warn};
 use std::collections::HashMap;
 use std::path::Path;
 use std::sync::{Arc, LazyLock, Mutex};
@@ -9,7 +9,6 @@ use std::time::SystemTime;
 /// Special folder names that get custom icons
 pub const SPECIAL_FOLDERS: [&str; 5] = ["characters", "lore", "locations", "story", "notes"];
 
-/// Progress of indexing operation
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct IndexingProgress {
     /// Total files to process
@@ -25,19 +24,15 @@ pub struct IndexingProgress {
     pub completed: bool,
 }
 
-/// Manages workspace indexing
 pub struct IndexManager;
 
-// Global state for indexing using LazyLock instead of lazy_static
 static INDEXING_STATE: LazyLock<Mutex<HashMap<String, Arc<Mutex<IndexingProgress>>>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
 
 impl IndexManager {
-    /// Start indexing a workspace
     pub fn start_indexing(workspace_path: &Path) -> Result<(), EditorError> {
         let path_str = workspace_path.display().to_string();
 
-        // Create initial progress state
         let progress = Arc::new(Mutex::new(IndexingProgress {
             total: 0,
             processed: 0,
@@ -45,13 +40,11 @@ impl IndexManager {
             completed: false,
         }));
 
-        // Store in global state
         {
             let mut state = INDEXING_STATE.lock().unwrap();
             state.insert(path_str.clone(), progress.clone());
         }
 
-        // Start background indexing thread
         let workspace_path = workspace_path.to_path_buf();
         std::thread::spawn(
             move || match Self::perform_indexing(&workspace_path, progress) {
@@ -63,7 +56,62 @@ impl IndexManager {
         Ok(())
     }
 
-    /// Get current indexing progress
+    pub fn trigger_incremental_update(
+        workspace_path: &Path,
+        changed_path: &Path,
+    ) -> Result<(), EditorError> {
+        debug!(
+            "Performing incremental update for: {}",
+            changed_path.display()
+        );
+
+        let (mut files, mut directories) = Self::load_index(workspace_path)?;
+
+        let rel_path = changed_path
+            .strip_prefix(workspace_path)
+            .map_err(|_| EditorError::InvalidPath(changed_path.display().to_string()))?;
+
+        let rel_path_str = rel_path.display().to_string();
+
+        // If the file exists, it was created or modified?
+        if changed_path.exists() {
+            if changed_path.is_file() {
+                files.retain(|f| f.path != rel_path_str);
+
+                match Self::index_file(workspace_path, changed_path) {
+                    Ok(indexed_file) => {
+                        debug!("Incrementally indexed file: {}", rel_path_str);
+                        files.push(indexed_file);
+                    }
+                    Err(e) => {
+                        error!("Failed to index file {}: {}", rel_path_str, e);
+                    }
+                }
+            } else if changed_path.is_dir() {
+                directories.retain(|d| d.path != rel_path_str);
+
+                match Self::index_directory(workspace_path, changed_path) {
+                    Ok(indexed_dir) => {
+                        debug!("Incrementally indexed directory: {}", rel_path_str);
+                        directories.push(indexed_dir);
+                    }
+                    Err(e) => {
+                        error!("Failed to index directory {}: {}", rel_path_str, e);
+                    }
+                }
+            }
+        } else {
+            files.retain(|f| !f.path.starts_with(&rel_path_str));
+            directories.retain(|d| !d.path.starts_with(&rel_path_str));
+            debug!("Removed deleted path from index: {}", rel_path_str);
+        }
+
+        Self::save_index(workspace_path, &files, &directories)?;
+        debug!("Incremental index update completed");
+
+        Ok(())
+    }
+
     pub fn get_indexing_progress(workspace_path: &Path) -> Option<IndexingProgress> {
         let path_str = workspace_path.display().to_string();
         let state = INDEXING_STATE.lock().unwrap();
@@ -74,7 +122,6 @@ impl IndexManager {
         })
     }
 
-    /// Perform the actual indexing (internal method)
     fn perform_indexing(
         workspace_path: &Path,
         progress: Arc<Mutex<IndexingProgress>>,
@@ -88,23 +135,19 @@ impl IndexManager {
             }
         }
 
-        // Update progress with total
         {
             let mut guard = progress.lock().unwrap();
             guard.total = total_files;
         }
 
-        // Create index storage
         let mut files = Vec::new();
         let mut directories = Vec::new();
 
-        // Process each file
         for result in Walk::new(workspace_path) {
             match result {
                 Ok(entry) => {
                     let path = entry.path();
 
-                    // Update progress
                     {
                         let mut guard = progress.lock().unwrap();
                         guard.processed += 1;
@@ -114,8 +157,6 @@ impl IndexManager {
                             .and_then(|p| p.to_str())
                             .map(|s| s.to_string());
                     }
-
-                    // Skip .lore directory
                     if let Ok(rel_path) = path.strip_prefix(workspace_path) {
                         let path_str = rel_path.to_string_lossy();
                         if path_str.starts_with(".lore/") {
@@ -123,7 +164,6 @@ impl IndexManager {
                         }
                     }
 
-                    // Process the entry
                     if path.is_file() {
                         if let Ok(indexed_file) = Self::index_file(workspace_path, path) {
                             files.push(indexed_file);
@@ -143,20 +183,16 @@ impl IndexManager {
             std::thread::sleep(std::time::Duration::from_millis(5));
         }
 
-        // Mark as completed
         {
             let mut guard = progress.lock().unwrap();
             guard.completed = true;
             guard.current_file = None;
         }
-
-        // Save the index to workspace
         Self::save_index(workspace_path, &files, &directories)?;
 
         Ok(())
     }
 
-    /// Index a single file
     fn index_file(workspace_path: &Path, file_path: &Path) -> Result<IndexedFile, EditorError> {
         let rel_path = file_path
             .strip_prefix(workspace_path)
@@ -195,7 +231,6 @@ impl IndexManager {
         })
     }
 
-    /// Index a directory
     fn index_directory(
         workspace_path: &Path,
         dir_path: &Path,
@@ -210,7 +245,6 @@ impl IndexManager {
             .unwrap_or("unnamed")
             .to_string();
 
-        // Determine if this is a special folder
         let icon = SPECIAL_FOLDERS
             .iter()
             .find(|&&folder| name.to_lowercase() == folder)
@@ -223,7 +257,6 @@ impl IndexManager {
         })
     }
 
-    /// Save index to workspace
     fn save_index(
         workspace_path: &Path,
         files: &[IndexedFile],
@@ -248,7 +281,6 @@ impl IndexManager {
         Ok(())
     }
 
-    /// Load index from workspace
     pub fn load_index(
         workspace_path: &Path,
     ) -> Result<(Vec<IndexedFile>, Vec<IndexedDirectory>), EditorError> {
@@ -268,14 +300,11 @@ impl IndexManager {
         Ok((files, directories))
     }
 
-    /// Build file tree from indexed data
     pub fn build_file_tree(workspace_path: &Path) -> Result<Vec<FileTreeItem>, EditorError> {
         let (files, directories) = Self::load_index(workspace_path)?;
 
-        // Create a map to store the tree structure
         let mut tree_map: HashMap<String, FileTreeItem> = HashMap::new();
 
-        // Add root
         tree_map.insert(
             "".to_string(),
             FileTreeItem {
@@ -291,12 +320,10 @@ impl IndexManager {
             },
         );
 
-        // Add all directories
         for dir in &directories {
             let parts: Vec<&str> = dir.path.split('/').collect();
             let parent_path = parts[..parts.len() - 1].join("/");
 
-            // Create directory item
             let dir_item = FileTreeItem {
                 name: dir.name.clone(),
                 path: dir.path.clone(),
@@ -305,10 +332,8 @@ impl IndexManager {
                 children: Vec::new(),
             };
 
-            // Add to tree map
             tree_map.insert(dir.path.clone(), dir_item);
 
-            // Add to parent's children
             if let Some(parent) = tree_map.get_mut(&parent_path) {
                 parent.children.push(FileTreeItem {
                     name: dir.name.clone(),
@@ -320,7 +345,6 @@ impl IndexManager {
             }
         }
 
-        // Add all files
         for file in &files {
             let parts: Vec<&str> = file.path.split('/').collect();
             let parent_path = if parts.len() > 1 {
@@ -329,7 +353,6 @@ impl IndexManager {
                 "".to_string()
             };
 
-            // Determine file icon based on type
             let icon = match file.file_type {
                 FileType::Markdown => Some("markdown".to_string()),
                 FileType::Canvas => Some("canvas".to_string()),
@@ -338,7 +361,6 @@ impl IndexManager {
                 FileType::Unknown => None,
             };
 
-            // Add to parent's children
             if let Some(parent) = tree_map.get_mut(&parent_path) {
                 parent.children.push(FileTreeItem {
                     name: file.name.clone(),
@@ -350,7 +372,6 @@ impl IndexManager {
             }
         }
 
-        // Return the root's children
         if let Some(root) = tree_map.get("") {
             return Ok(root.children.clone());
         }

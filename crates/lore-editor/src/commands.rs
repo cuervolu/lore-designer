@@ -1,14 +1,15 @@
 use super::{
     Editor, EditorError, EditorManager, EditorState, FileContent, FileTreeItem, IndexManager,
-    IndexingProgress, SaveFileRequest, TabInfo, WorkspaceInfo,
+    IndexingProgress, SaveFileRequest, TabInfo, WorkspaceInfo, FileSystemWatcher
 };
 use std::path::{Path, PathBuf};
 
 #[tauri::command]
 pub async fn open_workspace_in_editor(
+    app: tauri::AppHandle,
     workspace_path: String,
 ) -> Result<WorkspaceInfo, EditorError> {
-    EditorManager::open_workspace(Path::new(&workspace_path))
+    EditorManager::open_workspace(&app, Path::new(&workspace_path))
 }
 
 #[tauri::command]
@@ -79,8 +80,7 @@ pub async fn create_new_file(
         &file_name,
         &initial_content,
     )?;
-
-    // Return relative path
+    
     let rel_path = file_path
         .strip_prefix(&workspace_path_buf)
         .map_err(|_| EditorError::InvalidPath(file_path.display().to_string()))?;
@@ -91,4 +91,19 @@ pub async fn create_new_file(
 #[tauri::command]
 pub async fn get_welcome_text(workspace_name: String) -> String {
     Editor::get_welcome_text(&workspace_name)
+}
+
+#[tauri::command]
+pub async fn stop_watching_workspace(workspace_path: String) -> Result<(), EditorError> {
+    FileSystemWatcher::stop(Path::new(&workspace_path))
+        .map_err(EditorError::Operation)
+}
+
+#[tauri::command]
+pub async fn refresh_file_tree(workspace_path: String) -> Result<Vec<FileTreeItem>, EditorError> {
+    // Reindex the workspace first
+    IndexManager::start_indexing(Path::new(&workspace_path))?;
+
+    // Then build and return the file tree
+    IndexManager::build_file_tree(Path::new(&workspace_path))
 }

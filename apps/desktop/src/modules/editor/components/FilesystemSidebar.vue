@@ -33,8 +33,8 @@ const searchQuery = ref('');
 const expandedFolders = ref<Record<string, boolean>>({});
 const isCreateModalOpen = ref(false);
 const selectedParentPath = ref('');
+const isRefreshing = ref(false);
 
-// Computed property to filter file tree based on search query
 const filteredFileTree = computed(() => {
   if (!searchQuery.value.trim()) {
     return editorStore.fileTree;
@@ -42,20 +42,14 @@ const filteredFileTree = computed(() => {
 
   const query = searchQuery.value.toLowerCase();
 
-  // Helper function to search recursively
   const searchInTree = (items: FileTree[]): FileTree[] => {
     return items.filter(item => {
-      // Check if this item matches
       const nameMatches = item.name.toLowerCase().includes(query);
 
-      // For directories, also check children
       if (item.is_directory && item.children.length > 0) {
-        // Search in children
         const matchingChildren = searchInTree(item.children);
 
-        // If children match, include this directory and its matching children
         if (matchingChildren.length > 0) {
-          // Make a copy with only matching children
           return {
             ...item,
             children: matchingChildren
@@ -72,34 +66,31 @@ const filteredFileTree = computed(() => {
 
 // Refresh file tree
 const refreshFileTree = async () => {
-  await editorStore.loadFileTree();
-  toast.success('File tree refreshed');
+  if (isRefreshing.value) return;
+
+  try {
+    isRefreshing.value = true;
+    await editorStore.refreshFileTree();
+  } finally {
+    isRefreshing.value = false;
+  }
 };
 
-// Handle file click to open it
 const handleFileClick = async (path: string) => {
   await editorStore.openFile(path);
 };
 
-// Open create file modal
 const openCreateFileModal = (parentPath: string) => {
   selectedParentPath.value = parentPath;
   isCreateModalOpen.value = true;
 };
 
-// Create new file with data from modal
 const handleCreateFile = async (fileName: string, extension: string, initialContent: string, parentPath: string) => {
-  try {
     const filePath = await editorStore.createNewFile(parentPath, fileName, initialContent);
     if (filePath) {
       // Ensure parent folder is expanded
       expandedFolders.value[parentPath] = true;
-      toast.success(`Created ${extension} file successfully`);
     }
-  } catch (err) {
-    console.error('Failed to create file:', err);
-    toast.error('Failed to create file');
-  }
 };
 
 // Toggle folder expansion
@@ -107,9 +98,7 @@ const toggleFolder = (folderPath: string) => {
   expandedFolders.value[folderPath] = !expandedFolders.value[folderPath];
 };
 
-// Initialize expanded folders when component mounts
 onMounted(() => {
-  // Auto-expand the standard folders
   const standardFolders = ['Characters', 'Lore', 'Story', 'Notes'];
 
   for (const item of editorStore.fileTree) {
@@ -127,11 +116,12 @@ onMounted(() => {
       <div class="flex items-center justify-between">
         <h3 class="font-semibold">Explorer</h3>
         <Button variant="ghost"
-          @click="refreshFileTree"
-          class="text-muted-foreground hover:text-foreground p-1 rounded-md hover:bg-muted"
-          title="Refresh file tree"
+                @click="refreshFileTree"
+                class="text-muted-foreground hover:text-foreground p-1 rounded-md hover:bg-muted"
+                title="Refresh file tree"
+                :disabled="isRefreshing"
         >
-          <RefreshCw class="h-4 w-4" />
+          <RefreshCw class="h-4 w-4" :class="{ 'animate-spin': isRefreshing }" />
         </Button>
       </div>
       <div class="relative mt-2">
