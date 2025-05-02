@@ -117,6 +117,7 @@ pub fn run() {
             lore_editor::get_welcome_text,
             lore_editor::stop_watching_workspace,
             lore_editor::refresh_file_tree,
+            lore_editor::create_file_from_template
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

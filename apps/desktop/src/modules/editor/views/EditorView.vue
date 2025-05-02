@@ -6,11 +6,13 @@ import { useAppTitle } from '@common/composables/useAppTitle';
 import EditorLayout from '@editor/layouts/EditorLayout.vue';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
+import { usePlatform } from '@common/composables/usePlatform';
 
 const route = useRoute();
 const router = useRouter();
 const editorStore = useEditorStore();
 const { setEditorTitle, resetTitle } = useAppTitle();
+const { platform } = usePlatform();
 
 const workspacePath = ref('');
 const isLoadingWorkspace = ref(true);
@@ -21,9 +23,36 @@ const indexProgress = computed(() => {
 
   const { processed, total } = editorStore.indexingProgress;
   if (total === 0) return 0;
-
   return Math.floor((processed / total) * 100);
 });
+
+const handleKeyDown = (event: KeyboardEvent) => {
+  const isMacPlatform = platform.value === 'macos';
+  const isSaveShortcut = (isMacPlatform && event.metaKey && event.key === 's') ||
+    (!isMacPlatform && event.ctrlKey && event.key === 's');
+
+  if (isSaveShortcut) {
+    event.preventDefault();
+    triggerSave();
+  }
+};
+
+const triggerSave = async () => {
+  if (!editorStore.activeTab) {
+    return;
+  }
+  if (!editorStore.activeTab.hasUnsavedChanges) {
+    return;
+  }
+  const contentToSave = editorStore.activeFileContent;
+  const frontmatterToSave = editorStore.activeFileFrontmatter;
+
+  await editorStore.saveFileContent(
+    editorStore.activeTab.path,
+    contentToSave,
+    frontmatterToSave
+  );
+};
 
 watch(
   () => editorStore.activeTab,
@@ -40,10 +69,11 @@ watch(
       resetTitle();
     }
   },
-  { immediate: true }
+  { immediate: true, deep: true }
 );
 
 onMounted(async () => {
+  window.addEventListener('keydown', handleKeyDown);
   // Get workspace path from query parameter
   const workspacePathParam = route.query.path;
 
@@ -67,6 +97,7 @@ onMounted(async () => {
 
 // Cleanup on component unmount
 onBeforeUnmount(async () => {
+  window.removeEventListener('keydown', handleKeyDown);
   await resetTitle();
   // Clean up workspace resources
   await editorStore.closeWorkspace();

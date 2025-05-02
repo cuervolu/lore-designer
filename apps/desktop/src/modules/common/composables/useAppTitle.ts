@@ -43,22 +43,37 @@ export function useAppTitle() {
    * @param fileName File name
    * @param fileExt File extension (without the dot)
    * @param workspaceName Workspace name
+   * @param hasUnsavedChanges Indicates if the file has unsaved changes
    */
-  async function setEditorTitle(fileName: string, fileExt?: string, workspaceName?: string) {
-    // Fix: Check if fileName already includes the extension
-    let title = fileName;
-
-    // Only append extension if it's provided and not already included in fileName
-    if (fileExt && !fileName.toLowerCase().endsWith(`.${fileExt.toLowerCase()}`)) {
-      title = `${fileName}.${fileExt}`;
+  async function setEditorTitle(
+    fileName: string,
+    fileExt?: string,
+    workspaceName?: string,
+    hasUnsavedChanges?: boolean
+  ) {
+    let baseFileName = fileName;
+    if (fileExt && baseFileName.toLowerCase().endsWith(`.${fileExt.toLowerCase()}`)) {
+      baseFileName = baseFileName.slice(0, -(fileExt.length + 1));
     }
+
+    let displayFileName = baseFileName;
+    if (fileExt) {
+      displayFileName += `.${fileExt}`;
+    }
+
+    // Prepend indicator if there are unsaved changes
+    const unsavedIndicator = hasUnsavedChanges ? '• ' : '';
+
+    let finalTitle = `${unsavedIndicator}${displayFileName}`;
 
     if (workspaceName) {
-      title += ` - ${workspaceName}`;
+      finalTitle += ` - ${workspaceName}`;
+    } else {
+      // Fallback if workspace name is missing, but still show unsaved status
+      finalTitle = `${unsavedIndicator}${displayFileName} - Lore Designer`;
     }
 
-    // When in editor mode, update the native window title as well
-    await setTitle(title, true);
+    await setTitle(finalTitle, true);
   }
 
   /**

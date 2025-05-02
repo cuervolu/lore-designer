@@ -17,8 +17,8 @@ pub use watcher::*;
 use anyhow::Context;
 use log::{debug, info};
 use std::path::Path;
-use gray_matter::Matter;
-use crate::frontmatter::{combine_frontmatter_and_content, extract_frontmatter};
+use gray_matter::{engine::YAML, Matter};
+use crate::frontmatter::{combine_frontmatter_and_content};
 
 /// Main structure for editor functionality
 pub struct EditorManager;
@@ -72,6 +72,10 @@ impl EditorManager {
         }
 
         let file_type = FileType::from_path(&full_path)?;
+
+        let matter = Matter::<YAML>::new();
+        
+        
         let content = match file_type {
             FileType::Markdown => {
                 // Read markdown content
@@ -91,18 +95,41 @@ impl EditorManager {
 
                 FileContent::Canvas { data: json }
             }
-            FileType::Character => {
-                // Read character file (Markdown with YAML frontmatter)
+            FileType::Character
+            | FileType::Location
+            | FileType::Lore => {
                 let text = std::fs::read_to_string(&full_path).context(format!(
-                    "Failed to read character file: {}",
+                    "Failed to read file with frontmatter: {}",
                     full_path.display()
                 ))?;
+                
+                let result = matter.parse(&text);
 
-                let (frontmatter, content) = extract_frontmatter(&text);
-
-                FileContent::Character {
-                    frontmatter,
-                    content
+                // Extract the raw frontmatter string and content
+                // We check result.data.is_some() to see if frontmatter was actually parsed.
+                // If not, we treat the whole file as content.
+                // `result.matter` contains the raw frontmatter string.
+                // `result.content` contains the content after frontmatter.
+                let (frontmatter_opt, content_str) = if result.data.is_some() {
+                    (Some(result.matter.to_string()), result.content.to_string())
+                } else {
+                    (None, result.orig.to_string()) // Use original string if no frontmatter found
+                };
+                
+                match file_type {
+                    FileType::Character => FileContent::Character {
+                        frontmatter: frontmatter_opt,
+                        content: content_str,
+                    },
+                    FileType::Location => FileContent::Location {
+                        frontmatter: frontmatter_opt,
+                        content: content_str,
+                    },
+                    FileType::Lore => FileContent::Lore {
+                        frontmatter: frontmatter_opt,
+                        content: content_str,
+                    },
+                    _ => unreachable!(), // Should not happen due to outer match
                 }
             }
             FileType::Image => {
@@ -117,32 +144,6 @@ impl EditorManager {
                     .context(format!("Failed to read file: {}", full_path.display()))?;
 
                 FileContent::PlainText { content: text }
-            }
-            FileType::Location => {
-                let text = std::fs::read_to_string(&full_path).context(format!(
-                    "Failed to read location file: {}",
-                    full_path.display()
-                ))?;
-
-                let (frontmatter, content) = extract_frontmatter(&text);
-
-                FileContent::Location {
-                    frontmatter,
-                    content
-                }
-            }
-            FileType::Lore => {
-                let text = std::fs::read_to_string(&full_path).context(format!(
-                    "Failed to read lore file: {}",
-                    full_path.display()
-                ))?;
-
-                let (frontmatter, content) = extract_frontmatter(&text);
-
-                FileContent::Lore {
-                    frontmatter,
-                    content
-                }
             }
             FileType::Dialogue => {
                 let text = std::fs::read_to_string(&full_path).context(format!(

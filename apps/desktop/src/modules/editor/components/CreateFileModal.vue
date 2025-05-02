@@ -1,25 +1,28 @@
 <script setup lang="ts">
-import {ref} from 'vue';
-import {FileText, User, MapIcon, Book, PenTool, File, type LucideIcon} from 'lucide-vue-next';
+import {error as logError} from "@tauri-apps/plugin-log";
+import {ref, computed} from 'vue';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
+  FileText, User, MapPin, BookOpen, PenTool, type LucideIcon
+} from 'lucide-vue-next';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription
 } from '@/components/ui/dialog';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import {ScrollArea} from '@/components/ui/scroll-area';
 import {useEditorStore} from '@editor/stores/editor.store';
+import {toast} from 'vue-sonner';
 
 interface FileTypeOption {
-  id: string;
+  id: string; // Should match backend FileType enum name for templates
   name: string;
-  extension: string;
+  // Extension is now often derived or handled by backend template command
+  // Keep it for display/suggestion if needed
+  suggestedExtension: string;
   icon: LucideIcon;
   description: string;
-  initialContent: string;
+  isTemplate: boolean; // Flag template types
+  initialContent?: string; // Only for non-template types
 }
 
 const props = defineProps<{
@@ -29,223 +32,224 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:isOpen': [value: boolean];
-  'create': [fileName: string, extension: string, initialContent: string, parentPath: string];
 }>();
 
 const editorStore = useEditorStore();
 const fileName = ref('');
-const selectedType = ref<string>('markdown');
+const selectedTypeId = ref<string>('Markdown');
 const errorMessage = ref('');
 const isCreating = ref(false);
 
-// Define the available file types
+// Define the available file types - IDs match backend FileType enum names
 const fileTypes: FileTypeOption[] = [
   {
-    id: 'markdown',
-    name: 'Markdown',
-    extension: 'md',
+    id: 'Markdown',
+    name: 'Markdown Document',
+    suggestedExtension: '.md',
     icon: FileText,
-    description: 'General purpose document with rich text formatting',
-    initialContent: '# Untitled Document\n\nWrite your content here...'
+    description: 'General purpose document (notes, story chapters).',
+    isTemplate: false,
+    initialContent: '# Untitled Document\n\n'
   },
   {
-    id: 'character',
+    id: 'Character',
     name: 'Character',
-    extension: 'character.md',
+    suggestedExtension: '.character.md',
     icon: User,
-    description: 'Character sheet with details, background, and relationships',
-    initialContent: '# Character Sheet\n\n## Name\n\n## Description\n\n## Background\n\n## Relationships\n'
+    description: 'Character sheet using frontmatter template.',
+    isTemplate: true,
   },
   {
-    id: 'location',
+    id: 'Location',
     name: 'Location',
-    extension: 'location.json',
-    icon: MapIcon,
-    description: 'Place or setting with details and connections',
-    initialContent: JSON.stringify({
-      name: '',
-      description: '',
-      features: [],
-      connections: []
-    }, null, 2)
+    suggestedExtension: '.location.md',
+    icon: MapPin,
+    description: 'Location details using frontmatter template.',
+    isTemplate: true,
   },
   {
-    id: 'lore',
+    id: 'Lore',
     name: 'Lore Entry',
-    extension: 'lore.md',
-    icon: Book,
-    description: 'World-building element like history, culture, or technology',
-    initialContent: '# Lore Entry\n\n## Overview\n\n## Details\n\n## Significance\n'
+    suggestedExtension: '.lore.md',
+    icon: BookOpen,
+    description: 'World-building element using frontmatter template.',
+    isTemplate: true,
   },
   {
-    id: 'canvas',
+    id: 'Canvas',
     name: 'Canvas',
-    extension: 'canvas.json',
+    suggestedExtension: '.canvas.json',
     icon: PenTool,
-    description: 'Visual workspace for mind mapping and relationship diagrams',
-    initialContent: JSON.stringify({
-      nodes: [],
-      edges: [],
-      metadata: {
-        name: '',
-        description: '',
-        created: new Date().toISOString()
-      }
-    }, null, 2)
+    description: 'Visual workspace for mind mapping (JSON format).',
+    isTemplate: false,
+    initialContent: JSON.stringify({nodes: [], edges: []}, null, 2)
   },
   {
-    id: 'custom',
-    name: 'Custom File',
-    extension: '',
-    icon: File,
-    description: 'Create a file with a custom extension',
-    initialContent: ''
-  }
+    id: 'Dialogue',
+    name: 'Dialogue (Simple)',
+    suggestedExtension: '.dialogue.md',
+    icon: FileText,
+    description: 'Simple linear dialogue script (Markdown).',
+    isTemplate: false,
+    initialContent: '# Dialogue\n\nCharacter A: Hello!\nCharacter B: Hi there.\n'
+  },
 ];
 
+const selectedType = computed(() => fileTypes.find(t => t.id === selectedTypeId.value));
+
+const suggestedFileName = computed(() => {
+  if (!fileName.value.trim() || !selectedType.value) {
+    return `filename${selectedType.value?.suggestedExtension || ''}`;
+  }
+  let name = fileName.value.trim();
+  const ext = selectedType.value.suggestedExtension;
+
+  if (ext && name.toLowerCase().endsWith(ext.toLowerCase())) {
+    name = name.slice(0, -(ext.length));
+  }
+  return name + ext;
+});
+
+
 const closeModal = () => {
+  if (isCreating.value) return;
   fileName.value = '';
-  selectedType.value = 'markdown';
+  selectedTypeId.value = 'Markdown';
   errorMessage.value = '';
   emit('update:isOpen', false);
 };
 
 const createFile = async () => {
   if (isCreating.value) return;
+  errorMessage.value = '';
 
-  if (!fileName.value.trim()) {
+  const name = fileName.value.trim();
+  if (!name) {
     errorMessage.value = 'Please enter a file name.';
     return;
   }
-  const fileType = fileTypes.find(t => t.id === selectedType.value);
-  if (!fileType) {
-    errorMessage.value = 'Please select a file type.';
+
+  const typeInfo = selectedType.value;
+  if (!typeInfo) {
+    errorMessage.value = 'Invalid file type selected.'; // Should not happen
     return;
   }
 
-  let finalFileName = fileName.value;
-  let extension = fileType.extension;
-
-  // For custom file, get extension from the file name if provided
-  if (fileType.id === 'custom') {
-    const parts = fileName.value.split('.');
-
-    if (parts.length > 1) {
-      // The user included an extension, so use it
-      extension = parts.slice(1).join('.');
-      finalFileName = parts[0];
-    } else {
-      errorMessage.value = 'Please include a file extension for custom files.';
-      return;
-    }
-  } else {
-    // Make sure the file name doesn't already have the extension
-    if (finalFileName.endsWith(`.${extension}`)) {
-      finalFileName = finalFileName.slice(0, -(extension.length + 1));
-    }
-  }
-
-  // Validate filename (no special characters)
-  if (!/^[a-zA-Z0-9_\- ]+$/.test(finalFileName)) {
-    errorMessage.value = 'File name can only contain letters, numbers, underscores, hyphens, and spaces.';
+  // Basic filename validation (allow spaces, hyphens, underscores, letters, numbers)
+  // Prevent path traversal or invalid chars
+  if (!/^[a-zA-Z0-9_\-\s]+$/.test(name)) {
+    errorMessage.value = 'File name contains invalid characters.';
     return;
   }
 
-  // Create the full file name
-  const fullFileName = fileType.id === 'custom'
-    ? `${finalFileName}.${extension}`
-    : `${finalFileName}.${extension}`;
+  isCreating.value = true;
+  let createdPath: string | null = null;
 
   try {
-    isCreating.value = true;
-    emit('create', fullFileName, extension, fileType.initialContent, props.parentPath);
+    if (typeInfo.isTemplate) {
+      createdPath = await editorStore.createFromTemplate(
+        props.parentPath,
+        name,
+        typeInfo.id
+      );
+    } else {
+      const fullFileName = name + typeInfo.suggestedExtension;
+      createdPath = await editorStore.createNewFile(
+        props.parentPath,
+        fullFileName,
+        typeInfo.initialContent || ''
+      );
+    }
 
-    // Wait a bit to ensure file is created, then refresh the file tree
-    setTimeout(async () => {
-      await editorStore.refreshFileTree();
-      isCreating.value = false;
-    }, 500);
+    if (createdPath) {
+      closeModal();
+    } else {
+      errorMessage.value = 'Failed to create file. Check logs for details.';
+    }
 
-    closeModal();
-  } catch (error) {
+  } catch (error: any) {
+    await logError(`Error in CreateFileModal createFile: ${error}`);
+    errorMessage.value = `Error: ${error.message || 'Failed to create file.'}`;
+    toast.error("File Creation Failed", {description: errorMessage.value});
+  } finally {
     isCreating.value = false;
-    errorMessage.value = `Error creating file: ${error}`;
   }
 };
 
-// Get a displayable path name
 const getPathDisplay = (path: string) => {
-  if (!path || path === '/') return 'Root';
-  return path;
+  if (!path || path === '/' || path === '.') return 'Workspace Root';
+  // Remove leading/trailing slashes for display
+  return path.replace(/^[\\/]+|[\\/]+$/g, '');
 };
 </script>
 
 <template>
-  <Dialog :open="isOpen" @update:open="emit('update:isOpen', $event)">
-    <DialogContent class="sm:max-w-md">
+  <Dialog :open="isOpen" @update:open="closeModal">
+    <DialogContent class="sm:max-w-lg">
       <DialogHeader>
         <DialogTitle>Create New File</DialogTitle>
+        <DialogDescription>
+          Select a file type and enter a name. Files will be created in:
+          <span class="font-mono text-xs bg-muted/50 px-1 py-0.5 rounded">{{
+              getPathDisplay(parentPath)
+            }}</span>
+        </DialogDescription>
       </DialogHeader>
 
-      <div class="py-4">
-        <div class="mb-4">
-          <label class="text-sm font-medium mb-1 block">Location</label>
-          <div class="bg-muted/30 p-2 rounded text-sm">
-            {{ getPathDisplay(parentPath) }}
-          </div>
-        </div>
-
-        <div class="mb-4">
+      <div class="py-4 grid gap-4">
+        <!-- File Name Input -->
+        <div>
           <label for="fileName" class="text-sm font-medium mb-1 block">File Name</label>
           <Input
             id="fileName"
             v-model="fileName"
-            placeholder="Enter file name"
+            placeholder="Enter file name (without extension)"
             class="mb-1"
             @keydown.enter="createFile"
+            :disabled="isCreating"
           />
-          <p class="text-xs text-muted-foreground">
-            File will be saved as: <span class="font-mono">{{
-              fileName || 'filename'
-            }}{{
-              selectedType !== 'custom' ? '.' + fileTypes.find(t => t.id === selectedType)?.extension : ''
-            }}</span>
+          <p class="text-xs text-muted-foreground h-4">
+            Will be created as: <span class="font-mono">{{ suggestedFileName }}</span>
           </p>
         </div>
 
-        <div class="mb-4">
+        <!-- File Type Selection -->
+        <div>
           <label class="text-sm font-medium mb-2 block">File Type</label>
           <ScrollArea class="h-60 rounded-md border">
-            <div class="p-1">
+            <div class="p-1 space-y-1">
               <div
                 v-for="type in fileTypes"
                 :key="type.id"
-                class="flex items-start p-2 rounded-md cursor-pointer hover:bg-accent gap-3"
-                :class="{ 'bg-accent': selectedType === type.id }"
-                @click="selectedType = type.id"
+                class="flex items-start p-2 rounded-md cursor-pointer hover:bg-accent gap-3 border"
+                :class="{
+                    'bg-accent border-accent-foreground/30': selectedTypeId === type.id,
+                    'border-transparent': selectedTypeId !== type.id
+                 }"
+                @click="selectedTypeId = type.id"
               >
-                <div class="bg-muted/40 p-2 rounded-md">
-                  <component :is="type.icon" class="h-5 w-5"/>
+                <div class="bg-muted/40 p-1.5 rounded-md mt-0.5">
+                  <component :is="type.icon" class="h-4 w-4"/>
                 </div>
-                <div>
-                  <h4 class="font-medium">{{ type.name }}</h4>
-                  <p class="text-xs text-muted-foreground">{{ type.description }}</p>
+                <div class="flex-1">
+                  <h4 class="font-medium text-sm leading-tight">{{ type.name }}</h4>
+                  <p class="text-xs text-muted-foreground leading-snug">{{ type.description }}</p>
                 </div>
               </div>
             </div>
           </ScrollArea>
         </div>
 
-        <p v-if="errorMessage" class="text-sm text-destructive mb-4">
+        <p v-if="errorMessage" class="text-sm text-destructive">
           {{ errorMessage }}
         </p>
       </div>
 
       <DialogFooter>
         <Button variant="outline" @click="closeModal" :disabled="isCreating">Cancel</Button>
-        <Button @click="createFile" :disabled="isCreating">
+        <Button @click="createFile" :disabled="isCreating || !fileName.trim()">
           <span v-if="isCreating">Creating...</span>
-          <span v-else>Create</span>
+          <span v-else>Create File</span>
         </Button>
       </DialogFooter>
     </DialogContent>
