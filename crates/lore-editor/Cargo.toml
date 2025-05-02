@@ -5,9 +5,9 @@ edition = "2024"
 
 [dependencies]
 ignore = "0.4.22"
-walkdir = "2.5.0"
+gray_matter = "0.2.8"
 tauri = {workspace = true}
-tauri-plugin-store = {workspace = true}
+yaml-rust2 = "0.10.1"
 anyhow = {workspace = true}
 thiserror = {workspace = true}
 serde = {workspace = true}
@@ -17,3 +17,4 @@ uuid = {workspace = true}
 notify = "8.0.0"
 lore-workspaces = { path = "../lore-workspaces" }
 crossbeam-channel = "0.5.15"
+chrono = "0.4.40"

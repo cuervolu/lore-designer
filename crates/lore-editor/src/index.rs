@@ -336,8 +336,11 @@ impl IndexManager {
                 FileType::Markdown => Some("markdown".to_string()),
                 FileType::Canvas => Some("canvas".to_string()),
                 FileType::Character => Some("character".to_string()),
+                FileType::Location => Some("location".to_string()),
+                FileType::Lore => Some("book".to_string()),
+                FileType::Dialogue => Some("message-square".to_string()),
                 FileType::Image => Some("image".to_string()),
-                FileType::Unknown => None,
+                _ => None,
             };
             let file_item = FileTreeItem {
                 name: file.name.clone(),

@@ -1,7 +1,8 @@
 use super::{
-    Editor, EditorError, EditorManager, EditorState, FileContent, FileTreeItem, IndexManager,
-    IndexingProgress, SaveFileRequest, TabInfo, WorkspaceInfo, FileSystemWatcher
+    Editor, EditorError, EditorManager, EditorState, FileContent, FileSystemWatcher, FileTreeItem,
+    FileType, IndexManager, IndexingProgress, SaveFileRequest, TabInfo, WorkspaceInfo,
 };
+use crate::templates::get_template_content;
 use std::path::{Path, PathBuf};
 
 #[tauri::command]
@@ -80,7 +81,7 @@ pub async fn create_new_file(
         &file_name,
         &initial_content,
     )?;
-    
+
     let rel_path = file_path
         .strip_prefix(&workspace_path_buf)
         .map_err(|_| EditorError::InvalidPath(file_path.display().to_string()))?;
@@ -95,8 +96,7 @@ pub async fn get_welcome_text(workspace_name: String) -> String {
 
 #[tauri::command]
 pub async fn stop_watching_workspace(workspace_path: String) -> Result<(), EditorError> {
-    FileSystemWatcher::stop(Path::new(&workspace_path))
-        .map_err(EditorError::Operation)
+    FileSystemWatcher::stop(Path::new(&workspace_path)).map_err(EditorError::Operation)
 }
 
 #[tauri::command]
@@ -106,4 +106,30 @@ pub async fn refresh_file_tree(workspace_path: String) -> Result<Vec<FileTreeIte
 
     // Then build and return the file tree
     IndexManager::build_file_tree(Path::new(&workspace_path))
+}
+
+#[tauri::command]
+pub async fn create_file_from_template(
+    workspace_path: String,
+    parent_dir: String,
+    file_name: String,
+    file_type: FileType,
+) -> Result<String, EditorError> {
+    let workspace_path_buf = PathBuf::from(&workspace_path);
+    let parent_dir_buf = PathBuf::from(&parent_dir);
+
+    let template_content = get_template_content(&file_type, &file_name);
+
+    let file_path = Editor::create_file(
+        &workspace_path_buf,
+        &parent_dir_buf,
+        &file_name,
+        &template_content,
+    )?;
+
+    let rel_path = file_path
+        .strip_prefix(&workspace_path_buf)
+        .map_err(|_| EditorError::InvalidPath(file_path.display().to_string()))?;
+
+    Ok(rel_path.display().to_string())
 }

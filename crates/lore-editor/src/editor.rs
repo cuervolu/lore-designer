@@ -78,29 +78,34 @@ impl Editor {
     }
 }
 
-/// Determine icon for a file
 fn determine_file_icon(file_path: &Path) -> Option<String> {
-    // Check extension
     if let Some(ext) = file_path.extension().and_then(|e| e.to_str()) {
         match ext.to_lowercase().as_str() {
             "md" => return Some("markdown".to_string()),
             "canvas" => return Some("canvas".to_string()),
             "character" => return Some("character".to_string()),
+            "location" => return Some("location".to_string()),
+            "lore" => return Some("book".to_string()),
+            "dialogue" => return Some("message-square".to_string()),
             "png" | "jpg" | "jpeg" | "webp" | "svg" => return Some("image".to_string()),
             _ => {}
         }
     }
 
-    // Check filename patterns
     if let Some(file_name) = file_path.file_name().and_then(|n| n.to_str()) {
-        if file_name.ends_with(".character.json") {
+        if file_name.ends_with(".character.md") {
             return Some("character".to_string());
+        } else if file_name.ends_with(".location.md") {
+            return Some("location".to_string());
+        } else if file_name.ends_with(".lore.md") {
+            return Some("book".to_string());
+        } else if file_name.ends_with(".dialogue.md") || file_name.ends_with(".dialogue.json") {
+            return Some("message-square".to_string());
         } else if file_name.ends_with(".canvas.json") {
             return Some("canvas".to_string());
         }
     }
 
-    // Check parent directory
     if let Some(parent) = file_path
         .parent()
         .and_then(|p| p.file_name())
@@ -112,6 +117,7 @@ fn determine_file_icon(file_path: &Path) -> Option<String> {
             "lore" => return Some("book".to_string()),
             "story" | "stories" => return Some("fileText".to_string()),
             "notes" => return Some("note".to_string()),
+            "dialogues" => return Some("message-square".to_string()),
             _ => {}
         }
     }

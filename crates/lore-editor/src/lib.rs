@@ -4,6 +4,8 @@ mod index;
 mod model;
 mod state;
 mod watcher;
+mod frontmatter;
+mod templates;
 
 pub use commands::*;
 pub use editor::*;
@@ -15,6 +17,8 @@ pub use watcher::*;
 use anyhow::Context;
 use log::{debug, info};
 use std::path::Path;
+use gray_matter::Matter;
+use crate::frontmatter::{combine_frontmatter_and_content, extract_frontmatter};
 
 /// Main structure for editor functionality
 pub struct EditorManager;
@@ -88,13 +92,18 @@ impl EditorManager {
                 FileContent::Canvas { data: json }
             }
             FileType::Character => {
-                // Read character file (Markdown format)
+                // Read character file (Markdown with YAML frontmatter)
                 let text = std::fs::read_to_string(&full_path).context(format!(
                     "Failed to read character file: {}",
                     full_path.display()
                 ))?;
 
-                FileContent::Character { data: text }
+                let (frontmatter, content) = extract_frontmatter(&text);
+
+                FileContent::Character {
+                    frontmatter,
+                    content
+                }
             }
             FileType::Image => {
                 // For images, we return the path for frontend to handle
@@ -108,6 +117,40 @@ impl EditorManager {
                     .context(format!("Failed to read file: {}", full_path.display()))?;
 
                 FileContent::PlainText { content: text }
+            }
+            FileType::Location => {
+                let text = std::fs::read_to_string(&full_path).context(format!(
+                    "Failed to read location file: {}",
+                    full_path.display()
+                ))?;
+
+                let (frontmatter, content) = extract_frontmatter(&text);
+
+                FileContent::Location {
+                    frontmatter,
+                    content
+                }
+            }
+            FileType::Lore => {
+                let text = std::fs::read_to_string(&full_path).context(format!(
+                    "Failed to read lore file: {}",
+                    full_path.display()
+                ))?;
+
+                let (frontmatter, content) = extract_frontmatter(&text);
+
+                FileContent::Lore {
+                    frontmatter,
+                    content
+                }
+            }
+            FileType::Dialogue => {
+                let text = std::fs::read_to_string(&full_path).context(format!(
+                    "Failed to read dialogue file: {}",
+                    full_path.display()
+                ))?;
+
+                FileContent::Dialogue { data: text }
             }
         };
 
@@ -139,16 +182,22 @@ impl EditorManager {
 
         match content {
             SaveFileRequest::Text { content } => {
-                std::fs::write(&full_path, content)
-                    .context(format!("Failed to write to file: {}", full_path.display()))?;
-            }
-            SaveFileRequest::Json { content } => {
-                std::fs::write(&full_path, content).context(format!(
-                    "Failed to write JSON to file: {}",
-                    full_path.display()
-                ))?;
-            }
+            std::fs::write(&full_path, content)
+                .context(format!("Failed to write to file: {}", full_path.display()))?;
         }
+        SaveFileRequest::Json { content } => {
+            std::fs::write(&full_path, content).context(format!(
+                "Failed to write JSON to file: {}",
+                full_path.display()
+            ))?;
+        }
+            SaveFileRequest::MarkdownWithFrontmatter { frontmatter, content } => {
+                let combined = combine_frontmatter_and_content(&frontmatter, &content);
+
+                std::fs::write(&full_path, combined)
+                    .context(format!("Failed to write file with frontmatter: {}", full_path.display()))?;
+            }
+    }
 
         debug!("Saved file: {}", full_path.display());
         Ok(())
