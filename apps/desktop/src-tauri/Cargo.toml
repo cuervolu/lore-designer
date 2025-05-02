@@ -32,7 +32,7 @@ tauri-plugin-opener = "2"
 tauri-plugin-store = {workspace = true}
 tauri-plugin-drpc = "0.1.4"
 chrono = { version = "0.4" }
-sysinfo = "0.34.2"
+sysinfo = "0.35.0"
 thiserror = {workspace = true}
 
 lore-workspaces = { path = "../../../crates/lore-workspaces" }
