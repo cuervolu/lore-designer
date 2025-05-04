@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import {convertFileSrc} from '@tauri-apps/api/core';
-import {error as logError} from "@tauri-apps/plugin-log";
-import {computed, onUnmounted, ref, watch} from 'vue';
+import {error as logError, debug} from "@tauri-apps/plugin-log";
+import {computed, ref, watch} from 'vue';
 import {toast} from 'vue-sonner';
+import { marked } from 'marked';
 import {
   User,
   Home,
@@ -12,11 +13,13 @@ import {
   type LucideIcon,
   MapPin, BookOpen, ImageIcon
 } from 'lucide-vue-next';
+import {Textarea} from "@/components/ui/textarea";
 import {useEditorStore} from '@editor/stores/editor.store';
 import type {EditorFile, FileContent} from "@editor/types/editor.types.ts";
+import TipTapEditor from './TipTapEditor.vue';
 
 const props = defineProps<{
-  file: EditorFile;
+  file: EditorFile | null;
 }>();
 
 const editorStore = useEditorStore();
@@ -30,6 +33,7 @@ const isLoading = ref(true);
 const isEditableText = computed(() => {
   // Files with frontmatter have their content edited here
   // Plain Markdown and Text files are also edited here
+  // Treat Markdown as editable rich text now
   return ['Markdown', 'Character', 'Location', 'Lore', 'PlainText'].includes(
     fileType.value
   );
@@ -56,9 +60,25 @@ const imageUrl = computed(() => {
   return null;
 });
 
+function calculateAndUpdateStats(text: string | null) {
+  if (text === null) {
+    editorStore.updateFileStats(null);
+    return;
+  }
+
+  const lines = text === '' ? 0 : text.split('\n').length;
+  const words = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+  const characters = text.length;
+
+  editorStore.updateFileStats({ lines, words, characters });
+}
+
 
 async function loadFileContent() {
-  if (!props.file) return;
+  if (!props.file) {
+    calculateAndUpdateStats(null);
+    return;
+  }
 
   isLoading.value = true;
   contentBody.value = ''; // Reset content
@@ -72,72 +92,113 @@ async function loadFileContent() {
       throw new Error('Received null content from store');
     }
 
-    fileType.value = loadedContent.type; // Store the type
+    fileType.value = loadedContent.type;
+    let textForInitialStats: string | null = null; // Text for immediate calculation
+    let rawContentFromStore: string;
 
-    // Update store's temporary active file state
-    editorStore.activeFileContent = '';
-    editorStore.activeFileFrontmatter = null;
-
-    // Extract data based on type
     switch (loadedContent.type) {
       case 'Markdown':
       case 'PlainText':
-        contentBody.value = loadedContent.data.content || '';
-        editorStore.activeFileContent = contentBody.value; // Update store
-        break;
       case 'Character':
       case 'Location':
       case 'Lore':
-        contentBody.value = loadedContent.data.content || '';
-        frontmatterYaml.value = loadedContent.data.frontmatter; // Store FM (read-only)
-        editorStore.activeFileContent = contentBody.value; // Update store
-        editorStore.activeFileFrontmatter = frontmatterYaml.value; // Update store
+        rawContentFromStore = editorStore.activeFileContent || '';
+        frontmatterYaml.value = editorStore.activeFileFrontmatter;
+        textForInitialStats = rawContentFromStore;
         break;
       case 'Canvas':
-      case 'Dialogue': // Assuming Dialogue might be JSON string for now
-        contentBody.value = loadedContent.data.data || ''; // Store JSON string
-        editorStore.activeFileContent = contentBody.value; // Update store (as JSON string)
+      case 'Dialogue':
+        rawContentFromStore = editorStore.activeFileContent || '';
+        frontmatterYaml.value = null;
+        textForInitialStats = rawContentFromStore;
         break;
       case 'Image':
         imagePath.value = loadedContent.data.path || null;
-        // No text content or frontmatter for images
+        rawContentFromStore = '';
+        frontmatterYaml.value = null;
+        textForInitialStats = null;
         break;
       default:
-        contentBody.value = '// Unsupported file type';
-        fileType.value = 'PlainText'; // Fallback
+        rawContentFromStore = '// Unsupported file type';
+        fileType.value = 'PlainText';
+        frontmatterYaml.value = null;
+        editorStore.activeFileContent = rawContentFromStore;
+        editorStore.activeFileFrontmatter = null;
+        textForInitialStats = rawContentFromStore;
     }
 
-    // Reset unsaved changes flag in the store *after* loading
-    // Note: This might conflict if Inspector loads slower/faster.
-    // The central save mechanism should be the source of truth for saving.
-    // Let's rely on the initial load not marking as changed.
-    // props.file.hasUnsavedChanges = false; // Let store handle this on save
+    if (
+      ['Markdown', 'Character', 'Location', 'Lore'].includes(
+        loadedContent.type
+      ) &&
+      rawContentFromStore !== null
+    ) {
+      // Convert MD to HTML for TipTap display
+      contentBody.value = marked.parse(rawContentFromStore) as string;
+      await debug(
+        `Converted Markdown to HTML for TipTap. Length: ${contentBody.value.length}`
+      );
+    } else if (rawContentFromStore !== null) {
+      contentBody.value = rawContentFromStore;
+    } else {
+      contentBody.value = '';
+    }
 
+    calculateAndUpdateStats(textForInitialStats);
+
+    await debug(
+      `Loaded ${loadedContent.type}. Has frontmatter: ${!!frontmatterYaml.value}`
+    );
   } catch (err) {
     console.error('Error loading file content:', err);
-    toast.error('Failed to load file content', {description: String(err)});
-    contentBody.value = `# Error Loading File\n\n${String(err)}`;
-    fileType.value = 'PlainText'; // Fallback on error
-    editorStore.activeFileContent = contentBody.value; // Update store with error message
+    toast.error('Failed to load file content', {
+      description: String(err),
+    });
+    calculateAndUpdateStats(null);
+    contentBody.value = marked.parse(
+      `# Error Loading File\n\n\`\`\`\n${String(err)}\n\`\`\``
+    ) as string;
+    fileType.value = 'Markdown';
+    frontmatterYaml.value = null;
+    editorStore.activeFileContent = `# Error Loading File\n\n${String(err)}`;
     editorStore.activeFileFrontmatter = null;
   } finally {
     isLoading.value = false;
   }
 }
 
-function handleContentInput(event: Event) {
-  const target = event.target as HTMLTextAreaElement;
-  contentBody.value = target.value;
+function handleTextUpdate(plainText: string) {
+  calculateAndUpdateStats(plainText);
   editorStore.activeFileContent = contentBody.value;
   editorStore.markTabAsChanged();
 }
 
-// Watch for file changes
+function handleJsonContentChange(event: Event) {
+  const target = event.target as HTMLTextAreaElement;
+  const newContent = target.value;
+  contentBody.value = newContent; // Update the ref bound to the textarea
+  editorStore.activeFileContent = newContent; // Update store's raw content
+  calculateAndUpdateStats(newContent); // Calculate stats for textarea content
+  editorStore.markTabAsChanged();
+}
+
 watch(() => props.file, async (newFile) => {
-  if (newFile) {
-    await loadFileContent();
-  }
-}, {immediate: true});
+    if (newFile) {
+      await loadFileContent();
+    } else {
+      // Reset state when no file is selected
+      contentBody.value = '';
+      frontmatterYaml.value = null;
+      imagePath.value = null;
+      fileType.value = 'PlainText';
+      isLoading.value = false;
+      editorStore.activeFileContent = '';
+      editorStore.activeFileFrontmatter = null;
+      calculateAndUpdateStats(null);
+    }
+  },
+  {immediate: true}
+);
 
 function getIconComponent(iconName: string | undefined): LucideIcon {
   const iconMap: Record<string, LucideIcon> = {
@@ -156,35 +217,12 @@ function getIconComponent(iconName: string | undefined): LucideIcon {
     file: File,
     dialogue: FileText,
   };
-  // Use lowercase, handle undefined, provide default
   return iconMap[iconName?.toLowerCase() || 'file'] || File;
 }
-
-watch(() => props.file, async (newFile) => {
-    if (newFile) {
-      await loadFileContent();
-    } else {
-      contentBody.value = '';
-      frontmatterYaml.value = null;
-      imagePath.value = null;
-      fileType.value = 'PlainText';
-      isLoading.value = false;
-      editorStore.activeFileContent = '';
-      editorStore.activeFileFrontmatter = null;
-    }
-  },
-  {immediate: true}
-);
-
-onUnmounted(() => {
-  editorStore.activeFileContent = '';
-  editorStore.activeFileFrontmatter = null;
-});
 </script>
 
 <template>
   <div class="flex flex-col h-full bg-background">
-    <!-- Header section (Simplified - Inspector shows more details) -->
     <div
       v-if="file"
       class="w-full h-24 md:h-32 bg-muted/30 flex-shrink-0 relative border-b"
@@ -215,15 +253,12 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <!-- Content area -->
     <div class="flex-1 overflow-y-auto pt-10 md:pt-12 px-4 pb-6">
-      <div class="max-w-5xl mx-auto">
-        <!-- Loading state -->
+      <div class="h-full">
         <div v-if="isLoading" class="flex items-center justify-center h-48">
           <div class="text-muted-foreground">Loading content...</div>
         </div>
 
-        <!-- Image View -->
         <div
           v-else-if="isImageView && imageUrl"
           class="flex items-center justify-center"
@@ -234,37 +269,31 @@ onUnmounted(() => {
             class="max-w-full max-h-[70vh] object-contain rounded border shadow-sm"
           />
         </div>
-
         <div v-else-if="isImageView && !imageUrl"
              class="text-center py-10 text-destructive-foreground">
           Could not load image. Check path or permissions.
         </div>
 
-        <!-- Editable Text Area (Markdown, Character Content, Lore Content, etc.) -->
-        <div v-else-if="isEditableText">
-          <textarea
-            :value="contentBody"
-            @input="handleContentInput"
-            class="w-full min-h-[calc(100vh-250px)] bg-transparent border-none focus:outline-none focus:ring-0 font-mono text-sm leading-relaxed resize-none p-2"
+        <div v-else-if="isEditableText" class="h-full">
+          <TipTapEditor
+            v-model="contentBody"
+            @textUpdate="handleTextUpdate"
+            class="h-full"
             placeholder="Start writing..."
             aria-label="File content editor"
-          ></textarea>
+          />
         </div>
 
-        <!-- JSON View (Canvas, potentially Dialogue) -->
-        <div v-else-if="isJsonView">
-           <textarea
-             :value="contentBody"
-             @input="handleContentInput"
-             class="w-full min-h-[calc(100vh-250px)] bg-muted/30 border border-input rounded-md p-4 font-mono text-sm focus:outline-none focus:ring-1 focus:ring-ring resize-none"
-             placeholder="JSON data..."
-             aria-label="JSON content viewer/editor"
-           ></textarea>
-          <!-- <pre class="text-xs p-4 bg-muted/50 rounded overflow-auto">{{ contentBody }}</pre> -->
-          <!-- TODO: Add a proper JSON editor/viewer later -->
+        <div v-else-if="isJsonView" class="h-full">
+            <Textarea
+              :value="contentBody"
+              @input="handleJsonContentChange"
+              class="w-full h-full bg-muted/30 border border-input rounded-md p-4 font-mono text-sm focus:outline-none focus:ring-1 focus:ring-ring resize-none"
+              placeholder="JSON data..."
+              aria-label="JSON content viewer/editor"
+            ></Textarea>
         </div>
 
-        <!-- Fallback for unknown/unsupported types -->
         <div v-else class="text-center py-10 text-muted-foreground">
           <p>Cannot display content for this file type.</p>
         </div>

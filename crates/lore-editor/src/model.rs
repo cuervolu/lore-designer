@@ -96,24 +96,9 @@ pub enum FileType {
     Unknown,
 }
 
-
 impl FileType {
     /// Determine file type from path
     pub fn from_path(path: &Path) -> Result<Self, EditorError> {
-        if let Some(ext) = path.extension().and_then(|e| e.to_str()) {
-            match ext.to_lowercase().as_str() {
-                "md" => return Ok(FileType::Markdown),
-                "canvas" | "canvas.json" => return Ok(FileType::Canvas),
-                "character" | "character.md" => return Ok(FileType::Character),
-                "location" | "location.md" => return Ok(FileType::Location),
-                "lore" | "lore.md" => return Ok(FileType::Lore),
-                "dialogue" | "dialogue.md" | "dialogue.json" => return Ok(FileType::Dialogue),
-                "png" | "jpg" | "jpeg" | "webp" | "svg" => return Ok(FileType::Image),
-                _ => {}
-            }
-        }
-
-        // Also check if the filename contains the extension as part of its name
         if let Some(file_name) = path.file_name().and_then(|n| n.to_str()) {
             if file_name.ends_with(".character.md") {
                 return Ok(FileType::Character);
@@ -127,7 +112,23 @@ impl FileType {
                 return Ok(FileType::Canvas);
             }
         }
+        if let Some(ext) = path.extension().and_then(|e| e.to_str()) {
+            match ext.to_lowercase().as_str() {
+                // Generic Markdown is now a fallback after specific types failed
+                "md" => return Ok(FileType::Markdown),
+                "canvas" => return Ok(FileType::Canvas), // Keep if you allow just .canvas
+                "dialogue" => return Ok(FileType::Dialogue), // Keep if you allow just .dialogue
+                "json" => {
+                    // Maybe check if filename contains .canvas? Or rely on specific check above.
+                    // For now, could be Unknown or maybe a specific JSON type if context allows.
+                    return Ok(FileType::Unknown); // Or handle generic JSON differently
+                }
+                "png" | "jpg" | "jpeg" | "webp" | "svg" => return Ok(FileType::Image),
+                _ => {} // Fall through if extension doesn't match known simple types
+            }
+        }
 
+        // Default if no specific filename or known extension matched
         Ok(FileType::Unknown)
     }
 }
@@ -136,23 +137,49 @@ impl FileType {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(tag = "type", content = "data")]
 pub enum FileContent {
-    Markdown { content: String },
-    Canvas { data: String },    // JSON string
-    Character { frontmatter: Option<String>, content: String }, 
-    Location { frontmatter: Option<String>, content: String },  
-    Lore { frontmatter: Option<String>, content: String },      
-    Dialogue { data: String },  // Could be Markdown or JSON
-    Image { path: String },
-    PlainText { content: String },
+    Markdown {
+        content: String,
+    },
+    Canvas {
+        data: String,
+    }, // JSON string
+    Character {
+        frontmatter: Option<String>,
+        content: String,
+    },
+    Location {
+        frontmatter: Option<String>,
+        content: String,
+    },
+    Lore {
+        frontmatter: Option<String>,
+        content: String,
+    },
+    Dialogue {
+        data: String,
+    }, // Could be Markdown or JSON
+    Image {
+        path: String,
+    },
+    PlainText {
+        content: String,
+    },
 }
 
 /// Request to save a file
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "type", content = "data")]
 pub enum SaveFileRequest {
-    Text { content: String },
-    Json { content: String },
-    MarkdownWithFrontmatter { frontmatter: String, content: String },
+    Text {
+        content: String,
+    },
+    Json {
+        content: String,
+    },
+    MarkdownWithFrontmatter {
+        frontmatter: String,
+        content: String,
+    },
 }
 
 /// Indexed file information

@@ -1,11 +1,11 @@
 mod commands;
 mod editor;
+mod frontmatter;
 mod index;
 mod model;
 mod state;
-mod watcher;
-mod frontmatter;
 mod templates;
+mod watcher;
 
 pub use commands::*;
 pub use editor::*;
@@ -14,11 +14,11 @@ pub use model::*;
 pub use state::*;
 pub use watcher::*;
 
+use crate::frontmatter::combine_frontmatter_and_content;
 use anyhow::Context;
+use gray_matter::{Matter, engine::YAML};
 use log::{debug, info};
 use std::path::Path;
-use gray_matter::{engine::YAML, Matter};
-use crate::frontmatter::{combine_frontmatter_and_content};
 
 /// Main structure for editor functionality
 pub struct EditorManager;
@@ -74,8 +74,7 @@ impl EditorManager {
         let file_type = FileType::from_path(&full_path)?;
 
         let matter = Matter::<YAML>::new();
-        
-        
+
         let content = match file_type {
             FileType::Markdown => {
                 // Read markdown content
@@ -95,14 +94,12 @@ impl EditorManager {
 
                 FileContent::Canvas { data: json }
             }
-            FileType::Character
-            | FileType::Location
-            | FileType::Lore => {
+            FileType::Character | FileType::Location | FileType::Lore => {
                 let text = std::fs::read_to_string(&full_path).context(format!(
                     "Failed to read file with frontmatter: {}",
                     full_path.display()
                 ))?;
-                
+
                 let result = matter.parse(&text);
 
                 // Extract the raw frontmatter string and content
@@ -115,7 +112,14 @@ impl EditorManager {
                 } else {
                     (None, result.orig.to_string()) // Use original string if no frontmatter found
                 };
-                
+
+                debug!(
+                    "Parsed File Type: {:?}, Frontmatter Found: {}, Frontmatter Content: {:?}",
+                    file_type,
+                    frontmatter_opt.is_some(),
+                    frontmatter_opt 
+                );
+
                 match file_type {
                     FileType::Character => FileContent::Character {
                         frontmatter: frontmatter_opt,
@@ -183,22 +187,27 @@ impl EditorManager {
 
         match content {
             SaveFileRequest::Text { content } => {
-            std::fs::write(&full_path, content)
-                .context(format!("Failed to write to file: {}", full_path.display()))?;
-        }
-        SaveFileRequest::Json { content } => {
-            std::fs::write(&full_path, content).context(format!(
-                "Failed to write JSON to file: {}",
-                full_path.display()
-            ))?;
-        }
-            SaveFileRequest::MarkdownWithFrontmatter { frontmatter, content } => {
+                std::fs::write(&full_path, content)
+                    .context(format!("Failed to write to file: {}", full_path.display()))?;
+            }
+            SaveFileRequest::Json { content } => {
+                std::fs::write(&full_path, content).context(format!(
+                    "Failed to write JSON to file: {}",
+                    full_path.display()
+                ))?;
+            }
+            SaveFileRequest::MarkdownWithFrontmatter {
+                frontmatter,
+                content,
+            } => {
                 let combined = combine_frontmatter_and_content(&frontmatter, &content);
 
-                std::fs::write(&full_path, combined)
-                    .context(format!("Failed to write file with frontmatter: {}", full_path.display()))?;
+                std::fs::write(&full_path, combined).context(format!(
+                    "Failed to write file with frontmatter: {}",
+                    full_path.display()
+                ))?;
             }
-    }
+        }
 
         debug!("Saved file: {}", full_path.display());
         Ok(())

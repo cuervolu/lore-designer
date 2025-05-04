@@ -1,9 +1,10 @@
-import {defineStore} from 'pinia'
-import {ref, computed} from 'vue'
 import {invoke} from '@tauri-apps/api/core'
 import {debug, error as logError, warn} from '@tauri-apps/plugin-log'
-import {toast} from 'vue-sonner'
 import {listen, type UnlistenFn} from '@tauri-apps/api/event'
+import {defineStore} from 'pinia'
+import {ref, computed} from 'vue'
+import {toast} from 'vue-sonner'
+import TurndownService from 'turndown';
 import {usePreferencesStore} from '@common/stores/preferences.store'
 import type {
   WorkspaceInfo,
@@ -34,10 +35,21 @@ export const useEditorStore = defineStore('editor', () => {
   const activeFileContent = ref<string>('');
   // Temporary state for the frontmatter YAML string being edited in InspectorPanel
   const activeFileFrontmatter = ref<string | null>(null);
+  const activeFileType = ref<FileContent['type'] | null>(null);
+  const activeFileLineCount = ref<number | null>(null);
+  const activeFileWordCount = ref<number | null>(null);
+  const activeFileCharCount = ref<number | null>(null);
 
   const activeTab = computed(() => {
     return openTabs.value.find(tab => tab.id === activeTabId.value) || null
   })
+
+  const turndownService = new TurndownService({
+    headingStyle: 'atx',      // Use # for headings
+    codeBlockStyle: 'fenced', // Use ``` for code blocks
+    emDelimiter: '*',         // Use * for italics
+    strongDelimiter: '**',    // Use ** for bold
+  });
 
   // Actions
 
@@ -146,7 +158,7 @@ export const useEditorStore = defineStore('editor', () => {
     indexingProgress.value = null; // Reset indexing progress
     editorError.value = null; // Clear any previous errors
     isLoading.value = false; // Ensure loading state is reset
-
+    updateFileStats(null);
     await debug(`Workspace ${path} closed and local state cleared.`);
   }
 
@@ -195,7 +207,7 @@ export const useEditorStore = defineStore('editor', () => {
       fileTree.value = tree;
       toast.success('File tree refreshed');
       await debug(`File tree refreshed successfully for ${workspacePath}. Items: ${tree.length}`);
-      startIndexingProgressPoll();
+      await startIndexingProgressPoll();
       return tree;
     } catch (err) {
       const errorMessage = `Failed to refresh file tree for ${workspacePath}: ${err}`;
@@ -292,7 +304,9 @@ export const useEditorStore = defineStore('editor', () => {
       openTabs.value = state.open_tabs.map((tab) => {
         const parts = tab.path.split(/[\\/]/);
         const fileNameWithExt = parts.pop() || tab.title;
-        const extension = fileNameWithExt.includes('.') ? fileNameWithExt.split('.').pop()! : '';
+        const extension = fileNameWithExt.includes('.')
+          ? (fileNameWithExt.split('.').pop() ?? '')
+          : '';
         return {
           id: tab.id,
           name: tab.title, // Use title from backend state first
@@ -392,7 +406,7 @@ export const useEditorStore = defineStore('editor', () => {
 
     if (!currentWorkspace.value) {
       await logError('Cannot open file: No workspace open.');
-      toast.error('Cannot open file', { description: 'No workspace is currently open.' });
+      toast.error('Cannot open file', {description: 'No workspace is currently open.'});
       return null;
     }
     const workspacePath = currentWorkspace.value.path;
@@ -447,7 +461,7 @@ export const useEditorStore = defineStore('editor', () => {
       await debug(`Added new tab ${newTab.id} for ${newTab.path} and activated it.`);
 
       await saveEditorState();
-
+      updateFileStats(null);
       return newTab;
 
     } catch (err) {
@@ -487,6 +501,7 @@ export const useEditorStore = defineStore('editor', () => {
     if (wasActive) {
       activeFileContent.value = '';
       activeFileFrontmatter.value = null;
+      updateFileStats(null);
       if (openTabs.value.length === 0) {
         activeTabId.value = null;
         await debug('Last tab closed. No active tab.');
@@ -507,16 +522,21 @@ export const useEditorStore = defineStore('editor', () => {
       return null;
     }
     const workspacePath = currentWorkspace.value.path;
-    if (filePath.startsWith(workspacePath)) {
-      filePath = filePath.substring(workspacePath.length).replace(/^[\\/]/, '');
+    let relativeFilePath = filePath;
+    if (relativeFilePath.startsWith(workspacePath)) {
+      relativeFilePath = relativeFilePath
+      .substring(workspacePath.length)
+      .replace(/^[\\/]/, '');
     }
-    await debug(`Getting file content for: ${filePath}`);
-
+    updateFileStats(null);
+    await debug(`Getting file content for: ${relativeFilePath}`);
+    activeFileType.value = null;
     try {
       const content = await invoke<FileContent>('get_file_content', {
         workspacePath,
         filePath,
       });
+      activeFileType.value = content.type;
       await debug(`Received file content type: ${content.type}`);
       activeFileContent.value = '';
       activeFileFrontmatter.value = null;
@@ -538,12 +558,12 @@ export const useEditorStore = defineStore('editor', () => {
         case 'Image':
           break;
       }
-      await debug('Updated activeFileContent and activeFileFrontmatter');
       return content;
     } catch (err) {
+      activeFileType.value = null;
       activeFileContent.value = '';
       activeFileFrontmatter.value = null;
-      const errorMessage = `Failed to get content for file ${filePath}: ${err}`;
+      const errorMessage = `Failed to get content for file ${relativeFilePath}: ${err}`;
       await logError(errorMessage);
       toast.error('Failed to load file content', {
         description: String(err),
@@ -555,7 +575,7 @@ export const useEditorStore = defineStore('editor', () => {
   async function saveFileContent(
     filePath: string,
     content: string,
-    frontmatter: string | null // Accept optional frontmatter string
+    frontmatter: string | null
   ): Promise<boolean> {
     if (!currentWorkspace.value) {
       await logError('Cannot save file: No workspace open.');
@@ -563,35 +583,50 @@ export const useEditorStore = defineStore('editor', () => {
       return false;
     }
     const workspacePath = currentWorkspace.value.path;
-    if (filePath.startsWith(workspacePath)) {
-      filePath = filePath.substring(workspacePath.length).replace(/^[\\/]/, '');
+    let relativeFilePath = filePath;
+    if (relativeFilePath.startsWith(workspacePath)) {
+      relativeFilePath = relativeFilePath
+      .substring(workspacePath.length)
+      .replace(/^[\\/]/, '');
     }
     await debug(`Attempting to save file: ${filePath}`);
 
     try {
       let request: SaveFileRequest;
+      const tab = openTabs.value.find(t => t.path === relativeFilePath);
+      const isJsonFile = tab?.extension?.toLowerCase().endsWith('.json');
 
-      // Determine the correct request type based on frontmatter presence
-      if (frontmatter !== null && frontmatter !== undefined) {
-        // If frontmatter is provided (even if empty string), use MarkdownWithFrontmatter
-        request = {
-          type: 'MarkdownWithFrontmatter',
-          data: {frontmatter: frontmatter, content: content},
-        };
-        await debug(`Saving ${filePath} with frontmatter.`);
-      } else {
-        // Check if the file type suggests JSON (Canvas)
-        // TODO: Improve this check - maybe pass file type explicitly?
-        const tab = openTabs.value.find(t => t.path === filePath);
-        if (tab?.extension?.toLowerCase().endsWith('canvas.json')) {
-          request = {type: 'Json', data: {content: content}};
-          await debug(`Saving ${filePath} as JSON.`);
-        } else {
-          // Otherwise, save as plain text
-          request = {type: 'Text', data: {content: content}};
-          await debug(`Saving ${filePath} as Text.`);
+      let contentToSave = content;
+      let isConverted = false;
+      if (!isJsonFile) {
+        try {
+          contentToSave = turndownService.turndown(content);
+          isConverted = true;
+          await debug(`Converted TipTap HTML to Markdown. Length: ${contentToSave.length}`);
+        } catch (conversionError) {
+          await logError(`Failed to convert HTML to Markdown for ${relativeFilePath}: ${conversionError}`);
+          toast.error("Save Warning", {description: "Could not convert content to Markdown. Saving raw editor content."});
+          contentToSave = content;
+          isConverted = false;
         }
       }
+
+      if (frontmatter !== null && frontmatter !== undefined) {
+        request = {
+          type: 'MarkdownWithFrontmatter',
+          data: {frontmatter: frontmatter, content: contentToSave},
+        };
+        await debug(`Saving ${relativeFilePath} with frontmatter (${isConverted ? 'converted MD' : 'original HTML/Text'}).`);
+
+      } else if (isJsonFile) {
+        request = {type: 'Json', data: {content: contentToSave}};
+        await debug(`Saving ${relativeFilePath} as JSON.`);
+
+      } else {
+        request = {type: 'Text', data: {content: contentToSave}};
+        await debug(`Saving ${relativeFilePath} as Text (${isConverted ? 'converted MD' : 'original HTML/Text'}).`);
+      }
+
 
       await invoke('save_file_content', {
         workspacePath,
@@ -599,17 +634,19 @@ export const useEditorStore = defineStore('editor', () => {
         content: request,
       });
 
-      const tab = openTabs.value.find((tab) => tab.path === filePath);
-      if (tab) {
-        tab.hasUnsavedChanges = false;
-        await debug(`Marked tab ${tab.id} as saved.`);
+
+      const activeTab = openTabs.value.find((tab) => tab.path === filePath);
+      if (activeTab) {
+        activeTab.hasUnsavedChanges = false;
+        await debug(`Marked tab ${activeTab.id} as saved.`);
       }
       await saveEditorState();
 
-      toast.success(`"${tab?.name || filePath}" saved successfully`);
+      toast.success(`"${activeTab?.name || relativeFilePath}" saved successfully`);
       return true;
+
     } catch (err) {
-      const errorMessage = `Failed to save file ${filePath}: ${err}`;
+      const errorMessage = `Failed to save file ${relativeFilePath}: ${err}`;
       await logError(errorMessage);
       toast.error('Failed to save file', {
         description: String(err),
@@ -617,6 +654,7 @@ export const useEditorStore = defineStore('editor', () => {
       return false;
     }
   }
+
 
   async function createNewFile(
     parentDir: string,
@@ -629,19 +667,22 @@ export const useEditorStore = defineStore('editor', () => {
       return null;
     }
     const workspacePath = currentWorkspace.value.path;
-    if (parentDir.startsWith(workspacePath)) {
-      parentDir = parentDir.substring(workspacePath.length).replace(/^[\\/]/, '');
+    let relativeParentDir = parentDir;
+    if (relativeParentDir.startsWith(workspacePath)) {
+      relativeParentDir = relativeParentDir
+      .substring(workspacePath.length)
+      .replace(/^[\\/]/, '');
     }
-    await debug(`Creating new file "${fileName}" in "${parentDir}"`);
+    await debug(`Creating new file "${fileName}" in "${relativeParentDir}"`);
 
     try {
       const relativePath = await invoke<string>('create_new_file', {
         workspacePath,
-        parentDir,
+        parentDir: relativeParentDir,
         fileName,
         initialContent,
       });
-      await debug(`File created at relative path: ${relativePath}`);
+      await debug(`File created at relative path: ${relativeParentDir}`);
 
       await loadFileTree(); // Use loadFileTree instead of refresh to avoid re-indexing
 
@@ -670,10 +711,13 @@ export const useEditorStore = defineStore('editor', () => {
       return null;
     }
     const workspacePath = currentWorkspace.value.path;
-    if (parentDir.startsWith(workspacePath)) {
-      parentDir = parentDir.substring(workspacePath.length).replace(/^[\\/]/, '');
+    let relativeParentDir = parentDir;
+    if (relativeParentDir.startsWith(workspacePath)) {
+      relativeParentDir = relativeParentDir
+      .substring(workspacePath.length)
+      .replace(/^[\\/]/, '');
     }
-    await debug(`Creating new file "${fileName}" from template "${fileType}" in "${parentDir}"`);
+    await debug(`Creating new file "${fileName}" from template "${fileType}" in "${relativeParentDir}"`);
 
     try {
       let finalFileName = fileName;
@@ -688,7 +732,7 @@ export const useEditorStore = defineStore('editor', () => {
 
       const relativePath = await invoke<string>('create_file_from_template', {
         workspacePath,
-        parentDir,
+        parentDir: relativeParentDir,
         fileName: finalFileName,
         fileType, // Pass the type string (e.g., "Character", "Location")
       });
@@ -732,6 +776,21 @@ export const useEditorStore = defineStore('editor', () => {
     }
   }
 
+  function updateFileStats(
+    stats: { lines: number; words: number; characters: number } | null
+  ) {
+    if (stats) {
+      activeFileLineCount.value = stats.lines;
+      activeFileWordCount.value = stats.words;
+      activeFileCharCount.value = stats.characters;
+    } else {
+      activeFileLineCount.value = null;
+      activeFileWordCount.value = null;
+      activeFileCharCount.value = null;
+    }
+  }
+
+
   return {
     // State
     currentWorkspace,
@@ -745,6 +804,10 @@ export const useEditorStore = defineStore('editor', () => {
     editorError,
     activeFileContent,
     activeFileFrontmatter,
+    activeFileLineCount,
+    activeFileWordCount,
+    activeFileCharCount,
+    activeFileType,
 
     // Computed
     activeTab,
@@ -765,5 +828,6 @@ export const useEditorStore = defineStore('editor', () => {
     getWelcomeText,
     markTabAsChanged,
     saveEditorState,
+    updateFileStats
   };
 });
