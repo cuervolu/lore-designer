@@ -75,8 +75,8 @@
     "license": "AGPL-3.0",
     "licenseFile": "../../LICENSE",
     "category": "DeveloperTool",
-    "shortDescription": "A streamlined game narrative and worldbuilding tool for indie developers",
-    "longDescription": "Create and manage your game's story, dialogues, and world in one unified workspace. Built by indie developers for indie developers.",
+    "shortDescription": "Design Narratives, Build Legends",
+    "longDescription": "Create and manage your stories, characters, and worlds in one unified workspace. A streamlined tool for writers and game developers to organize their creative narratives with clarity",
     "active": true,
     "createUpdaterArtifacts": true,
     "targets": [
