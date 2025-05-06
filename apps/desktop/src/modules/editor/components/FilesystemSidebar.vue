@@ -138,7 +138,7 @@ onMounted(() => {
 
     <!-- Workspace content -->
     <SidebarContent class="flex-1">
-      <ScrollArea class="h-full">
+      <ScrollArea class="h-full px-2">
         <SidebarGroup>
           <SidebarGroupLabel v-if="editorStore.currentWorkspace">
             <Folder class="h-4 w-4 mr-2"/>
@@ -177,7 +177,7 @@ onMounted(() => {
     </SidebarContent>
 
     <!-- Footer Buttons -->
-    <SidebarFooter class="border-t pb-8">
+    <SidebarFooter class="border-t pt-1.5 pb-2">
       <SidebarMenu>
         <div class="flex items-center justify-between px-2">
           <SidebarMenuItem class="flex-1">
@@ -187,7 +187,7 @@ onMounted(() => {
             </SidebarMenuButton>
           </SidebarMenuItem>
 
-          <div class="w-px h-6 bg-muted mx-1"></div>
+          <div class="w-px h-6 bg-border mx-1"></div>
 
           <SidebarMenuItem class="flex-1">
             <SidebarMenuButton class="gap-1 justify-center">

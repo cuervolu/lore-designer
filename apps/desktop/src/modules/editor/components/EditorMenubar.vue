@@ -133,7 +133,7 @@ const handleReloadFileTree = async () => {
 </script>
 
 <template>
-  <Menubar class="rounded-none border-t-0 border-x-0">
+  <Menubar class="rounded-none border-t-0 border-x-0 bg-[--menubar-background]">
     <MenubarMenu>
       <MenubarTrigger>File</MenubarTrigger>
       <MenubarContent>

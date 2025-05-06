@@ -41,7 +41,7 @@ onMounted(async () => {
 
 <template>
   <div
-    class="border-t h-6 bg-muted/20 flex items-center px-3 text-xs text-muted-foreground justify-between select-none"
+    class="border-t h-6 bg-muted flex items-center px-3 text-xs text-muted-foreground justify-between select-none"
   >
     <!-- Left side - status info -->
     <div class="flex items-center gap-2 min-w-0">

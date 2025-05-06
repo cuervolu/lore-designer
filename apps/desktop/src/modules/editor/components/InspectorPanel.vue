@@ -99,7 +99,7 @@ function onSelectChange(key: string, value: string | null | undefined) {
 </script>
 
 <template>
-  <div class="w-64 border-l h-full flex flex-col bg-background">
+  <div class="w-64 border-l h-full flex flex-col bg-[--inspector-background]">
     <div class="p-2 text-sm font-semibold border-b flex items-center justify-between gap-2">
       <div class="flex items-center gap-2">
         <Info class="h-4 w-4"/>
@@ -136,7 +136,7 @@ function onSelectChange(key: string, value: string | null | undefined) {
     </div>
 
     <!-- Properties Area -->
-    <ScrollArea class="flex-1">
+    <ScrollArea class="flex-1 min-h-0 ">
       <div class="p-2 text-xs">
         <div v-if="isLoading" class="flex items-center justify-center h-20">
           <span class="text-muted-foreground">Loading...</span>
