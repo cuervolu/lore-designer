@@ -1,5 +1,4 @@
-﻿<!-- apps/desktop/src/modules/wizard/views/NewWorkspaceView.vue -->
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import {invoke} from '@tauri-apps/api/core'
 import {open} from '@tauri-apps/plugin-dialog'
 import {debug, error, info} from '@tauri-apps/plugin-log'

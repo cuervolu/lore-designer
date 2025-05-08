@@ -1,4 +1,7 @@
 ﻿<script setup lang="ts">
+import {invoke} from "@tauri-apps/api/core";
+import {open} from '@tauri-apps/plugin-dialog'
+import {error} from '@tauri-apps/plugin-log'
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { Search } from 'lucide-vue-next'
@@ -34,6 +37,31 @@ const filteredWorkspaces = computed(() => {
     workspace.path.toLowerCase().includes(query)
   )
 })
+
+const handleOpenWorkspace = async () => {
+  try {
+    const selectedPath = await open({
+      directory: true,
+      title: 'Select Workspace Folder'
+    });
+
+    if (selectedPath) {
+      const result = await invoke<{ path: string, message: string }>('open_existing_workspace', {
+        workspacePath: selectedPath
+      });
+
+      await router.push({
+        name: 'editor',
+        query: { path: result.path }
+      });
+    }
+  } catch (err) {
+    await error(`Failed to open workspace: ${err}`);
+    toast.error('Failed to open workspace', {
+      description: String(err)
+    });
+  }
+};
 </script>
 
 <template>
@@ -42,7 +70,7 @@ const filteredWorkspaces = computed(() => {
       <h1 class="text-2xl font-bold">Welcome to Lore Designer</h1>
       <div class="flex gap-2">
         <Button variant="outline"> Import </Button>
-        <Button variant="outline"> Open </Button>
+        <Button variant="outline" @click="handleOpenWorkspace"> Open </Button>
         <Button @click="router.push({ name: 'new-workspace' })"> New Workspace </Button>
       </div>
     </header>
