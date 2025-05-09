@@ -8,6 +8,7 @@ log = {workspace = true}
 uuid = {workspace = true}
 chrono = {workspace = true}
 serde_json = {workspace = true}
+toml = {workspace = true}
 indicatif = "0.17.11"
 tempfile = "3.19.1"
 rand = "0.9.1"

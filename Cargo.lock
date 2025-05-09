@@ -2678,6 +2678,7 @@ dependencies = [
  "rand_chacha 0.9.0",
  "serde_json",
  "tempfile",
+ "toml 0.8.22",
  "uuid 1.16.0",
 ]
 

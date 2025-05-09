@@ -2,7 +2,7 @@ use clap::Parser;
 use indicatif::{ProgressBar, ProgressStyle};
 use log::{debug, info};
 use rand::{Rng, SeedableRng};
-use rand_chacha::ChaCha8Rng; 
+use rand_chacha::ChaCha8Rng;
 use std::{
     fs::{self},
     io::{self},
@@ -14,6 +14,8 @@ use tempfile::TempDir;
 use fs_extra::dir as fs_extra_dir;
 use fs_extra::file as fs_extra_file;
 use rand::seq::IndexedRandom;
+use uuid::Uuid;
+
 // const SPECIAL_FOLDERS: &[&str] = &["characters", "lore", "locations", "story", "notes"];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -33,25 +35,46 @@ impl GeneratedFileType {
     fn get_extension_and_name(&self, base_name: &str) -> (String, String) {
         match self {
             GeneratedFileType::Markdown => (format!("{}.md", base_name), "md".to_string()),
-            GeneratedFileType::Canvas => (format!("{}.canvas.json", base_name), "canvas.json".to_string()),
-            GeneratedFileType::Character => (format!("{}.character.md", base_name), "character.md".to_string()),
-            GeneratedFileType::Location => (format!("{}.location.md", base_name), "location.md".to_string()),
+            GeneratedFileType::Canvas => (
+                format!("{}.canvas.json", base_name),
+                "canvas.json".to_string(),
+            ),
+            GeneratedFileType::Character => (
+                format!("{}.character.md", base_name),
+                "character.md".to_string(),
+            ),
+            GeneratedFileType::Location => (
+                format!("{}.location.md", base_name),
+                "location.md".to_string(),
+            ),
             GeneratedFileType::Lore => (format!("{}.lore.md", base_name), "lore.md".to_string()),
-            GeneratedFileType::DialogueMd => (format!("{}.dialogue.md", base_name), "dialogue.md".to_string()),
-            GeneratedFileType::DialogueJson => (format!("{}.dialogue.json", base_name), "dialogue.json".to_string()),
+            GeneratedFileType::DialogueMd => (
+                format!("{}.dialogue.md", base_name),
+                "dialogue.md".to_string(),
+            ),
+            GeneratedFileType::DialogueJson => (
+                format!("{}.dialogue.json", base_name),
+                "dialogue.json".to_string(),
+            ),
             GeneratedFileType::Image => (format!("{}.png", base_name), "png".to_string()),
             GeneratedFileType::GenericJson => (format!("{}.json", base_name), "json".to_string()),
         }
     }
 
     fn needs_frontmatter(&self) -> bool {
-        matches!(self, GeneratedFileType::Character | GeneratedFileType::Location | GeneratedFileType::Lore)
+        matches!(
+            self,
+            GeneratedFileType::Character | GeneratedFileType::Location | GeneratedFileType::Lore
+        )
     }
 }
 
-
 #[derive(Parser, Debug)]
-#[clap(author, version, about = "Generates a large, temporary workspace for Lore Designer performance testing.")]
+#[clap(
+    author,
+    version,
+    about = "Generates a large, temporary workspace for Lore Designer performance testing."
+)]
 struct Args {
     /// Name of the workspace to create (e.g., MyBigNovel).
     #[clap(long)]
@@ -92,9 +115,32 @@ struct Args {
 }
 
 const LOREM_IPSUM: &[&str] = &[
-    "lorem", "ipsum", "dolor", "sit", "amet", "consectetur", "adipiscing", "elit",
-    "sed", "do", "eiusmod", "tempor", "incididunt", "ut", "labore", "et", "dolore",
-    "magna", "aliqua", "enim", "ad", "minim", "veniam", "quis", "nostrud", "exercitation",
+    "lorem",
+    "ipsum",
+    "dolor",
+    "sit",
+    "amet",
+    "consectetur",
+    "adipiscing",
+    "elit",
+    "sed",
+    "do",
+    "eiusmod",
+    "tempor",
+    "incididunt",
+    "ut",
+    "labore",
+    "et",
+    "dolore",
+    "magna",
+    "aliqua",
+    "enim",
+    "ad",
+    "minim",
+    "veniam",
+    "quis",
+    "nostrud",
+    "exercitation",
 ];
 
 fn generate_lipsum_text(size_kb: usize, rng: &mut impl Rng) -> String {
@@ -103,7 +149,7 @@ fn generate_lipsum_text(size_kb: usize, rng: &mut impl Rng) -> String {
         return String::new();
     }
 
-    let mut text = String::with_capacity(target_bytes + 100); 
+    let mut text = String::with_capacity(target_bytes + 100);
     let mut current_sentence_len = 0;
     let mut capitalize_next = true;
 
@@ -112,7 +158,8 @@ fn generate_lipsum_text(size_kb: usize, rng: &mut impl Rng) -> String {
             let mut current_word = word.to_string();
             if capitalize_next {
                 if let Some(first_char) = current_word.chars().next() {
-                    current_word = first_char.to_uppercase().to_string() + &current_word[first_char.len_utf8()..];
+                    current_word = first_char.to_uppercase().to_string()
+                        + &current_word[first_char.len_utf8()..];
                 }
                 capitalize_next = false;
             }
@@ -123,22 +170,21 @@ fn generate_lipsum_text(size_kb: usize, rng: &mut impl Rng) -> String {
             text.push_str(&current_word);
             current_sentence_len += 1;
 
-            // Lógica simple para terminar frases
-            if current_sentence_len >= rng.random_range(8..=20) { // Usa random_range de tu rand 0.9.1
-                let punctuation = [".", ".", ".", "!", "?"]; // Más probabilidad de punto
+            if current_sentence_len >= rng.random_range(8..=20) {
+                let punctuation = [".", ".", ".", "!", "?"];
                 text.push_str(punctuation.choose(rng).unwrap_or(&"."));
                 capitalize_next = true;
                 current_sentence_len = 0;
             }
         } else {
-            break; 
+            break;
         }
     }
-    
+
     if !text.is_empty() && !text.ends_with(['.', '!', '?']) {
         text.push('.');
     }
-    
+
     if text.len() > target_bytes {
         text.truncate(target_bytes);
     }
@@ -146,12 +192,19 @@ fn generate_lipsum_text(size_kb: usize, rng: &mut impl Rng) -> String {
 }
 
 fn generate_frontmatter(title: &str, rng: &mut impl Rng) -> String {
-    let tags = ["epic", "draft", "important", "plot-point", "character-arc", "world-building"];
+    let tags = [
+        "epic",
+        "draft",
+        "important",
+        "plot-point",
+        "character-arc",
+        "world-building",
+    ];
     let num_tags = rng.random_range(1..=3);
     let selected_tags: Vec<&str> = tags.choose_multiple(rng, num_tags).copied().collect();
 
-    let timestamp = chrono::Utc::now().to_rfc3339(); // Assuming chrono is in workspace deps
-    
+    let timestamp = chrono::Utc::now().to_rfc3339();
+
     let num_words_for_custom_field = rng.random_range(5..=15);
     let mut custom_value_parts = Vec::with_capacity(num_words_for_custom_field);
     for _ in 0..num_words_for_custom_field {
@@ -169,37 +222,62 @@ fn generate_frontmatter(title: &str, rng: &mut impl Rng) -> String {
         custom_field: \"{}\"\n\
         ---\n",
         title,
-        selected_tags.iter().map(|t| format!("\"{}\"", t)).collect::<Vec<_>>().join(", "),
+        selected_tags
+            .iter()
+            .map(|t| format!("\"{}\"", t))
+            .collect::<Vec<_>>()
+            .join(", "),
         timestamp,
-        custom_value // Now uses the DIY generated text
+        custom_value
     )
 }
 
 fn create_initial_workspace_structure(
     workspace_root: &Path,
-    _workspace_name: &str, 
+    workspace_name: &str,
     app_version: &str,
 ) -> io::Result<()> {
     let lore_dir = workspace_root.join(".lore");
     fs::create_dir_all(&lore_dir)?;
 
+    let manifest_path = workspace_root.join(format!("{}.lore", workspace_name));
+    let project_id = Uuid::new_v4().to_string();
+    let manifest_content = toml::toml! {
+        lore_version = 1
+        project_id = project_id
+        project_name = workspace_name
+        folder_name = workspace_name
+        created_with_version = app_version
+        last_opened_with_version = app_version
+        description = "Auto-generated test workspace"
+        authors = ["Test Generator"]
+    };
+
+    fs::write(
+        manifest_path,
+        toml::to_string_pretty(&manifest_content)
+            .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?,
+    )?;
+    
     let settings_path = lore_dir.join("settings.json");
-    // Usamos serde_json del workspace
     let settings_content = serde_json::json!({
         "version": app_version,
         "properties": {
             "editorFontSize": 14,
             "theme": "system",
         },
-        "lastOpened": chrono::Utc::now().to_rfc3339(), 
+        "lastOpened": chrono::Utc::now().to_rfc3339(),
     });
     fs::write(
         settings_path,
         serde_json::to_string_pretty(&settings_content)
-            .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?, 
+            .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?,
     )?;
 
-    debug!("Created initial .lore structure in {}", workspace_root.display());
+    debug!(
+        "Created initial workspace structure in {}",
+        workspace_root.display()
+    );
     Ok(())
 }
 
@@ -228,17 +306,31 @@ fn generate_workspace_recursive(
 
         let item_base_name = format!("{}_{}_{}", args.base_name, current_depth, i);
 
-        if current_depth < args.max_depth - 1 && rng.random_range(0..100) < args.dir_chance_percent {
-            let dir_name = item_base_name; // Simplificado, podrías reintroducir SPECIAL_FOLDERS aquí
+        if current_depth < args.max_depth - 1 && rng.random_range(0..100) < args.dir_chance_percent
+        {
+            let dir_name = item_base_name; 
             let new_dir_path = current_path.join(dir_name);
             fs::create_dir_all(&new_dir_path)?;
-            generate_workspace_recursive(&new_dir_path, current_depth + 1, args, rng, files_created_count, pb)?;
+            generate_workspace_recursive(
+                &new_dir_path,
+                current_depth + 1,
+                args,
+                rng,
+                files_created_count,
+                pb,
+            )?;
         } else {
             let file_types = [
-                GeneratedFileType::Markdown, GeneratedFileType::Canvas, GeneratedFileType::Character,
-                GeneratedFileType::Location, GeneratedFileType::Lore, GeneratedFileType::DialogueMd,
+                GeneratedFileType::Markdown,
+                GeneratedFileType::Canvas,
+                GeneratedFileType::Character,
+                GeneratedFileType::Location,
+                GeneratedFileType::Lore,
+                GeneratedFileType::DialogueMd,
             ];
-            let chosen_file_type = file_types.choose(rng).unwrap_or(&GeneratedFileType::Markdown);
+            let chosen_file_type = file_types
+                .choose(rng)
+                .unwrap_or(&GeneratedFileType::Markdown);
             let (file_name_with_ext, _) = chosen_file_type.get_extension_and_name(&item_base_name);
             let file_path = current_path.join(&file_name_with_ext);
 
@@ -249,31 +341,39 @@ fn generate_workspace_recursive(
             }
 
             match chosen_file_type {
-                GeneratedFileType::Canvas | GeneratedFileType::DialogueJson | GeneratedFileType::GenericJson => {
-                    // Usamos uuid del workspace
+                GeneratedFileType::Canvas
+                | GeneratedFileType::DialogueJson
+                | GeneratedFileType::GenericJson => {
                     let json_data = serde_json::json!({
-                        "id": uuid::Uuid::new_v4().to_string(),
+                        "id": Uuid::new_v4().to_string(),
                         "type": format!("{:?}", chosen_file_type),
                         "nodes": [{"id": "node_1", "x": rng.random_range(0..800), "y": rng.random_range(0..600)}],
                         "payload": generate_lipsum_text(1, rng)
                     });
-                    file_content_parts.push(serde_json::to_string_pretty(&json_data)
-                        .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?);
+                    file_content_parts.push(
+                        serde_json::to_string_pretty(&json_data)
+                            .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?,
+                    );
                 }
                 GeneratedFileType::Image => {
                     file_content_parts.push("Placeholder for a PNG image.".to_string());
                 }
                 _ => {
-                    let text_size_kb = rng.random_range((args.avg_size_kb / 2).max(1)..=args.avg_size_kb + (args.avg_size_kb / 2));
+                    let text_size_kb = rng.random_range(
+                        (args.avg_size_kb / 2).max(1)..=args.avg_size_kb + (args.avg_size_kb / 2),
+                    );
                     file_content_parts.push(generate_lipsum_text(text_size_kb, rng));
                 }
             }
 
-            let final_content = file_content_parts.join("\n"); 
+            let final_content = file_content_parts.join("\n");
             fs::write(&file_path, final_content)?;
             *files_created_count += 1;
             pb.inc(1);
-            pb.set_message(format!("Created {}", file_path.file_name().unwrap_or_default().to_string_lossy()));
+            pb.set_message(format!(
+                "Created {}",
+                file_path.file_name().unwrap_or_default().to_string_lossy()
+            ));
         }
     }
     Ok(())
@@ -284,14 +384,13 @@ fn main() -> io::Result<()> {
 
     let args = Args::parse();
     let start_time = Instant::now();
-    
-    let mut thread_rng_instance = rand::rng(); 
+
+    let mut thread_rng_instance = rand::rng();
     let mut rng: ChaCha8Rng = if let Some(seed) = args.seed {
         SeedableRng::seed_from_u64(seed)
     } else {
-        SeedableRng::from_rng(&mut thread_rng_instance) 
+        SeedableRng::from_rng(&mut thread_rng_instance)
     };
-
 
     let (workspace_base_path, _temp_dir_guard): (PathBuf, Option<TempDir>) =
         if let Some(ref output_path_arg) = args.output_path {
@@ -302,7 +401,10 @@ fn main() -> io::Result<()> {
             };
 
             if abs_output_path.exists() {
-                info!("Output path {:?} already exists. Removing it.", abs_output_path);
+                info!(
+                    "Output path {:?} already exists. Removing it.",
+                    abs_output_path
+                );
                 if abs_output_path.is_dir() {
                     fs_extra_dir::remove(&abs_output_path)
                         .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
@@ -338,13 +440,17 @@ fn main() -> io::Result<()> {
 
     let mut files_actually_created = 0;
 
-    create_initial_workspace_structure(&actual_workspace_path, &args.workspace_name, &args.app_version)?;
+    create_initial_workspace_structure(
+        &actual_workspace_path,
+        &args.workspace_name,
+        &args.app_version,
+    )?;
 
     generate_workspace_recursive(
         &actual_workspace_path,
         0,
         &args,
-        &mut rng, 
+        &mut rng,
         &mut files_actually_created,
         &pb,
     )?;
@@ -352,11 +458,17 @@ fn main() -> io::Result<()> {
     pb.finish_with_message(format!("Generated {} files.", files_actually_created));
 
     if args.output_path.is_none() {
-        info!("\nWorkspace generated in temporary directory: {:?}", actual_workspace_path.display());
+        info!(
+            "\nWorkspace generated in temporary directory: {:?}",
+            actual_workspace_path.display()
+        );
         info!("This directory will be automatically deleted when this program exits.");
         info!("To inspect, re-run with --output-path /path/to/inspect_dir");
     } else {
-        info!("\nWorkspace generated at: {:?}", actual_workspace_path.display());
+        info!(
+            "\nWorkspace generated at: {:?}",
+            actual_workspace_path.display()
+        );
     }
 
     info!("Total generation time: {:?}", start_time.elapsed());
