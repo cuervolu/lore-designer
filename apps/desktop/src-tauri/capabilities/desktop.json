@@ -37,7 +37,13 @@
     "fs:allow-appcache-write-recursive",
     {
       "identifier": "fs:scope",
-      "allow": [{ "path": "**/*" }]
-    }
+      "allow": [
+        {
+          "path": "**/*"
+        }
+      ]
+    },
+    "cli:default",
+    "cli:allow-cli-matches"
   ]
 }

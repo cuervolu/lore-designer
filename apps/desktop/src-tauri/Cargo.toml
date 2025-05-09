@@ -39,5 +39,6 @@ lore-workspaces = { path = "../../../crates/lore-workspaces" }
 lore-editor = { path = "../../../crates/lore-editor" }
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-cli = "2"
 tauri-plugin-updater = "2"
 tauri-plugin-window-state = "2"

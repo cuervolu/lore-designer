@@ -55,6 +55,16 @@
       "windows": {
         "installMode": "passive"
       }
+    },
+    "cli": {
+      "description": "Lore Designer Binary CLI",
+      "args": [
+        {
+          "name": "workspace",
+          "index": 1,
+          "takesValue": true
+        }
+      ]
     }
   },
   "bundle": {
