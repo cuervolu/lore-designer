@@ -37,6 +37,7 @@
     "@vueuse/core": "^13.1.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "dockview-vue": "^4.2.5",
     "lucide-vue-next": "^0.508.0",
     "marked": "^15.0.11",
     "pinia": "^3.0.1",
