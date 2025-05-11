@@ -2,10 +2,9 @@
 import {ref, watch, onBeforeUnmount, type Ref} from 'vue';
 import {useEditor, EditorContent} from '@tiptap/vue-3';
 import StarterKit from '@tiptap/starter-kit';
-import Placeholder from '@tiptap/extension-placeholder';
-import TableKit from '@tiptap/extension-table'
-import {ListKit} from '@tiptap/extension-list'
-import Image from '@tiptap/extension-image'
+import {Placeholder} from '@tiptap/extensions';
+import {TableKit} from '@tiptap/extension-table';
+import Image from '@tiptap/extension-image';
 import {SlashCommandsExtension} from "@editor/extensions/slash/SlashCommandsExtension.ts";
 import {suggestionConfig} from "@editor/extensions/slash/slash-commands-suggestion.ts";
 
@@ -24,11 +23,17 @@ const editor = useEditor({
   extensions: [
     StarterKit.configure({}),
     Placeholder.configure({
-      placeholder: props.placeholder || 'Start writing...',
+      placeholder: props.placeholder || 'Type something...',
     }),
-    // TableKit,
+    TableKit.configure(
+      {
+        table: {
+          resizable: true,
+        },
+      }
+    ),
     Image.configure({
-      allowBase64: false
+      allowBase64: false,
     }),
     SlashCommandsExtension.configure({
       suggestion: suggestionConfig,
