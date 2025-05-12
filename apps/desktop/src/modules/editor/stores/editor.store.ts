@@ -4,7 +4,6 @@ import {listen, type UnlistenFn} from '@tauri-apps/api/event'
 import {defineStore} from 'pinia'
 import {ref, computed} from 'vue'
 import {toast} from 'vue-sonner'
-import TurndownService from 'turndown';
 import {usePreferencesStore} from '@common/stores/preferences.store'
 import type {
   WorkspaceInfo,
@@ -43,13 +42,6 @@ export const useEditorStore = defineStore('editor', () => {
   const activeTab = computed(() => {
     return openTabs.value.find(tab => tab.id === activeTabId.value) || null
   })
-
-  const turndownService = new TurndownService({
-    headingStyle: 'atx',      // Use # for headings
-    codeBlockStyle: 'fenced', // Use ``` for code blocks
-    emDelimiter: '*',         // Use * for italics
-    strongDelimiter: '**',    // Use ** for bold
-  });
 
   // Actions
 
@@ -575,11 +567,13 @@ export const useEditorStore = defineStore('editor', () => {
   async function saveFileContent(
     filePath: string,
     content: string,
-    frontmatter: string | null
+    frontmatter: string | null,
   ): Promise<boolean> {
     if (!currentWorkspace.value) {
-      await logError('Cannot save file: No workspace open.');
-      toast.error('Cannot save file', {description: 'No workspace is open.'});
+      await logError("Cannot save file: No workspace open.");
+      toast.error("Cannot save file", {
+        description: "No workspace is open.",
+      });
       return false;
     }
     const workspacePath = currentWorkspace.value.path;
@@ -587,68 +581,67 @@ export const useEditorStore = defineStore('editor', () => {
     if (relativeFilePath.startsWith(workspacePath)) {
       relativeFilePath = relativeFilePath
       .substring(workspacePath.length)
-      .replace(/^[\\/]/, '');
+      .replace(/^[\\/]/, "");
     }
-    await debug(`Attempting to save file: ${filePath}`);
+    await debug(
+      `Attempting to save file: ${relativeFilePath} (original path: ${filePath})`,
+    );
 
     try {
       let request: SaveFileRequest;
-      const tab = openTabs.value.find(t => t.path === relativeFilePath);
-      const isJsonFile = tab?.extension?.toLowerCase().endsWith('.json');
+      const tab = openTabs.value.find((t) => t.path === relativeFilePath);
+      const isJsonFile =
+        tab?.extension?.toLowerCase().endsWith(".json") ||
+        activeFileType.value === "Canvas" ||
+        activeFileType.value === "Dialogue";
+      const contentToSave = content;
 
-      let contentToSave = content;
-      let isConverted = false;
-      if (!isJsonFile) {
-        try {
-          contentToSave = turndownService.turndown(content);
-          isConverted = true;
-          await debug(`Converted TipTap HTML to Markdown. Length: ${contentToSave.length}`);
-        } catch (conversionError) {
-          await logError(`Failed to convert HTML to Markdown for ${relativeFilePath}: ${conversionError}`);
-          toast.error("Save Warning", {description: "Could not convert content to Markdown. Saving raw editor content."});
-          contentToSave = content;
-          isConverted = false;
-        }
-      }
-
-      if (frontmatter !== null && frontmatter !== undefined) {
+      if (
+        frontmatter !== null &&
+        frontmatter !== undefined &&
+        (activeFileType.value === "Character" ||
+          activeFileType.value === "Location" ||
+          activeFileType.value === "Lore" ||
+          activeFileType.value === "Markdown")
+      ) {
         request = {
-          type: 'MarkdownWithFrontmatter',
+          type: "MarkdownWithFrontmatter",
           data: {frontmatter: frontmatter, content: contentToSave},
         };
-        await debug(`Saving ${relativeFilePath} with frontmatter (${isConverted ? 'converted MD' : 'original HTML/Text'}).`);
-
+        await debug(
+          `Saving ${relativeFilePath} as MarkdownWithFrontmatter.`,
+        );
       } else if (isJsonFile) {
-        request = {type: 'Json', data: {content: contentToSave}};
+        request = {type: "Json", data: {content: contentToSave}};
         await debug(`Saving ${relativeFilePath} as JSON.`);
-
       } else {
-        request = {type: 'Text', data: {content: contentToSave}};
-        await debug(`Saving ${relativeFilePath} as Text (${isConverted ? 'converted MD' : 'original HTML/Text'}).`);
+        request = {type: "Text", data: {content: contentToSave}};
+        await debug(`Saving ${relativeFilePath} as Text (Markdown/Plain).`);
       }
 
-
-      await invoke('save_file_content', {
+      await invoke("save_file_content", {
         workspacePath,
-        filePath,
+        filePath: relativeFilePath,
         content: request,
       });
 
-
-      const activeTab = openTabs.value.find((tab) => tab.path === filePath);
-      if (activeTab) {
-        activeTab.hasUnsavedChanges = false;
-        await debug(`Marked tab ${activeTab.id} as saved.`);
+      const savedTab = openTabs.value.find(
+        (t) => t.path === relativeFilePath,
+      );
+      if (savedTab) {
+        savedTab.hasUnsavedChanges = false;
+        await debug(`Marked tab ${savedTab.id} as saved.`);
       }
       await saveEditorState();
 
-      toast.success(`"${activeTab?.name || relativeFilePath}" saved successfully`);
+      toast.success(
+        `"${savedTab?.name || relativeFilePath}" saved successfully`,
+      );
       return true;
-
     } catch (err) {
       const errorMessage = `Failed to save file ${relativeFilePath}: ${err}`;
       await logError(errorMessage);
-      toast.error('Failed to save file', {
+      toast.error("Failed to save file", {
         description: String(err),
       });
       return false;

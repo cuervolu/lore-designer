@@ -16,7 +16,7 @@ import {
 import {Textarea} from "@/components/ui/textarea";
 import {useEditorStore} from '@editor/stores/editor.store';
 import type {EditorFile, FileContent} from "@editor/types/editor.types.ts";
-import TipTapEditor from './TipTapEditor.vue';
+import MilkdownEditor from "@editor/components/MilkdownEditor.vue";
 
 const props = defineProps<{
   file: EditorFile | null;
@@ -93,7 +93,7 @@ async function loadFileContent() {
     }
 
     fileType.value = loadedContent.type;
-    let textForInitialStats: string | null = null; // Text for immediate calculation
+    let textForInitialStats: string | null;
     let rawContentFromStore: string;
 
     switch (loadedContent.type) {
@@ -127,24 +127,13 @@ async function loadFileContent() {
         textForInitialStats = rawContentFromStore;
     }
 
-    if (
-      ['Markdown', 'Character', 'Location', 'Lore'].includes(
-        loadedContent.type
-      ) &&
-      rawContentFromStore !== null
-    ) {
-      // Convert MD to HTML for TipTap display
-      contentBody.value = marked.parse(rawContentFromStore) as string;
-      await debug(
-        `Converted Markdown to HTML for TipTap. Length: ${contentBody.value.length}`
-      );
-    } else if (rawContentFromStore !== null) {
-      contentBody.value = rawContentFromStore;
-    } else {
-      contentBody.value = '';
-    }
+    contentBody.value = rawContentFromStore;
 
-    calculateAndUpdateStats(textForInitialStats);
+    if (textForInitialStats !== null && !isEditableText.value) {
+      calculateAndUpdateStats(textForInitialStats);
+    } else if (textForInitialStats === null && isImageView.value) {
+      calculateAndUpdateStats(null);
+    }
 
     await debug(
       `Loaded ${loadedContent.type}. Has frontmatter: ${!!frontmatterYaml.value}`
@@ -167,7 +156,7 @@ async function loadFileContent() {
   }
 }
 
-function handleTextUpdate(plainText: string) {
+function handleEditorTextUpdate(plainText: string) {
   calculateAndUpdateStats(plainText);
   editorStore.activeFileContent = contentBody.value;
   editorStore.markTabAsChanged();
@@ -275,9 +264,9 @@ function getIconComponent(iconName: string | undefined): LucideIcon {
         </div>
 
         <div v-else-if="isEditableText" class="h-full">
-          <TipTapEditor
+          <MilkdownEditor
             v-model="contentBody"
-            @textUpdate="handleTextUpdate"
+            @textUpdate="handleEditorTextUpdate"
             class="h-full"
             placeholder="Start writing..."
             aria-label="File content editor"
