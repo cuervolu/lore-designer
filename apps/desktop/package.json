@@ -18,7 +18,6 @@
     "tauri": "tauri"
   },
   "dependencies": {
-    "@floating-ui/dom": "^1.7.0",
     "@fontsource-variable/inter": "^5.2.5",
     "@milkdown/crepe": "^7.10.2",
     "@milkdown/kit": "^7.10.2",
