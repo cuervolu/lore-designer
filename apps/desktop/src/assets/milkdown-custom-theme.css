@@ -1,183 +1,544 @@
+/* Base editor styling */
 .milkdown {
-  background-color: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans), sans-serif;
   height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.milkdown .editor {
-  flex: 1;
-  overflow-y: auto;
-  padding: 1rem;
+  color: var(--foreground);
+  font-family: var(--font-sans);
   line-height: 1.6;
 }
 
-.milkdown .editor h1 {
-  font-size: 2em;
-  color: var(--primary);
-  margin-top: 1.5em;
-  margin-bottom: 0.5em;
-  font-weight: 600;
-}
-.milkdown .editor h2 {
-  font-size: 1.75em;
-  color: var(--primary);
-  margin-top: 1.4em;
-  margin-bottom: 0.4em;
-  font-weight: 600;
+.milkdown .editor {
+  height: 100%;
+  padding: 1rem;
+  outline: none;
 }
 
+/* Typography */
 .milkdown .editor p {
-  margin-bottom: 1em;
+  margin: 0.75rem 0;
+  color: var(--foreground);
 }
 
-.milkdown .editor a {
-  color: var(--accent);
-  text-decoration: none;
-}
-.milkdown .editor a:hover {
-  text-decoration: underline;
+.milkdown .editor h1,
+.milkdown .editor h2,
+.milkdown .editor h3,
+.milkdown .editor h4,
+.milkdown .editor h5,
+.milkdown .editor h6 {
+  margin: 1.5rem 0 0.75rem;
+  color: var(--foreground);
+  font-weight: 600;
+  line-height: 1.2;
 }
 
+.milkdown .editor h1 {
+  font-size: 1.8rem;
+}
+
+.milkdown .editor h2 {
+  font-size: 1.5rem;
+}
+
+.milkdown .editor h3 {
+  font-size: 1.3rem;
+}
+
+.milkdown .editor h4 {
+  font-size: 1.2rem;
+}
+
+.milkdown .editor h5 {
+  font-size: 1.1rem;
+}
+
+.milkdown .editor h6 {
+  font-size: 1rem;
+}
+
+/* Code blocks */
 .milkdown .editor pre {
-  background-color: oklch(from var(--background) l c h / 70%);
-  border: 1px solid var(--border);
-  padding: 1em;
+  background-color: var(--card);
   border-radius: var(--radius);
+  font-family: var(--font-mono);
+  padding: 1rem;
+  margin: 1rem 0;
   overflow-x: auto;
-  font-family: var(--font-mono), monospace;
 }
+
 .milkdown .editor code {
-  font-family: var(--font-mono), monospace;
-  background-color: oklch(from var(--background) l c h / 50%);
-  padding: 0.2em 0.4em;
-  border-radius: calc(var(--radius) / 2);
+  font-family: var(--font-mono);
   font-size: 0.9em;
+  background-color: var(--muted);
+  color: var(--foreground);
+  padding: 0.2em 0.4em;
+  border-radius: var(--radius-sm);
 }
+
 .milkdown .editor pre code {
   background-color: transparent;
   padding: 0;
-  font-size: inherit;
+  border-radius: 0;
 }
 
+/* Blockquotes */
+.milkdown .editor blockquote {
+  border-left: 4px solid var(--primary);
+  padding-left: 1rem;
+  margin: 1rem 0;
+  color: var(--muted-foreground);
+}
+
+/* Lists */
 .milkdown .editor ul,
 .milkdown .editor ol {
-  margin-left: 1.5em;
-  margin-bottom: 1em;
+  padding-left: 1.5rem;
+  margin: 0.75rem 0;
 }
+
 .milkdown .editor li {
-  margin-bottom: 0.25em;
+  margin: 0.25rem 0;
 }
+
 .milkdown .editor li > p {
-  margin-bottom: 0.25em;
+  margin: 0.25rem 0;
 }
 
-.milkdown .editor blockquote {
-  border-left: 4px solid var(--accent);
-  margin-left: 0;
-  padding-left: 1em;
-  color: var(--muted-foreground);
-  font-style: italic;
-}
-
-.milkdown .editor table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 1em;
-  border: 1px solid var(--border);
-}
-.milkdown .editor th,
-.milkdown .editor td {
-  border: 1px solid var(--border);
-  padding: 0.5em 0.75em;
-  text-align: left;
-}
-.milkdown .editor th {
-  background-color: oklch(from var(--background) l c h / 50%);
-  font-weight: 600;
-}
-
+/* Horizontal rule */
 .milkdown .editor hr {
   border: none;
   border-top: 1px solid var(--border);
-  margin: 2em 0;
+  margin: 1.5rem 0;
 }
 
-.milkdown .editor .placeholder {
-  color: var(--muted-foreground);
-  pointer-events: none;
-  position: absolute;
+/* Links */
+.milkdown .editor a {
+  color: var(--primary);
+  text-decoration: none;
+  transition: color 0.2s;
 }
 
-.milkdown-toolbar {
-  position: absolute;
-  background-color: var(--card);
+.milkdown .editor a:hover {
+  color: var(--primary-foreground);
+  text-decoration: underline;
+}
+
+/* Tables */
+.milkdown .editor table {
+  border-collapse: collapse;
+  margin: 1rem 0;
+  width: 100%;
+  overflow: auto;
+  display: block;
+}
+
+.milkdown .editor th {
+  background-color: var(--muted);
+  font-weight: 600;
+  text-align: left;
+}
+
+.milkdown .editor th,
+.milkdown .editor td {
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-lg);
-  padding: 0.3rem 0.5rem;
+  padding: 0.5rem;
+}
+
+.milkdown .editor tr:nth-child(even) {
+  background-color: var(--card);
+}
+
+/* Images */
+.milkdown .editor img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius);
+}
+
+/* Task lists */
+.milkdown .editor ul[data-type="taskList"] {
+  list-style: none;
+  padding-left: 0;
+}
+
+.milkdown .editor ul[data-type="taskList"] li {
   display: flex;
-  gap: 0.25rem;
-  z-index: 100;
-  opacity: 0;
-  transition: opacity 0.15s ease-out, transform 0.15s ease-out;
-  transform: translateY(5px) scale(0.95);
+  align-items: flex-start;
+  margin: 0.5rem 0;
 }
 
-.milkdown-toolbar[data-show="true"] {
-  opacity: 1;
-  transform: translateY(0) scale(1);
+.milkdown .editor ul[data-type="taskList"] li > div {
+  margin-right: 0.5rem;
 }
 
-.toolbar-item {
-  background-color: transparent;
-  border: none;
-  padding: 0.4rem;
-  margin: 0;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--muted-foreground);
-  transition: background-color 0.15s ease-out, color 0.15s ease-out;
-}
-
-.toolbar-item:hover {
-  background-color: oklch(from var(--accent) l c h / 0.1);
+/* Selection and focus styles */
+.milkdown .editor *::selection {
+  background-color: var(--accent);
   color: var(--accent-foreground);
 }
 
-.toolbar-item:focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: 1px;
+.milkdown .editor p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: var(--muted-foreground);
+  float: left;
+  height: 0;
+  pointer-events: none;
 }
 
+/* Mark styles */
+.milkdown .editor strong {
+  font-weight: 600;
+}
 
-.toolbar-item.active {
-  background-color: oklch(from var(--primary) l c h / 0.15);
+.milkdown .editor em {
+  font-style: italic;
+}
+
+.milkdown .editor s {
+  text-decoration: line-through;
+}
+
+/* Code blocks with CodeMirror */
+.milkdown .editor .cm-editor {
+  background-color: var(--card);
+  color: var(--foreground);
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+}
+
+.milkdown .editor .cm-scroller {
+  font-family: var(--font-mono);
+}
+
+.milkdown .editor .cm-content {
+  padding: 0.5rem;
+}
+
+.milkdown .editor .cm-line {
+  padding: 0 0.5rem;
+}
+
+/* Crepe-specific components */
+/* Language picker */
+.milkdown .language-list {
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.milkdown .language-list-item {
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+}
+
+.milkdown .language-list-item:hover {
+  background-color: var(--muted);
+}
+
+.milkdown .language-list-item.selected {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+}
+
+/* Image blocks */
+.milkdown .image-block {
+  margin: 1rem 0;
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.milkdown .image-block img {
+  max-width: 100%;
+  height: auto;
+}
+
+.milkdown .image-block-caption {
+  background-color: var(--muted);
+  padding: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--muted-foreground);
+}
+
+/* Placeholder text */
+.milkdown .placeholder {
+  color: var(--muted-foreground);
+}
+
+/* Link tooltips */
+.milkdown .link-tooltip {
+  background-color: var(--popover);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.5rem;
+  box-shadow: var(--shadow-md);
+}
+
+.milkdown .link-tooltip-button {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  margin-left: 0.5rem;
+}
+
+.milkdown .link-tooltip-button:hover {
+  opacity: 0.9;
+}
+
+.milkdown .link-tooltip-input {
+  background-color: var(--input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.25rem 0.5rem;
+  color: var(--foreground);
+  width: 100%;
+  font-family: var(--font-sans);
+}
+
+/* Table blocks */
+.milkdown .table-wrapper {
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+
+.milkdown .table-controls {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.milkdown .table-control-button {
+  background-color: var(--muted);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  color: var(--foreground);
+}
+
+.milkdown .table-control-button:hover {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+}
+
+/* Slash commands menu */
+.milkdown .slash-menu {
+  background-color: var(--popover);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  overflow-y: auto;
+  max-height: 300px;
+}
+
+.milkdown .slash-menu-item {
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.milkdown .slash-menu-item:hover {
+  background-color: var(--muted);
+}
+
+.milkdown .slash-menu-item.selected {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+}
+
+/* Toolbar */
+.milkdown .toolbar {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.5rem;
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+
+.milkdown .toolbar-button {
+  background-color: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  color: var(--foreground);
+}
+
+.milkdown .toolbar-button:hover {
+  background-color: var(--muted);
+}
+
+.milkdown .toolbar-button.active {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+}
+
+/* Drop cursor */
+.milkdown .ProseMirror-dropcursor {
+  border-top: 2px solid var(--primary);
+  margin-top: -1px;
+}
+
+/* Gap cursor */
+.milkdown .ProseMirror-gapcursor:after {
+  border-top: 2px solid var(--primary);
+  margin-top: -1px;
+}
+
+/* Additional utility classes for consistent spacing */
+.milkdown .mb-4 {
+  margin-bottom: 1rem;
+}
+
+.milkdown .mt-4 {
+  margin-top: 1rem;
+}
+
+.milkdown .my-4 {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 640px) {
+  .milkdown .editor {
+    padding: 0.75rem;
+  }
+
+  .milkdown .editor h1 {
+    font-size: 1.5rem;
+  }
+
+  .milkdown .editor h2 {
+    font-size: 1.3rem;
+  }
+
+  .milkdown .editor h3 {
+    font-size: 1.2rem;
+  }
+}
+
+.milkdown-slash-menu {
+  background-color: var(--card) !important;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  opacity: 1 !important;
+  z-index: 50;
+}
+
+.milkdown-slash-menu .tab-group {
+  border-bottom: 1px solid var(--border);
+}
+
+.milkdown-slash-menu .tab-group ul li {
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  color: var(--foreground);
+}
+
+.milkdown-slash-menu .tab-group ul li.selected {
   color: var(--primary);
-}
-.toolbar-item.active:hover {
-  background-color: oklch(from var(--primary) l c h / 0.25);
+  border-bottom: 2px solid var(--primary);
 }
 
-
-.milkdown-icon {
-  display: inline-flex;
+.milkdown-slash-menu .tab-group ul li:hover {
+  background-color: var(--muted);
 }
 
-.milkdown-icon svg {
-  width: 1.125em;
-  height: 1.125em;
+.milkdown-slash-menu .menu-groups h6 {
+  color: var(--muted-foreground);
+  font-size: 0.85rem;
+  margin: 0.5rem 1rem;
+}
+
+.milkdown-slash-menu .menu-groups li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  color: var(--foreground);
+}
+
+.milkdown-slash-menu .menu-groups li.hover,
+.milkdown-slash-menu .menu-groups li:hover {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.milkdown-slash-menu .milkdown-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.milkdown-slash-menu .milkdown-icon svg {
   fill: currentColor;
 }
 
-.milkdown-toolbar .divider {
-  width: 1px;
-  background-color: var(--border);
-  margin: 0.25rem 0.1rem;
-  align-self: stretch;
+.milkdown-block-handle {
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  opacity: 0.9;
+  z-index: 30;
+}
+
+.milkdown-block-handle .operation-item {
+  color: var(--foreground);
+  background-color: transparent;
+  border-radius: var(--radius-sm);
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.milkdown-block-handle .operation-item:hover {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.milkdown-block-handle .milkdown-icon svg {
+  fill: currentColor;
+}
+
+.milkdown .milkdown-icon {
+  color: inherit;
+}
+
+.milkdown .milkdown-icon svg {
+  fill: currentColor;
+}
+
+.milkdown .editor .ProseMirror-focused {
+  outline: none;
+}
+
+.milkdown .editor .ProseMirror-focused *::selection {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.milkdown [data-drag-handle],
+.milkdown [data-ref-content] {
+  color: var(--foreground);
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+}
+
+.milkdown [data-selected="true"] {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }

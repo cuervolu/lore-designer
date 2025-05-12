@@ -37,9 +37,9 @@
   --sidebar-accent-foreground: oklch(0.32 0 0);
   --sidebar-border: oklch(0.87 0 0);
   --sidebar-ring: oklch(0.65 0.15 150.31);
-  --font-sans: Inter, sans-serif;
-  --font-serif: Inter, sans-serif;
-  --font-mono: Fira Code, monospace;
+  --font-sans: 'Inter Variable', sans-serif;
+  --font-serif: 'Inter Variable', sans-serif;
+  --font-mono: 'Fira Code Variable', monospace;
   --radius: 0.5rem;
   --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
   --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
@@ -86,9 +86,9 @@
   --sidebar-accent-foreground: oklch(0.92 0 0);
   --sidebar-border: oklch(0.39 0 0);
   --sidebar-ring: oklch(0.65 0.15 150.31);
-  --font-sans: Inter, sans-serif;
-  --font-serif: Inter, sans-serif;
-  --font-mono: Fira Code, monospace;
+  --font-sans: 'Inter Variable', sans-serif;
+  --font-serif: 'Inter Variable', sans-serif;
+  --font-mono: 'Fira Code Variable', monospace;
   --radius: 0.5rem;
   --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
   --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);

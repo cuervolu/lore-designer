@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import {error as logError} from '@tauri-apps/plugin-log';
 import { ref, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
 import { Crepe } from '@milkdown/crepe';
 import { replaceAll } from '@milkdown/kit/utils';
 
 import '@milkdown/crepe/theme/common/style.css';
-import "@/assets/milkdown-custom-theme.css";
+import '@/assets/milkdown-custom-theme.css';
+import { customTheme } from '@editor/lib/custom-theme';
 
 const props = defineProps<{
   modelValue: string; // For v-model
@@ -53,6 +53,7 @@ onMounted(async () => {
     },
   });
 
+
   await crepe.value.create();
 
   // Set up listeners
@@ -83,7 +84,7 @@ watch(() => props.modelValue, async (newValue) => {
     const plainText = stripMarkdownSyntax(newValue);
     emit('textUpdate', plainText);
   } catch (error) {
-    await logError(`Error updating Milkdown content: ${error}`);
+    console.error(`Error updating Milkdown content: ${error}`);
   } finally {
     await nextTick();
     isUpdatingContent.value = false;
