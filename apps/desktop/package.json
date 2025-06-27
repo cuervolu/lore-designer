@@ -46,7 +46,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dockview-vue": "^4.2.5",
-    "lucide-vue-next": "^0.514.0",
+    "lucide-vue-next": "^0.524.0",
     "marked": "^15.0.11",
     "pinia": "^3.0.1",
     "reka-ui": "^2.2.1",

@@ -44,7 +44,7 @@
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "dockview-vue": "^4.2.5",
-        "lucide-vue-next": "^0.514.0",
+        "lucide-vue-next": "^0.524.0",
         "marked": "^15.0.11",
         "pinia": "^3.0.1",
         "reka-ui": "^2.2.1",
@@ -1333,7 +1333,7 @@
 
     "lru-cache": ["lru-cache@10.4.3", "", {}, "sha512-JNAzZcXrCt42VGLuYz0zfAzDfAvJWW6AfYlDBQyDV5DClI2m5sAmK+OIO7s59XfsRsWHp02jAJrRadPRGTt6SQ=="],
 
-    "lucide-vue-next": ["lucide-vue-next@0.514.0", "", { "peerDependencies": { "vue": ">=3.0.1" } }, "sha512-rZUuw7l8NTa2OZPo1RT/UPQLAWOAgZjDKv4tRyAXyjB1SWl/Bb7EhGjHYadfjMFSdaAYdfgiYGh5z/zIzl59zQ=="],
+    "lucide-vue-next": ["lucide-vue-next@0.524.0", "", { "peerDependencies": { "vue": ">=3.0.1" } }, "sha512-Ea+g23VY0pS6hTscAKxflu2yHpoSloN8ouIguLfXggUCnYjo0ymPEfxcWmXzSJyUE5+otZF5R7yALX8F46jSEA=="],
 
     "magic-string": ["magic-string@0.30.17", "", { "dependencies": { "@jridgewell/sourcemap-codec": "^1.5.0" } }, "sha512-sNPKHvyjVf7gyjwS4xGTaW/mCnF8wnjtifKBEhxfZ7E/S8tQ0rssrwGNn6q8JH/ohItJfSQp9mBtQYuTlH5QnA=="],
 
