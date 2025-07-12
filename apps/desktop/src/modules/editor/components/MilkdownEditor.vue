@@ -1,11 +1,15 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
-import { Crepe } from '@milkdown/crepe';
-import { replaceAll } from '@milkdown/kit/utils';
-
-import '@milkdown/crepe/theme/common/style.css';
+import {error as logError} from "@tauri-apps/plugin-log";
+import {nextTick, onBeforeUnmount, onMounted, ref, watch} from 'vue';
+import {defaultValueCtx, Editor, rootCtx, editorViewOptionsCtx} from '@milkdown/kit/core';
+import {commonmark} from '@milkdown/kit/preset/commonmark';
+import {gfm} from '@milkdown/kit/preset/gfm';
+import {history} from '@milkdown/kit/plugin/history';
+import {clipboard} from '@milkdown/kit/plugin/clipboard';
+import {listener, listenerCtx} from '@milkdown/kit/plugin/listener';
+import {replaceAll} from '@milkdown/kit/utils';
+import '@milkdown/kit/prose/view/style/prosemirror.css';
 import '@/assets/milkdown-custom-theme.css';
-import { customTheme } from '@editor/lib/custom-theme';
 
 const props = defineProps<{
   modelValue: string; // For v-model
@@ -15,7 +19,7 @@ const props = defineProps<{
 const emit = defineEmits(['update:modelValue', 'change', 'textUpdate']);
 
 const editorContainer = ref<HTMLElement | null>(null);
-const crepe = ref<Crepe | null>(null);
+const editor = ref<Editor | null>(null);
 const internalValue = ref(props.modelValue);
 const isUpdatingContent = ref(false);
 
@@ -40,25 +44,21 @@ function stripMarkdownSyntax(markdown: string): string {
 onMounted(async () => {
   if (!editorContainer.value) return;
 
-  crepe.value = new Crepe({
-    root: editorContainer.value,
-    defaultValue: props.modelValue,
-    featureConfigs: {
-      [Crepe.Feature.Placeholder]: {
-        text: props.placeholder || 'Start writing...',
-        mode: 'block',
+  editor.value = await Editor.make()
+  .config((ctx) => {
+    ctx.set(rootCtx, editorContainer.value);
+    ctx.set(defaultValueCtx, props.modelValue);
+
+    ctx.update(editorViewOptionsCtx, (prev) => ({
+      ...prev,
+      attributes: {
+        ...prev.attributes,
+        placeholder: props.placeholder || 'Start writing...',
       },
-      [Crepe.Feature.Table]: {
-      },
-    },
-  });
+    }));
 
-
-  await crepe.value.create();
-
-  // Set up listeners
-  crepe.value.on((listener) => {
-    listener.markdownUpdated((ctx, markdown) => {
+    const listenerManager = ctx.get(listenerCtx);
+    listenerManager.markdownUpdated((_, markdown) => {
       if (isUpdatingContent.value) return;
 
       if (markdown !== internalValue.value) {
@@ -70,21 +70,27 @@ onMounted(async () => {
         emit('change');
       }
     });
-  });
+  })
+  .use(commonmark)
+  .use(gfm)
+  .use(history)
+  .use(clipboard)
+  .use(listener)
+  .create();
 });
 
 watch(() => props.modelValue, async (newValue) => {
-  if (!crepe.value || newValue === internalValue.value) return;
+  if (!editor.value || newValue === internalValue.value) return;
 
   try {
     isUpdatingContent.value = true;
     internalValue.value = newValue;
-    crepe.value.editor.action(replaceAll(newValue));
+    editor.value.action(replaceAll(newValue));
 
     const plainText = stripMarkdownSyntax(newValue);
     emit('textUpdate', plainText);
   } catch (error) {
-    console.error(`Error updating Milkdown content: ${error}`);
+    await logError(`Error updating Milkdown content: ${error}`);
   } finally {
     await nextTick();
     isUpdatingContent.value = false;
@@ -92,7 +98,7 @@ watch(() => props.modelValue, async (newValue) => {
 });
 
 onBeforeUnmount(() => {
-  crepe.value?.destroy();
+  editor.value?.destroy();
 });
 </script>
 
