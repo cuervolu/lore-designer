@@ -5,7 +5,7 @@ edition = "2024"
 
 [dependencies]
 ignore = "0.4.23"
-gray_matter = "0.2.9"
+gray_matter = "0.3.0"
 tauri = {workspace = true}
 anyhow = {workspace = true}
 thiserror = {workspace = true}
