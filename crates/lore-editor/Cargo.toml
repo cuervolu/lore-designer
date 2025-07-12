@@ -4,8 +4,8 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-ignore = "0.4.22"
-gray_matter = "0.2.8"
+ignore = "0.4.23"
+gray_matter = "0.2.9"
 tauri = {workspace = true}
 anyhow = {workspace = true}
 thiserror = {workspace = true}
@@ -13,7 +13,7 @@ serde = {workspace = true}
 serde_json = {workspace = true}
 log = {workspace = true}
 uuid = {workspace = true}
-notify = "8.0.0"
+notify = "8.1.0"
 lore-workspaces = { path = "../lore-workspaces" }
 crossbeam-channel = "0.5.15"
 chrono = {workspace = true}

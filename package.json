@@ -16,11 +16,12 @@
     "astro": "cd apps/docs && bun run astro"
   },
   "devDependencies": {
-    "@biomejs/biome": "1.9.4",
+    "@biomejs/biome": "2.1.1",
     "@types/bun": "latest",
-    "@types/node": "^22.14.1"
+    "@types/node": "^24.0.13"
   },
   "peerDependencies": {
     "typescript": "^5"
-  }
+  },
+  "packageManager": "pnpm@10.13.1"
 }
