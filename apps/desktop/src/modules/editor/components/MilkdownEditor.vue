@@ -13,12 +13,15 @@ import { replaceAll } from '@milkdown/kit/utils';
 
 import CommandMenu, { type CommandMenuItem } from './CommandMenu.vue';
 import { useEditorStore } from '@editor/stores/editor.store';
+import { callCommand } from '@milkdown/kit/utils';
+import { insertEntityLinkCommand, type InsertEntityLinkPayload } from '@editor/lib/commands';
 
 import { Code, Heading1, Heading2, Heading3, List, ListOrdered, MapPin, Quote, User, BookOpen } from 'lucide-vue-next';
 
 // Styles
 import '@milkdown/kit/prose/view/style/prosemirror.css';
 import '@/assets/milkdown-custom-theme.css';
+import {entityLinkSchema} from "@editor/lib/entity-link.ts";
 
 const props = defineProps<{
   modelValue: string;
@@ -58,21 +61,23 @@ const commandItems = computed<CommandMenuItem[]>(() => {
   const trigger = slashState.value.trigger;
   const query = slashState.value.query?.toLowerCase() || '';
 
-  let source: Omit<CommandMenuItem, 'action'>[] = [];
+  let source: Omit<CommandMenuItem, 'action' | 'href'>[] = [];
+  let entityType: InsertEntityLinkPayload['entityType'] = 'unknown';
 
   if (trigger === '@') {
-    // TODO: Replace with real data from editorStore.
+    entityType = 'character';
     source = [
-      { id: 'char1', type: 'character', label: 'Arin el Valiente', icon: User },
-      { id: 'char2', type: 'character', label: 'La Hechicera Umbra', icon: User },
+      { id: 'Characters/Arin.md', type: 'character', label: 'Arin el Valiente', icon: User },
+      { id: 'Characters/Umbra.md', type: 'character', label: 'La Hechicera Umbra', icon: User },
     ];
   } else if (trigger === '#') {
-    // TODO: Replace with real data.
+    entityType = 'location';
     source = [
-      { id: 'loc1', type: 'location', label: 'Aldea Inicial', icon: MapPin },
-      { id: 'loc2', type: 'location', label: 'El Bosque Tenebroso', icon: MapPin },
+      { id: 'Locations/AldeaInicial.md', type: 'location', label: 'Aldea Inicial', icon: MapPin },
+      { id: 'Locations/Bosque.md', type: 'location', label: 'El Bosque Tenebroso', icon: MapPin },
     ];
   } else if (trigger === '/') {
+    entityType = 'command';
     source = defaultCommands;
   }
 
@@ -81,7 +86,19 @@ const commandItems = computed<CommandMenuItem[]>(() => {
   .map(item => ({
     ...item,
     action: () => {
-      console.log(`Selected: ${item.label} (ID: ${item.id})`);
+      if (!editor.value) return;
+
+      if (item.type === 'command') {
+        console.log(`Executing command: ${item.label}`);
+      } else {
+        const payload: InsertEntityLinkPayload = {
+          href: item.id,
+          entityType: item.type,
+          label: item.label,
+        };
+        editor.value.action(callCommand(insertEntityLinkCommand.key, payload));
+      }
+
       slashState.value.open = false;
     },
   }));
@@ -98,21 +115,17 @@ onMounted(async () => {
         slashState.value.open = false;
         return false;
       }
-
       const textBefore = slashProvider.getContent(view);
       if (!textBefore) {
         slashState.value.open = false;
         return false;
       }
-
       const match = /(?:^|\s)([\/\@\#])(\w*)$/.exec(textBefore);
-
       if (match) {
         const [, trigger, query] = match;
         slashState.value = { open: true, trigger, query };
         return true;
       }
-
       slashState.value.open = false;
       return false;
     },
@@ -122,7 +135,6 @@ onMounted(async () => {
   .config((ctx) => {
     ctx.set(rootCtx, editorContainer.value);
     ctx.set(defaultValueCtx, props.modelValue);
-
     ctx.update(editorViewOptionsCtx, (prev) => ({
       ...prev,
       attributes: {
@@ -130,7 +142,6 @@ onMounted(async () => {
         placeholder: props.placeholder || 'Start writing...',
       },
     }));
-
     const listenerManager = ctx.get(listenerCtx);
     listenerManager.markdownUpdated((_, markdown) => {
       if (isUpdatingContent.value) return;
@@ -142,7 +153,6 @@ onMounted(async () => {
         emit('change');
       }
     });
-
     ctx.set(slash.key, {
       view: () => ({
         update: (view, prevState) => slashProvider.update(view, prevState),
@@ -156,6 +166,8 @@ onMounted(async () => {
   .use(clipboard)
   .use(listener)
   .use(slash)
+  .use(entityLinkSchema)
+  .use(insertEntityLinkCommand)
   .create();
 });
 

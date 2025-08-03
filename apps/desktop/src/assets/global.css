@@ -213,3 +213,50 @@ html, body {
   padding-top: 36px;
 }
 
+/* Base style for all entity links */
+.entity-link {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 500;
+  font-size: 0.85em;
+  text-decoration: none !important; /* Override default link styles */
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  border: 1px solid transparent;
+}
+
+/* Character specific style */
+.entity-link.entity-type--character {
+  background-color: hsl(var(--primary) / 0.1);
+  color: hsl(var(--primary));
+  border-color: hsl(var(--primary) / 0.2);
+}
+
+.entity-link.entity-type--character:hover {
+  background-color: hsl(var(--primary) / 0.2);
+  border-color: hsl(var(--primary) / 0.4);
+}
+
+/* Location specific style */
+.entity-link.entity-type--location {
+  background-color: hsl(var(--chart-2) / 0.1);
+  color: hsl(var(--chart-2));
+  border-color: hsl(var(--chart-2) / 0.2);
+}
+
+.entity-link.entity-type--location:hover {
+  background-color: hsl(var(--chart-2) / 0.2);
+  border-color: hsl(var(--chart-2) / 0.4);
+}
+
+/* Lore specific style */
+.entity-link.entity-type--lore {
+  background-color: hsl(var(--chart-5) / 0.1);
+  color: hsl(var(--chart-5));
+  border-color: hsl(var(--chart-5) / 0.2);
+}
+
+.entity-link.entity-type--lore:hover {
+  background-color: hsl(var(--chart-5) / 0.2);
+  border-color: hsl(var(--chart-5) / 0.4);
+}
