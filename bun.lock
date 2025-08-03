@@ -85,8 +85,8 @@
       "name": "@lore-designer/docs",
       "version": "0.0.1",
       "dependencies": {
-        "@astrojs/starlight": "^0.34.5",
-        "astro": "^5.11.0",
+        "@astrojs/starlight": "^0.34.8",
+        "astro": "^5.12.8",
         "sharp": "^0.34.3",
       },
     },
