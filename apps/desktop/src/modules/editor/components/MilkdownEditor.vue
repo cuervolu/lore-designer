@@ -15,13 +15,14 @@ import CommandMenu, { type CommandMenuItem } from './CommandMenu.vue';
 import { useEditorStore } from '@editor/stores/editor.store';
 import { callCommand } from '@milkdown/kit/utils';
 import { insertEntityLinkCommand, type InsertEntityLinkPayload } from '@editor/lib/commands';
+import {entityLinkSchema} from "@editor/lib/entity-link.ts";
+import {entityLinkRemarkPlugin} from "@editor/lib/entity-link-remark.plugin.ts";
 
 import { Code, Heading1, Heading2, Heading3, List, ListOrdered, MapPin, Quote, User, BookOpen } from 'lucide-vue-next';
 
 // Styles
 import '@milkdown/kit/prose/view/style/prosemirror.css';
 import '@/assets/milkdown-custom-theme.css';
-import {entityLinkSchema} from "@editor/lib/entity-link.ts";
 
 const props = defineProps<{
   modelValue: string;
@@ -162,6 +163,7 @@ onMounted(async () => {
   })
   .use(commonmark)
   .use(gfm)
+  .use(entityLinkRemarkPlugin)
   .use(history)
   .use(clipboard)
   .use(listener)

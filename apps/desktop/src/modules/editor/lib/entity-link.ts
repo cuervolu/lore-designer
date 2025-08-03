@@ -1,6 +1,12 @@
 import type { Mark } from '@milkdown/kit/prose/model';
 import { $markSchema } from '@milkdown/kit/utils';
 
+interface EntityLinkData {
+  href: string;
+  entityType: string;
+  label: string;
+}
+
 export const entityLinkSchema = $markSchema('entityLink', () => ({
   attrs: {
     href: { default: '' },
@@ -34,22 +40,28 @@ export const entityLinkSchema = $markSchema('entityLink', () => ({
       0,
     ];
   },
-  // This part is required for the schema to be valid.
-  // It tells Milkdown how to handle this mark when converting to/from Markdown.
   toMarkdown: {
     match: (mark) => mark.type.name === 'entityLink',
     runner: (state, mark) => {
-      const { href, entityType, label } = mark.attrs;
-      // We serialize to a custom syntax to preserve our data.
-      state.write(`@[${label || state.stack.pop()?.value || ''}](${href}){entityType=${entityType}}`);
+      const { href, label } = mark.attrs;
+
+      if (label && label !== href) {
+        state.addNode('text', undefined, `[[${href}|${label}]]`);
+      } else {
+        state.addNode('text', undefined, `[[${href}]]`);
+      }
     },
   },
   parseMarkdown: {
-    // For now, we only parse standard markdown links into this mark.
-    // A full parser for the custom syntax would require a remark plugin.
-    match: (node) => node.type === 'link',
+    match: (node) => node.type === 'entityLink',
     runner: (state, node, markType) => {
-      state.openMark(markType, { href: node.url, title: node.title });
+      const { href, entityType, label } = (node.data as EntityLinkData) || {
+        href: '',
+        entityType: 'unknown',
+        label: ''
+      };
+
+      state.openMark(markType, { href, entityType, label });
       state.next(node.children);
       state.closeMark(markType);
     },
