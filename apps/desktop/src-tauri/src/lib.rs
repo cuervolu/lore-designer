@@ -120,6 +120,9 @@ pub fn run() {
             lore_editor::refresh_file_tree,
             lore_editor::create_file_from_template,
             lore_workspaces::open_existing_workspace,
+            lore_editor::search_files_by_type,
+            lore_editor::get_file_frontmatter,
+            lore_editor::get_all_workspace_files,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

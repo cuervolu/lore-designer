@@ -1,4 +1,4 @@
-use super::{EditorError, FileTreeItem, FileType, IndexedDirectory, IndexedFile};
+use super::{EditorError, FileSearchResult, FileTreeItem, FileType, IndexedDirectory, IndexedFile};
 use ignore::Walk;
 use log::{debug, error, info, warn};
 use std::collections::HashMap;
@@ -48,8 +48,8 @@ impl IndexManager {
         let workspace_path = workspace_path.to_path_buf();
         std::thread::spawn(
             move || match Self::perform_indexing(&workspace_path, progress) {
-                Ok(_) => info!("Indexing completed for: {}", path_str),
-                Err(e) => error!("Indexing failed for {}: {}", path_str, e),
+                Ok(_) => info!("Indexing completed for: {path_str}"),
+                Err(e) => error!("Indexing failed for {path_str}: {e}"),
             },
         );
 
@@ -80,11 +80,11 @@ impl IndexManager {
 
                 match Self::index_file(workspace_path, changed_path) {
                     Ok(indexed_file) => {
-                        debug!("Incrementally indexed file: {}", rel_path_str);
+                        debug!("Incrementally indexed file: {rel_path_str}");
                         files.push(indexed_file);
                     }
                     Err(e) => {
-                        error!("Failed to index file {}: {}", rel_path_str, e);
+                        error!("Failed to index file {rel_path_str}: {e}");
                     }
                 }
             } else if changed_path.is_dir() {
@@ -92,18 +92,18 @@ impl IndexManager {
 
                 match Self::index_directory(workspace_path, changed_path) {
                     Ok(indexed_dir) => {
-                        debug!("Incrementally indexed directory: {}", rel_path_str);
+                        debug!("Incrementally indexed directory: {rel_path_str}");
                         directories.push(indexed_dir);
                     }
                     Err(e) => {
-                        error!("Failed to index directory {}: {}", rel_path_str, e);
+                        error!("Failed to index directory {rel_path_str}: {e}");
                     }
                 }
             }
         } else {
             files.retain(|f| !f.path.starts_with(&rel_path_str));
             directories.retain(|d| !d.path.starts_with(&rel_path_str));
-            debug!("Removed deleted path from index: {}", rel_path_str);
+            debug!("Removed deleted path from index: {rel_path_str}");
         }
 
         Self::save_index(workspace_path, &files, &directories)?;
@@ -131,7 +131,7 @@ impl IndexManager {
         for result in Walk::new(workspace_path) {
             match result {
                 Ok(_) => total_files += 1,
-                Err(err) => warn!("Error walking directory: {}", err),
+                Err(err) => warn!("Error walking directory: {err}"),
             }
         }
 
@@ -175,7 +175,7 @@ impl IndexManager {
                     }
                 }
                 Err(err) => {
-                    warn!("Error processing entry: {}", err);
+                    warn!("Error processing entry: {err}");
                 }
             }
 
@@ -373,23 +373,20 @@ impl IndexManager {
                 if let Some(parent) = tree_map.get_mut(&parent_path) {
                     parent.children.push(child_item);
                     debug!(
-                        "Added item {} to parent {}, parent now has {} children",
-                        path,
-                        parent_path,
+                        "Added item {path} to parent {parent_path}, parent now has {} children",
                         parent.children.len()
                     );
                 } else {
                     warn!(
-                        "Parent directory not found in tree_map for item: {} (parent: {}) - Re-inserting item.",
-                        path, parent_path
+                        "Parent directory not found in tree_map for item: {path} (parent: {parent_path}) - Re-inserting item."
                     );
                     tree_map.insert(path, child_item);
                     if !parent_path.is_empty() {
-                        warn!("Parent path not found in tree_map: {}", parent_path);
+                        warn!("Parent path not found in tree_map: {parent_path}");
                     }
                 }
             } else {
-                warn!("Item path not found during linking phase: {}", path);
+                warn!("Item path not found during linking phase: {path}");
             }
         }
 
@@ -398,10 +395,7 @@ impl IndexManager {
             if let Some(item) = tree_map.remove(&root_child_path) {
                 result.push(item);
             } else {
-                warn!(
-                    "Root child path not found in final map: {}",
-                    root_child_path
-                );
+                warn!("Root child path not found in final map: {root_child_path}");
             }
         }
         result.sort_by(|a, b| match (a.is_directory, b.is_directory) {
@@ -415,5 +409,121 @@ impl IndexManager {
             result.len()
         );
         Ok(result)
+    }
+
+    pub fn search_files_by_type(
+        workspace_path: &Path,
+        file_type_str: &str,
+        query: Option<&str>,
+    ) -> Result<Vec<FileSearchResult>, EditorError> {
+        let target_file_type = match file_type_str {
+            "character" => FileType::Character,
+            "location" => FileType::Location,
+            "lore" => FileType::Lore,
+            "markdown" => FileType::Markdown,
+            "canvas" => FileType::Canvas,
+            _ => return Ok(vec![]), // Empty result for unknown types
+        };
+
+        let (files, _) = Self::load_index(workspace_path)?;
+        let query_lower = query.map(|q| q.to_lowercase());
+
+        let mut results: Vec<FileSearchResult> = files
+            .into_iter()
+            .filter(|file| file.file_type == target_file_type)
+            .filter_map(|file| {
+                let display_name = Self::extract_display_name(workspace_path, &file);
+
+                // Apply query filter if provided
+                if let Some(ref q) = query_lower {
+                    if !display_name.to_lowercase().contains(q)
+                        && !file.path.to_lowercase().contains(q)
+                    {
+                        return None;
+                    }
+                }
+
+                Some(FileSearchResult {
+                    path: file.path,
+                    name: display_name,
+                    file_type: file.file_type,
+                    extension: file.extension,
+                    last_modified: file.last_modified,
+                })
+            })
+            .collect();
+
+        results.sort_by(|a, b| {
+            b.last_modified
+                .cmp(&a.last_modified)
+                .then_with(|| a.name.cmp(&b.name))
+        });
+
+        Ok(results)
+    }
+
+    pub fn get_all_workspace_files(
+        workspace_path: &Path,
+    ) -> Result<Vec<FileSearchResult>, EditorError> {
+        let (files, _) = Self::load_index(workspace_path)?;
+
+        let mut results: Vec<FileSearchResult> = files
+            .into_iter()
+            .map(|file| {
+                let display_name = Self::extract_display_name(workspace_path, &file);
+                FileSearchResult {
+                    path: file.path,
+                    name: display_name,
+                    file_type: file.file_type,
+                    extension: file.extension,
+                    last_modified: file.last_modified,
+                }
+            })
+            .collect();
+
+        // Sort by file type, then by name
+        results.sort_by(|a, b| {
+            format!("{:?}", a.file_type)
+                .cmp(&format!("{:?}", b.file_type))
+                .then_with(|| a.name.cmp(&b.name))
+        });
+
+        Ok(results)
+    }
+
+    fn extract_display_name(workspace_path: &Path, indexed_file: &IndexedFile) -> String {
+        // For files with potential frontmatter, try to extract 'name' or 'title' field
+        match indexed_file.file_type {
+            FileType::Character | FileType::Location | FileType::Lore => {
+                let full_path = workspace_path.join(&indexed_file.path);
+                if let Ok(content) = std::fs::read_to_string(&full_path) {
+                    let matter = gray_matter::Matter::<gray_matter::engine::YAML>::new();
+                    let parsed = matter.parse(&content);
+
+                    if let Some(data) = parsed.data {
+                        // Try 'name' field first, then 'title'
+                        if let Some(name) = Self::get_pod_string(&data, "name") {
+                            return name;
+                        }
+                        if let Some(title) = Self::get_pod_string(&data, "title") {
+                            return title;
+                        }
+                    }
+                }
+            }
+            _ => {}
+        }
+
+        // Fallback to filename without extension
+        indexed_file.name.clone()
+    }
+
+    fn get_pod_string(pod: &gray_matter::Pod, key: &str) -> Option<String> {
+        let value = &pod[key];
+        if *value != gray_matter::Pod::Null {
+            value.as_string().ok()
+        } else {
+            None
+        }
     }
 }

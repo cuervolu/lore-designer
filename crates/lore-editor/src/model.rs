@@ -235,3 +235,19 @@ pub struct FileTreeItem {
     /// Children (only for directories)
     pub children: Vec<FileTreeItem>,
 }
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct FileSearchResult {
+    pub path: String,              // Relative path from workspace root
+    pub name: String,              // Display name (from frontmatter or filename)
+    pub file_type: FileType,       // Character, Location, Lore, etc.
+    pub extension: Option<String>, // .md, .json, etc.
+    pub last_modified: u64,        // Timestamp for sorting
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct FrontmatterResult {
+    pub path: String,
+    pub frontmatter: Option<String>, // YAML string or null
+    pub has_frontmatter: bool,
+}

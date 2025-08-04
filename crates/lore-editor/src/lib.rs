@@ -117,7 +117,7 @@ impl EditorManager {
                     "Parsed File Type: {:?}, Frontmatter Found: {}, Frontmatter Content: {:?}",
                     file_type,
                     frontmatter_opt.is_some(),
-                    frontmatter_opt 
+                    frontmatter_opt
                 );
 
                 match file_type {
@@ -211,5 +211,55 @@ impl EditorManager {
 
         debug!("Saved file: {}", full_path.display());
         Ok(())
+    }
+    pub fn get_file_frontmatter(
+        workspace_path: impl AsRef<Path>,
+        file_path: impl AsRef<Path>,
+    ) -> Result<FrontmatterResult, EditorError> {
+        let workspace = workspace_path.as_ref();
+        let file = file_path.as_ref();
+
+        if !workspace.exists() || !workspace.is_dir() {
+            return Err(EditorError::WorkspaceNotFound(
+                workspace.display().to_string(),
+            ));
+        }
+
+        let full_path = workspace.join(file);
+        if !full_path.exists() || !full_path.is_file() {
+            return Err(EditorError::FileNotFound(full_path.display().to_string()));
+        }
+
+        let file_type = FileType::from_path(&full_path)?;
+
+        match file_type {
+            FileType::Character | FileType::Location | FileType::Lore => {
+                let content = std::fs::read_to_string(&full_path)
+                    .context(format!("Failed to read file: {}", full_path.display()))?;
+
+                let matter = Matter::<YAML>::new();
+                let parsed = matter.parse(&content);
+
+                let frontmatter_yaml = if parsed.data.is_some() {
+                    Some(parsed.orig.clone())
+                } else {
+                    None
+                };
+
+                Ok(FrontmatterResult {
+                    path: file.display().to_string(),
+                    frontmatter: frontmatter_yaml,
+                    has_frontmatter: parsed.data.is_some(),
+                })
+            }
+            _ => {
+                // File types that don't support frontmatter
+                Ok(FrontmatterResult {
+                    path: file.display().to_string(),
+                    frontmatter: None,
+                    has_frontmatter: false,
+                })
+            }
+        }
     }
 }

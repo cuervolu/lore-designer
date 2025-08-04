@@ -13,10 +13,12 @@ import { replaceAll } from '@milkdown/kit/utils';
 
 import CommandMenu, { type CommandMenuItem } from './CommandMenu.vue';
 import { useEditorStore } from '@editor/stores/editor.store';
+import { useFileIndexStore } from '@editor/stores/file-index.store';
 import { callCommand } from '@milkdown/kit/utils';
 import { insertEntityLinkCommand, type InsertEntityLinkPayload } from '@editor/lib/commands';
 import {entityLinkSchema} from "@editor/lib/entity-link.ts";
 import {entityLinkRemarkPlugin} from "@editor/lib/entity-link-remark.plugin.ts";
+import type {EntityLinkType} from "@editor/types/editor.types.ts";
 
 import { Code, Heading1, Heading2, Heading3, List, ListOrdered, MapPin, Quote, User, BookOpen } from 'lucide-vue-next';
 
@@ -36,6 +38,7 @@ const editor = ref<Editor | null>(null);
 const internalValue = ref(props.modelValue);
 const isUpdatingContent = ref(false);
 const editorStore = useEditorStore();
+const fileIndexStore = useFileIndexStore();
 
 const slash = slashFactory('lore-commands');
 const slashState = ref<{
@@ -58,43 +61,66 @@ const defaultCommands: Omit<CommandMenuItem, 'action'>[] = [
   { id: 'codeBlock', type: 'command', label: 'Code Block', icon: Code },
 ];
 
+function getIconForFileType(fileType: string) {
+  switch (fileType) {
+    case 'Character': return User;
+    case 'Location': return MapPin;
+    case 'Lore': return BookOpen;
+    default: return User;
+  }
+}
+
+function getEntityTypeFromTrigger(trigger: string): EntityLinkType | null {
+  switch (trigger) {
+    case '@': return 'character';
+    case '#': return 'location';
+    case '!': return 'lore';
+    default: return null;
+  }
+}
+
+
 const commandItems = computed<CommandMenuItem[]>(() => {
   const trigger = slashState.value.trigger;
-  const query = slashState.value.query?.toLowerCase() || '';
+  const query = slashState.value.query || '';
 
-  let source: Omit<CommandMenuItem, 'action' | 'href'>[] = [];
+  let source: Omit<CommandMenuItem, 'action'>[] = [];
   let entityType: InsertEntityLinkPayload['entityType'] = 'unknown';
 
-  if (trigger === '@') {
-    entityType = 'character';
-    source = [
-      { id: 'Characters/Arin.md', type: 'character', label: 'Arin el Valiente', icon: User },
-      { id: 'Characters/Umbra.md', type: 'character', label: 'La Hechicera Umbra', icon: User },
-    ];
-  } else if (trigger === '#') {
-    entityType = 'location';
-    source = [
-      { id: 'Locations/AldeaInicial.md', type: 'location', label: 'Aldea Inicial', icon: MapPin },
-      { id: 'Locations/Bosque.md', type: 'location', label: 'El Bosque Tenebroso', icon: MapPin },
-    ];
-  } else if (trigger === '/') {
+  if (trigger === '/') {
     entityType = 'command';
     source = defaultCommands;
+  } else {
+    const entityTypeFromTrigger = getEntityTypeFromTrigger(trigger || '');
+
+    if (entityTypeFromTrigger) {
+      entityType = entityTypeFromTrigger;
+
+      const files = fileIndexStore.filterFiles(query, entityTypeFromTrigger);
+
+      source = files.map(file => ({
+        id: file.path,
+        type: entityTypeFromTrigger,
+        label: file.name,
+        icon: getIconForFileType(file.file_type),
+      }));
+    }
   }
 
   return source
-  .filter(item => item.label.toLowerCase().includes(query))
+  .filter(item => item.label.toLowerCase().includes(query.toLowerCase()))
+  .slice(0, 10)
   .map(item => ({
     ...item,
     action: () => {
       if (!editor.value) return;
 
       if (item.type === 'command') {
-        console.log(`Executing command: ${item.label}`);
+        // TODO: Implementar comandos reales aquí
       } else {
         const payload: InsertEntityLinkPayload = {
           href: item.id,
-          entityType: item.type,
+          entityType: item.type as InsertEntityLinkPayload['entityType'],
           label: item.label,
         };
         editor.value.action(callCommand(insertEntityLinkCommand.key, payload));
@@ -104,6 +130,25 @@ const commandItems = computed<CommandMenuItem[]>(() => {
     },
   }));
 });
+
+const isLoadingFiles = computed(() => fileIndexStore.isIndexing);
+
+watch(() => slashState.value.query, async (newQuery) => {
+  if (!slashState.value.open || !slashState.value.trigger) return;
+
+  const entityType = getEntityTypeFromTrigger(slashState.value.trigger);
+  if (!entityType) return;
+
+  if (newQuery && newQuery.length >= 2) {
+    try {
+      await fileIndexStore.searchFilesByType(entityType, newQuery);
+    } catch (error) {
+      await logError(`Error searching files: ${error}`);
+    }
+  }
+});
+
+
 
 onMounted(async () => {
   if (!editorContainer.value || !slashContainerRef.value) return;
@@ -121,7 +166,7 @@ onMounted(async () => {
         slashState.value.open = false;
         return false;
       }
-      const match = /(?:^|\s)([\/\@\#])(\w*)$/.exec(textBefore);
+      const match = /(?:^|\s)([\/@#!])(\w*)$/.exec(textBefore);
       if (match) {
         const [, trigger, query] = match;
         slashState.value = { open: true, trigger, query };
@@ -229,6 +274,7 @@ function stripMarkdownSyntax(markdown: string): string {
       <CommandMenu
         v-if="slashState.open"
         :items="commandItems"
+        :loading="isLoadingFiles"
       />
     </div>
   </div>

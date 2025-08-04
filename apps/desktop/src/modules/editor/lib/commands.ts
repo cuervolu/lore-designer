@@ -9,7 +9,7 @@ export type InsertEntityLinkPayload = {
 };
 
 // This regex must match the one used in the SlashProvider to correctly identify and replace the trigger text.
-const TRIGGER_REGEX = /(?:^|\s)([\/\@\#])(\w*)$/;
+const TRIGGER_REGEX = /(?:^|\s)([\/@#!])(\w*)$/;
 
 export const insertEntityLinkCommand = $command(
   'InsertEntityLink',

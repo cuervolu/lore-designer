@@ -1,6 +1,7 @@
 use super::{
-    Editor, EditorError, EditorManager, EditorState, FileContent, FileSystemWatcher, FileTreeItem,
-    FileType, IndexManager, IndexingProgress, SaveFileRequest, TabInfo, WorkspaceInfo,
+    Editor, EditorError, EditorManager, EditorState, FileContent, FileSearchResult,
+    FileSystemWatcher, FileTreeItem, FileType, FrontmatterResult, IndexManager, IndexingProgress,
+    SaveFileRequest, TabInfo, WorkspaceInfo,
 };
 use crate::templates::get_template_content;
 use std::path::{Path, PathBuf};
@@ -132,4 +133,28 @@ pub async fn create_file_from_template(
         .map_err(|_| EditorError::InvalidPath(file_path.display().to_string()))?;
 
     Ok(rel_path.display().to_string())
+}
+
+#[tauri::command]
+pub async fn search_files_by_type(
+    workspace_path: String,
+    file_type: String,
+    query: Option<String>,
+) -> Result<Vec<FileSearchResult>, EditorError> {
+    IndexManager::search_files_by_type(Path::new(&workspace_path), &file_type, query.as_deref())
+}
+
+#[tauri::command]
+pub async fn get_file_frontmatter(
+    workspace_path: String,
+    file_path: String,
+) -> Result<FrontmatterResult, EditorError> {
+    EditorManager::get_file_frontmatter(Path::new(&workspace_path), Path::new(&file_path))
+}
+
+#[tauri::command]
+pub async fn get_all_workspace_files(
+    workspace_path: String,
+) -> Result<Vec<FileSearchResult>, EditorError> {
+    IndexManager::get_all_workspace_files(Path::new(&workspace_path))
 }

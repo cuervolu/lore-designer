@@ -5,6 +5,7 @@ import {defineStore} from 'pinia'
 import {ref, computed} from 'vue'
 import {toast} from 'vue-sonner'
 import {usePreferencesStore} from '@common/stores/preferences.store'
+import {useFileIndexStore} from './file-index.store';
 import type {
   WorkspaceInfo,
   FileTree,
@@ -64,6 +65,9 @@ export const useEditorStore = defineStore('editor', () => {
       await preferencesStore.updateLastProject(workspacePath);
       await setupFileSystemListener(); // Start watching for FS changes
 
+      const fileIndexStore = useFileIndexStore();
+      await fileIndexStore.refreshIndex();
+
       return workspace;
     } catch (err) {
       const errorMessage = `Failed to open workspace at ${workspacePath}: ${err}`;
@@ -107,6 +111,9 @@ export const useEditorStore = defineStore('editor', () => {
           if (currentWorkspace.value && eventData.workspace_path === currentWorkspace.value.path) {
             await debug(`Refreshing file tree for ${currentWorkspace.value.path} due to filesystem change.`);
             await loadFileTree(); // Refresh the file tree in the UI
+
+            const fileIndexStore = useFileIndexStore();
+            await fileIndexStore.handleFileSystemChange();
           } else {
             await warn(`Ignoring file system event for different workspace: ${eventData.workspace_path}`);
           }
@@ -142,6 +149,9 @@ export const useEditorStore = defineStore('editor', () => {
     } catch (err) {
       await logError(`Failed to stop backend file watcher for ${path}: ${err}`);
     }
+
+    const fileIndexStore = useFileIndexStore();
+    fileIndexStore.clearIndex();
 
     currentWorkspace.value = null;
     fileTree.value = [];

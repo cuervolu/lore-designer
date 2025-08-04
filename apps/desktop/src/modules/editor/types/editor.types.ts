@@ -86,3 +86,20 @@ export enum FileType {
   Dialogue = 'Dialogue',
   Unknown = 'Unknown',
 }
+
+export interface FileSearchResult {
+  path: string;           // Relative path from workspace root
+  name: string;           // Display name (from frontmatter or filename)
+  file_type: FileType;    // Character, Location, Lore, etc.
+  extension: string | null; // .md, .json, etc.
+  last_modified: number;  // Timestamp for sorting
+}
+
+export interface FrontmatterResult {
+  path: string;
+  frontmatter: string | null; // YAML string or null
+  has_frontmatter: boolean;
+}
+
+export type EntityType = 'character' | 'location' | 'lore' | 'markdown' | 'canvas';
+export type EntityLinkType = 'character' | 'location' | 'lore';
