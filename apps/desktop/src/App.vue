@@ -2,6 +2,7 @@
 import { onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { Toaster } from '@/components/ui/sonner'
+import 'vue-sonner/style.css'
 import { usePreferencesStore } from '@common/stores/preferences.store'
 import { useAppTitle } from '@common/composables/useAppTitle.ts'
 import AppTitlebar from '@common/components/AppTitlebar.vue'
@@ -38,29 +39,25 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="fixed top-0 left-0 right-0 z-50">
-    <AppTitlebar :title="title">
-      <template #logo>
-        <img
-          :src="logo"
-          alt="Logo"
-          class="h-5 w-5 object-contain"
-        />
-      </template>
-    </AppTitlebar>
-  </div>
+  <AppTitlebar :title="title" class="fixed top-0 left-0 right-0 z-50">
+    <template #logo>
+      <img
+        :src="logo"
+        alt="Logo"
+        class="h-5 w-5 object-contain"
+      />
+    </template>
+  </AppTitlebar>
 
-  <div class="h-screen w-screen pt-9">
-    <Toaster />
-    <div class="h-full bg-background text-foreground">
-      <router-view />
-    </div>
-  </div>
+  <main class="h-screen w-screen pt-9 bg-background text-foreground">
+  <Toaster position="bottom-right" rich-colors />
+    <router-view />
+  </main>
+
 </template>
 
 <style>
 html, body {
-  overflow: hidden;
   margin: 0;
   padding: 0;
   height: 100%;
