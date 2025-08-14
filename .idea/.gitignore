@@ -16,3 +16,6 @@ git_toolbox_prj.xml
 /codeStyles/codeStyleConfig.xml
 /developer-tools.xml
 /palantir-java-format.xml
+/.copilot-plugin
+/DigmaJCEFProjectPersistence.xml
+/jsLibraryMappings.xml
