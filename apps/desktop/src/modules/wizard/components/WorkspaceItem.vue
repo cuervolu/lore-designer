@@ -2,7 +2,7 @@
 import {invoke, convertFileSrc} from "@tauri-apps/api/core";
 import {writeText} from '@tauri-apps/plugin-clipboard-manager';
 import {revealItemInDir} from '@tauri-apps/plugin-opener';
-import {error as logError} from "@tauri-apps/plugin-log";
+import {error as logError, debug} from "@tauri-apps/plugin-log";
 import {onMounted, ref} from "vue";
 import {useRouter} from 'vue-router';
 import {Folder, EllipsisVertical, ExternalLink, Copy, Trash, Edit} from 'lucide-vue-next';
@@ -65,11 +65,11 @@ const handleOpen = async () => {
 
 const handleShowInExplorer = async () => {
   try {
-    console.log("Opening path:", props.workspace.path);
-    await revealItemInDir(props.workspace.path);
+   await debug(`Opening path: ${props.workspace.path}`);
+    await revealItemInDir("props.workspace.path");
   } catch (err) {
     await logError(`Failed to open path: ${err}`);
-    toast.error('Failed to open location');
+    toast.error(`Failed to open location: ${err}`);
   }
 };
 
