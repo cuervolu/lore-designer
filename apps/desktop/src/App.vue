@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import {useI18n} from "vue-i18n";
 import { Toaster } from '@/components/ui/sonner'
 import 'vue-sonner/style.css'
 import { usePreferencesStore } from '@common/stores/preferences.store'
@@ -10,21 +11,22 @@ import logo from '@/assets/app_icon.webp';
 
 const preferencesStore = usePreferencesStore()
 const route = useRoute()
+const { t } = useI18n()
 const { title, setWizardPageTitle, resetTitle } = useAppTitle()
 
-// Define mapping for route names to page titles
-const routeTitles: Record<string, string> = {
-  'workspaces': 'Welcome to Lore Designer',
-  'new-workspace': 'Create New Workspace',
-  'plugins': 'Plugins',
-  'settings': 'Settings',
-  'learn': 'Learn'
+const routeTitleKeys: Record<string, string> = {
+  'workspaces': 'welcome.routeTitles.welcome',
+  'new-workspace': 'welcome.routeTitles.newWorkspace',
+  'plugins': 'welcome.routeTitles.plugins',
+  'settings': 'welcome.routeTitles.settings',
+  'learn': 'welcome.routeTitles.learn'
 };
 
 watch(() => route.name, (newRouteName) => {
-  if (newRouteName && typeof newRouteName === 'string' && newRouteName in routeTitles) {
+  if (newRouteName && typeof newRouteName === 'string' && newRouteName in routeTitleKeys) {
     // Use the wizard-specific function which doesn't update the native window title
-    setWizardPageTitle(routeTitles[newRouteName]);
+    const titleKey = routeTitleKeys[newRouteName];
+    setWizardPageTitle(t(titleKey));
   } else {
     // Not in a recognized wizard route - reset the title
     // but don't update the native window title if we're in the editor

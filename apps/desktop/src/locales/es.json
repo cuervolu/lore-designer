@@ -1,0 +1,71 @@
+{
+  "app": {
+    "title": "Lore Designer"
+  },
+  "menu": {
+    "file": "Archivo",
+    "newFile": "Nuevo Archivo",
+    "openFile": "Abrir Archivo",
+    "save": "Guardar",
+    "saveAs": "Guardar Como",
+    "closeFile": "Cerrar Archivo",
+    "exitToWorkspaces": "Salir a Workspaces",
+    "edit": "Editar",
+    "undo": "Deshacer",
+    "redo": "Rehacer",
+    "cut": "Cortar",
+    "copy": "Copiar",
+    "paste": "Pegar",
+    "findSubMenu": "Buscar",
+    "find": "Buscar",
+    "replace": "Reemplazar",
+    "findInFiles": "Buscar en Archivos",
+    "workspace": "Workspace",
+    "workspacesHome": "Inicio de Workspaces",
+    "newWorkspace": "Nuevo Workspace",
+    "refreshFileTree": "Refrescar Árbol de Archivos",
+    "workspaceSettings": "Configuración del Workspace",
+    "view": "Ver",
+    "showConsole": "Mostrar Consola",
+    "showInspector": "Mostrar Inspector",
+    "zoomIn": "Aumentar Zoom",
+    "zoomOut": "Reducir Zoom",
+    "resetZoom": "Restablecer Zoom",
+    "help": "Ayuda",
+    "documentation": "Documentación",
+    "keyboardShortcuts": "Atajos de Teclado",
+    "checkUpdates": "Buscar Actualizaciones",
+    "about": "Acerca de Lore Designer"
+  },
+  "welcome": {
+    "routeTitles": {
+      "welcome": "Bienvenido a Lore Designer",
+      "newWorkspace": "Crear Nuevo Workspace",
+      "plugins": "Plugins",
+      "settings": "Configuración",
+      "learn": "Aprender"
+    },
+    "newWorkspace": "Nuevo Workspace",
+    "openWorkspace": "Abrir Workspace"
+  },
+  "errors": {
+    "workspace": {
+      "manifestNotFound": "No se pudo encontrar el manifiesto del workspace en {path}",
+      "ioError": "Error de E/S: {message}"
+    }
+  },
+  "editor": {
+    "messages": {
+      "selectNewFileLocation": "Selecciona la ubicación para el nuevo archivo",
+      "failedToSelectDir": "No se pudo seleccionar el directorio",
+      "fileCreatedSuccess": "Archivo {extension} creado con éxito",
+      "failedToCreateFile": "No se pudo crear el archivo",
+      "openFileTitle": "Abrir Archivo",
+      "failedToOpenFile": "No se pudo abrir el archivo",
+      "noActiveFileToSave": "No hay ningún archivo activo para guardar",
+      "saveTriggered": "Acción de guardar disparada",
+      "saveWillBeImplemented": "La funcionalidad de guardado se implementará en el componente del editor",
+      "fileTreeRefreshed": "Árbol de archivos actualizado"
+    }
+  }
+}
