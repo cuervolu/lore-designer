@@ -14,7 +14,7 @@ import App from './App.vue'
 import router from './router'
 import { usePreferencesStore } from '@common/stores/preferences.store'
 
-const i18n = createI18n({
+export const i18n = createI18n({
   legacy: false,
   locale: 'en',
   fallbackLocale: 'es',

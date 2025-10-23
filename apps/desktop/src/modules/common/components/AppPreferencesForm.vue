@@ -18,7 +18,6 @@ const themeOptions = [
 const languageOptions = [
   { value: 'en', label: 'English' },
   { value: 'es', label: 'Español' },
-  // Add more languages as needed
 ];
 
 const fontSizes = ref([preferencesStore.font_size]);

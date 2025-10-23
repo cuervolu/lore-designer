@@ -2,6 +2,8 @@
 import {error as logError} from '@tauri-apps/plugin-log'
 import { defineStore } from 'pinia'
 import { useColorMode } from '@vueuse/core'
+import {i18n} from "@/main.ts";
+import type {Locale} from "vue-i18n";
 
 export interface AppPreferences {
   // Appearance
@@ -46,6 +48,11 @@ export const usePreferencesStore = defineStore('preferences', {
         const preferences = await invoke<AppPreferences>('get_preferences')
         this.$patch(preferences)
         this.applyTheme(preferences.theme)
+
+        if (preferences.language) {
+          i18n.global.locale.value = preferences.language
+        }
+
         return preferences
       } catch (error) {
         await logError(`Failed to load preferences: ${error}`)
@@ -77,6 +84,7 @@ export const usePreferencesStore = defineStore('preferences', {
       try {
         await invoke('set_language', { language })
         this.language = language
+        i18n.global.locale.value = language
       } catch (error) {
         await logError(`Failed to set language: ${error}`)
         throw error
