@@ -67,5 +67,76 @@
       "saveWillBeImplemented": "Save functionality will be implemented in the editor component",
       "fileTreeRefreshed": "File tree refreshed"
     }
+  },
+  "common": {
+    "back": "Back",
+    "browse": "Browse",
+    "cancel": "Cancel"
+  },
+  "wizard": {
+    "new": {
+      "description": "Set up a new workspace for your project",
+      "detailsTitle": "Workspace Details",
+      "nameLabel": "Workspace Name",
+      "namePlaceholder": "The Gray Garden",
+      "nameDescription": "The display name for your workspace. Spaces and special characters will be converted to underscores for the folder name.",
+      "locationLabel": "Location",
+      "locationPlaceholder": "Select a folder",
+      "openAfterCreationLabel": "Open in editor after creation",
+      "creating": "Creating...",
+      "createButton": "Create Workspace",
+      "browseTitle": "Select Workspace Directory",
+      "browsing": "Browsing...",
+      "errors": {
+        "selectFailed": "Failed to select directory: {err}",
+        "missingFields": "Please provide both a name and location",
+        "createFailed": "Failed to create workspace: {err}"
+      }
+    },
+    "workspaces": {
+      "import": "Import",
+      "open": "Open",
+      "searchPlaceholder": "Search workspaces",
+      "loading": "Loading workspaces...",
+      "openTitle": "Open Workspace",
+      "empty": {
+        "message": "No workspaces found",
+        "createButton": "Create Your First Workspace"
+      },
+      "errors": {
+        "loadFailed": "Failed to load recent workspaces",
+        "openFailed": "Failed to open workspace"
+      }
+    },
+    "sidebar": {
+      "workspaces": "Workspaces",
+      "logoAlt": "Lore Designer Logo"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "appearance": {
+      "title": "Appearance",
+      "theme": "Theme",
+      "selectTheme": "Select theme",
+      "language": "Language",
+      "selectLanguage": "Select language",
+      "fontSize": "Font Size: {size}px",
+      "themeOptions": {
+        "system": "System Default",
+        "light": "Light",
+        "dark": "Dark"
+      },
+      "languageOptions": {
+        "en": "English",
+        "es": "Español"
+      }
+    },
+    "behavior": {
+      "title": "Application Behavior",
+      "autoSave": "Auto Save",
+      "autoSaveDescription": "Automatically save changes",
+      "saveInterval": "Save Interval: {seconds}s"
+    }
   }
 }
