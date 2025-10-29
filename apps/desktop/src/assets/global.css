@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@import '../../../../node_modules/dockview-vue/dist/styles/dockview.css';
+@import 'dockview-vue/dist/styles/dockview.css';
 
 @plugin "@tailwindcss/typography";
 @custom-variant dark (&:is(.dark *));
