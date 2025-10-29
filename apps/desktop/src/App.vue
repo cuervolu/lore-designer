@@ -11,7 +11,7 @@ import logo from '@/assets/app_icon.webp';
 
 const preferencesStore = usePreferencesStore()
 const route = useRoute()
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const { title, setWizardPageTitle, resetTitle } = useAppTitle()
 
 const routeTitleKeys: Record<string, string> = {
@@ -22,18 +22,30 @@ const routeTitleKeys: Record<string, string> = {
   'learn': 'welcome.routeTitles.learn'
 };
 
-watch(() => route.name, (newRouteName) => {
-  if (newRouteName && typeof newRouteName === 'string' && newRouteName in routeTitleKeys) {
+function updateTitleForRoute(routeName: string | symbol | null | undefined) {
+  if (routeName && typeof routeName === 'string' && routeName in routeTitleKeys) {
     // Use the wizard-specific function which doesn't update the native window title
-    const titleKey = routeTitleKeys[newRouteName];
-    setWizardPageTitle(t(titleKey));
-  } else {
+    const titleKey = routeTitleKeys[routeName] as string
+    setWizardPageTitle(t(titleKey))
+  }
+  else {
     // Not in a recognized wizard route - reset the title
     // but don't update the native window title if we're in the editor
-    const inEditor = newRouteName === 'editor';
-    resetTitle(!inEditor);
+    const inEditor = routeName === 'editor'
+    resetTitle(!inEditor)
   }
-}, { immediate: true });
+}
+
+
+
+watch(() => route.name, (newRouteName) => {
+  updateTitleForRoute(newRouteName)
+}, { immediate: true })
+
+
+watch(locale, () => {
+  updateTitleForRoute(route.name)
+})
 
 onMounted(async () => {
   await preferencesStore.loadPreferences()
