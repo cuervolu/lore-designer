@@ -4,6 +4,7 @@ import {ref, onMounted} from 'vue'; // Removed computed
 import {cn} from '@/lib/utils';
 import {Minus, X, Square} from 'lucide-vue-next';
 import WindowRestoreIcon from '@common/icons/WindowRestoreIcon.vue';
+import { useI18n } from 'vue-i18n'
 
 interface Props {
   /**
@@ -27,6 +28,7 @@ const props = withDefaults(defineProps<Props>(), {
 // Window state
 const isMaximized = ref(false);
 const appWindow = ref(); // Keep window ref
+const { t } = useI18n();
 
 // Initialize window reference and listeners
 onMounted(async () => {
@@ -91,7 +93,7 @@ const closeWindow = async () => {
       <button
         class="inline-flex items-center justify-center h-8 w-8 rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
         @click="minimizeWindow"
-        title="Minimize"
+        :title="t('app.minimize')"
       >
         <Minus class="h-4 w-4"/>
       </button>
@@ -99,7 +101,7 @@ const closeWindow = async () => {
       <button
         class="inline-flex items-center justify-center h-8 w-8 rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
         @click="toggleMaximize"
-        :title="isMaximized ? 'Restore' : 'Maximize'"
+        :title="isMaximized ? t('app.restore') : t('app.maximize')"
       >
         <Square v-if="!isMaximized" class="h-4 w-4"/>
         <WindowRestoreIcon v-else class="h-4 w-4"/>
@@ -108,7 +110,7 @@ const closeWindow = async () => {
       <button
         class="inline-flex items-center justify-center h-8 w-8 rounded-md text-muted-foreground hover:bg-destructive hover:text-destructive-foreground transition-colors"
         @click="closeWindow"
-        title="Close"
+        :title="t('app.close')"
       >
         <X class="h-4 w-4"/>
       </button>

@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 
 const preferencesStore = usePreferencesStore();
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 const themeOptions = computed(() => [
   { value: 'auto', label: t('settings.appearance.themeOptions.system') },
@@ -20,15 +20,25 @@ const languageOptions = computed(() => [
   { value: 'en', label: t('settings.appearance.languageOptions.en') },
   { value: 'es', label: t('settings.appearance.languageOptions.es') },
 ]);
+
+
+const selectedLanguage = computed({
+  get() {
+    return preferencesStore.language;
+  },
+  set(value: string) {
+    preferencesStore.setLanguage(value);
+  }
+});
+
+
+
+
 const fontSizes = ref([preferencesStore.font_size]);
 const autoSaveIntervals = ref([preferencesStore.auto_save_interval_seconds]);
 
 const handleThemeChange = (value: string) => {
   preferencesStore.setTheme(value as 'dark' | 'light' | 'auto');
-};
-
-const handleLanguageChange = (value: string) => {
-  preferencesStore.setLanguage(value);
 };
 
 const handleFontSizeChange = (event: Event) => {
@@ -76,26 +86,27 @@ const handleIntervalChange = (event: Event) => {
         </div>
 
         <div class="flex items-center justify-between">
-          <Label for="language">{{ $t('settings.appearance.language') }}</Label>
-          <div class="w-[180px]">
-            <Select
-              :model-value="preferencesStore.language"
-              @update:model-value="handleLanguageChange"
-            >
-              <SelectTrigger id="language">
-                <SelectValue :placeholder="$t('settings.appearance.selectLanguage')" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem
-                  v-for="option in languageOptions"
-                  :key="option.value"
-                  :value="option.value"
-                >
-                  {{ option.label }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
+          <div>
+            <Label for="language-select" class="font-medium">{{ $t('settings.appearance.language') }}</Label>
+            <p class="text-sm text-muted-foreground">{{ $t('settings.appearance.languageDescription') }}</p>
           </div>
+          <Select
+            id="language-select"
+            v-model="selectedLanguage"
+          >
+            <SelectTrigger class="w-[180px]">
+              <SelectValue placeholder="Select language" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem
+                v-for="option in languageOptions"
+                :key="option.value"
+                :value="option.value"
+              >
+                {{ option.label }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div class="flex items-center justify-between">

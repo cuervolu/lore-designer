@@ -45,7 +45,7 @@ onMounted(async () => {
     <template #logo>
       <img
         :src="logo"
-        alt="Logo"
+        :alt="t('wizard.sidebar.logoAlt')"
         class="h-5 w-5 object-contain"
       />
     </template>

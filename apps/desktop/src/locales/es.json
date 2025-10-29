@@ -1,6 +1,10 @@
 {
   "app": {
-    "title": "Lore Designer"
+    "title": "Lore Designer",
+    "maximize": "Maximizar Ventana",
+    "restore": "Restaurar Ventana",
+    "minimize": "Minimizar Ventana",
+    "close": "Cerrar Ventana"
   },
   "menu": {
     "file": "Archivo",
@@ -119,7 +123,6 @@
         "title": "Apariencia",
         "theme": "Tema",
         "selectTheme": "Selecciona un tema",
-        "language": "Idioma",
         "selectLanguage": "Selecciona un idioma",
         "fontSize": "Tamaño de Fuente: {size}px",
         "themeOptions": {
@@ -127,8 +130,10 @@
           "light": "Claro",
           "dark": "Oscuro"
         },
+        "language": "Idioma",
+        "languageDescription": "Selecciona el idioma de la aplicación.",
         "languageOptions": {
-          "en": "English",
+          "en": "Inglés",
           "es": "Español"
         }
       },
