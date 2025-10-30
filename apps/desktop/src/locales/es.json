@@ -39,7 +39,8 @@
     "documentation": "Documentación",
     "keyboardShortcuts": "Atajos de Teclado",
     "checkUpdates": "Buscar Actualizaciones",
-    "about": "Acerca de Lore Designer"
+    "about": "Acerca de Lore Designer",
+    "exit": "Salir"
   },
   "welcome": {
     "routeTitles": {
