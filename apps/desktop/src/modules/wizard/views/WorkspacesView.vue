@@ -5,6 +5,7 @@ import {error} from '@tauri-apps/plugin-log'
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { Search } from 'lucide-vue-next'
+import { useI18n } from 'vue-i18n'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import WorkspaceItem from '@wizard/components/WorkspaceItem.vue'
@@ -12,6 +13,7 @@ import { useRecentWorkspacesStore } from '@wizard/stores/recent-workspaces.store
 import { toast } from 'vue-sonner'
 
 const router = useRouter()
+const { t } = useI18n()
 const recentWorkspacesStore = useRecentWorkspacesStore()
 
 const searchQuery = ref('')
@@ -22,7 +24,7 @@ onMounted(async () => {
     isLoading.value = true
     await recentWorkspacesStore.loadRecentWorkspaces()
   } catch (err) {
-    toast.error('Failed to load recent workspaces')
+    toast.error(t('wizard.workspaces.errors.loadFailed'))
   } finally {
     isLoading.value = false
   }
@@ -42,7 +44,7 @@ const handleOpenWorkspace = async () => {
   try {
     const selectedPath = await open({
       directory: true,
-      title: 'Select Workspace Folder'
+      title: t('wizard.workspaces.openTitle')
     });
 
     if (selectedPath) {
@@ -57,9 +59,7 @@ const handleOpenWorkspace = async () => {
     }
   } catch (err) {
     await error(`Failed to open workspace: ${err}`);
-    toast.error('Failed to open workspace', {
-      description: String(err)
-    });
+    toast.error(t('wizard.workspaces.errors.openFailed'))
   }
 };
 </script>
@@ -67,11 +67,11 @@ const handleOpenWorkspace = async () => {
 <template>
   <div class="container mx-auto p-8">
     <header class="flex justify-between items-center mb-8">
-      <h1 class="text-2xl font-bold">Welcome to Lore Designer</h1>
+      <h1 class="text-2xl font-bold">{{ $t('welcome.routeTitles.welcome') }}</h1>
       <div class="flex gap-2">
-        <Button variant="outline"> Import </Button>
-        <Button variant="outline" @click="handleOpenWorkspace"> Open </Button>
-        <Button @click="router.push({ name: 'new-workspace' })"> New Workspace </Button>
+        <Button variant="outline"> {{ $t('wizard.workspaces.import') }} </Button>
+        <Button variant="outline" @click="handleOpenWorkspace"> {{ $t('wizard.workspaces.open') }} </Button>
+        <Button @click="router.push({ name: 'new-workspace' })"> {{ $t('welcome.newWorkspace') }} </Button>
       </div>
     </header>
 
@@ -79,7 +79,7 @@ const handleOpenWorkspace = async () => {
       <Input
         v-model="searchQuery"
         type="text"
-        placeholder="Search workspaces"
+        :placeholder="$t('wizard.workspaces.searchPlaceholder')"
         class="pl-10 max-w-md"
       />
       <span class="absolute start-0 inset-y-0 flex items-center justify-center px-2">
@@ -88,12 +88,12 @@ const handleOpenWorkspace = async () => {
     </div>
 
     <div v-if="isLoading" class="py-4">
-      <p class="text-muted-foreground text-center">Loading workspaces...</p>
+      <p class="text-muted-foreground text-center">{{ $t('wizard.workspaces.loading') }}</p>
     </div>
 
     <div v-else-if="filteredWorkspaces.length === 0" class="py-8 text-center">
-      <p class="text-muted-foreground mb-4">No workspaces found</p>
-      <Button @click="router.push({ name: 'new-workspace' })">Create Your First Workspace</Button>
+      <p class="text-muted-foreground mb-4">{{ $t('wizard.workspaces.empty.message') }}</p>
+      <Button @click="router.push({ name: 'new-workspace' })">{{ $t('wizard.workspaces.empty.createButton') }}</Button>
     </div>
 
     <div v-else class="grid gap-4 mt-4">
@@ -101,7 +101,6 @@ const handleOpenWorkspace = async () => {
         v-for="workspace in filteredWorkspaces"
         :key="workspace.path"
         :workspace="workspace"
-        @remove="recentWorkspacesStore.removeRecentWorkspace(workspace.path)"
       />
     </div>
   </div>

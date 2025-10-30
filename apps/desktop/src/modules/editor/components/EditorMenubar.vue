@@ -3,6 +3,7 @@ import {open} from '@tauri-apps/plugin-dialog';
 import {toast} from 'vue-sonner';
 import {ref} from 'vue';
 import {useRouter} from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import {
   Menubar,
   MenubarCheckboxItem,
@@ -25,23 +26,24 @@ const emit = defineEmits(['toggleConsole']);
 const router = useRouter();
 const editorStore = useEditorStore();
 const { cmdKey, shiftKey, plusSeparator } = usePlatform();
+const { t } = useI18n();
 
-// State for create file modal
+
 const isCreateModalOpen = ref(false);
 const selectedParentPath = ref('');
 const isAboutModalOpen = ref(false);
 
-// Toggle console panel
+
 const handleToggleConsole = () => {
   emit('toggleConsole');
 };
 
-// Toggle inspector panel
+
 const handleToggleInspector = () => {
   editorStore.toggleInspector();
 };
 
-// Navigate back to workspaces
+
 const goToWorkspaces = () => {
   router.push({name: 'workspaces'});
 };
@@ -50,7 +52,6 @@ const openAboutModal = () => {
   isAboutModalOpen.value = true;
 };
 
-// Create a new file
 const handleNewFile = async () => {
   if (!editorStore.currentWorkspace) return;
 
@@ -58,7 +59,7 @@ const handleNewFile = async () => {
     // Open folder selection dialog
     const folderPath = await open({
       directory: true,
-      title: 'Select location for new file',
+      title: t('editor.messages.selectNewFileLocation'),
       defaultPath: editorStore.currentWorkspace.path,
     });
 
@@ -67,26 +68,23 @@ const handleNewFile = async () => {
     isCreateModalOpen.value = true;
   } catch (err) {
     console.error('Failed to select directory:', err);
-    toast.error('Failed to select directory');
+    toast.error(t('editor.messages.failedToSelectDir'));
   }
 };
 
-// Handle create file from modal
 const handleCreateFile = async (fileName: string, extension: string, initialContent: string, parentPath: string) => {
   try {
     const filePath = await editorStore.createNewFile(parentPath, fileName, initialContent);
     if (filePath) {
-      toast.success(`Created ${extension} file successfully`);
-      // Auto-open the file
+      toast.success(t('editor.messages.fileCreatedSuccess', { extension }));
       await editorStore.openFile(filePath);
     }
   } catch (err) {
     console.error('Failed to create file:', err);
-    toast.error('Failed to create file');
+    toast.error(t('editor.messages.failedToCreateFile'));
   }
 };
 
-// Open a file
 const handleOpenFile = async () => {
   if (!editorStore.currentWorkspace) return;
 
@@ -94,7 +92,7 @@ const handleOpenFile = async () => {
     const filePath = await open({
       directory: false,
       multiple: false,
-      title: 'Open File',
+      title: t('editor.messages.openFileTitle'),
       defaultPath: editorStore.currentWorkspace.path,
     });
 
@@ -107,103 +105,103 @@ const handleOpenFile = async () => {
     await editorStore.openFile(relativePath);
   } catch (err) {
     console.error('Failed to open file:', err);
-    toast.error('Failed to open file');
+    toast.error(t('editor.messages.failedToOpenFile'));
   }
 };
 
 // Save active file
 const handleSave = async () => {
   if (!editorStore.activeTab) {
-    toast.error('No active file to save');
+    toast.error(t('editor.messages.noActiveFileToSave'));
     return;
   }
 
   // The actual save is handled in the EditorContent component
   // This just triggers a save action that will be implemented later
-  toast.info('Save action triggered', {
-    description: 'Save functionality will be implemented in the editor component'
+  toast.info(t('editor.messages.saveTriggered'), {
+    description: t('editor.messages.saveWillBeImplemented')
   });
 };
 
 // Reload file tree
 const handleReloadFileTree = async () => {
   await editorStore.loadFileTree();
-  toast.success('File tree refreshed');
+  toast.success(t('editor.messages.fileTreeRefreshed'));
 };
 </script>
 
 <template>
   <Menubar class="rounded-none border-t-0 border-x-0 bg-[--menubar-background]">
     <MenubarMenu>
-      <MenubarTrigger>File</MenubarTrigger>
+      <MenubarTrigger>{{ t('menu.file') }}</MenubarTrigger>
       <MenubarContent>
         <MenubarItem @click="handleNewFile">
-          New File
+          {{ t('menu.newFile') }}
           <MenubarShortcut>{{ cmdKey }}{{ plusSeparator }}N</MenubarShortcut>
         </MenubarItem>
         <MenubarItem @click="handleOpenFile">
-          Open File
+          {{ t('menu.openFile') }}
           <MenubarShortcut>{{ cmdKey }}{{ plusSeparator }}O</MenubarShortcut>
         </MenubarItem>
         <MenubarSeparator/>
         <MenubarItem @click="handleSave">
-          Save
+          {{ t('menu.save') }}
           <MenubarShortcut>{{ cmdKey }}{{ plusSeparator }}S</MenubarShortcut>
         </MenubarItem>
         <MenubarItem>
-          Save As
+          {{ t('menu.saveAs') }}
           <MenubarShortcut>{{ shiftKey }}{{ plusSeparator }}{{ cmdKey }}{{ plusSeparator }}S</MenubarShortcut>
         </MenubarItem>
         <MenubarSeparator/>
         <MenubarItem>
-          Close File
+          {{ t('menu.closeFile') }}
           <MenubarShortcut>{{ cmdKey }}{{ plusSeparator }}W</MenubarShortcut>
         </MenubarItem>
         <MenubarSeparator/>
         <MenubarItem @click="goToWorkspaces">
-          Exit to Workspaces
+          {{ t('menu.exitToWorkspaces') }}
         </MenubarItem>
       </MenubarContent>
     </MenubarMenu>
 
     <MenubarMenu>
-      <MenubarTrigger>Edit</MenubarTrigger>
+      <MenubarTrigger>{{ t('menu.edit') }}</MenubarTrigger>
       <MenubarContent>
         <MenubarItem>
-          Undo
+          {{ t('menu.undo') }}
           <MenubarShortcut>{{ cmdKey }}{{ plusSeparator }}Z</MenubarShortcut>
         </MenubarItem>
         <MenubarItem>
-          Redo
+          {{ t('menu.redo') }}
           <MenubarShortcut>{{ shiftKey }}{{ plusSeparator }}{{ cmdKey }}{{ plusSeparator }}Z</MenubarShortcut>
         </MenubarItem>
         <MenubarSeparator/>
         <MenubarItem>
-          Cut
+          {{ t('menu.cut') }}
           <MenubarShortcut>{{ cmdKey }}{{ plusSeparator }}X</MenubarShortcut>
         </MenubarItem>
         <MenubarItem>
-          Copy
+          {{ t('menu.copy') }}
           <MenubarShortcut>{{ cmdKey }}{{ plusSeparator }}C</MenubarShortcut>
         </MenubarItem>
         <MenubarItem>
-          Paste
+          {{ t('menu.paste') }}
           <MenubarShortcut>{{ cmdKey }}{{ plusSeparator }}V</MenubarShortcut>
         </MenubarItem>
         <MenubarSeparator/>
         <MenubarSub>
-          <MenubarSubTrigger>Find</MenubarSubTrigger>
+          <MenubarSubTrigger>{{ t('menu.findSubMenu') }}</MenubarSubTrigger>
           <MenubarSubContent>
             <MenubarItem>
-              Find
+              {{ t('menu.find') }}
               <MenubarShortcut>{{ cmdKey }}{{ plusSeparator }}F</MenubarShortcut>
             </MenubarItem>
             <MenubarItem>
-              Replace
+              {{ t('menu.replace') }}
               <MenubarShortcut>{{ cmdKey }}{{ plusSeparator }}H</MenubarShortcut>
             </MenubarItem>
             <MenubarItem>
-              Find in Files
+              {{ t('menu.findInFiles') }}
               <MenubarShortcut>{{ shiftKey }}{{ plusSeparator }}{{ cmdKey }}{{ plusSeparator }}F</MenubarShortcut>
             </MenubarItem>
           </MenubarSubContent>
@@ -212,81 +210,80 @@ const handleReloadFileTree = async () => {
     </MenubarMenu>
 
     <MenubarMenu>
-      <MenubarTrigger>Workspace</MenubarTrigger>
+      <MenubarTrigger>{{ t('menu.workspace') }}</MenubarTrigger>
       <MenubarContent>
         <MenubarItem @click="goToWorkspaces">
-          Workspaces Home
+          {{ t('menu.workspacesHome') }}
         </MenubarItem>
         <MenubarItem>
-          New Workspace
+          {{ t('menu.newWorkspace') }}
         </MenubarItem>
         <MenubarSeparator/>
         <MenubarItem @click="handleReloadFileTree">
-          Refresh File Tree
+          {{ t('menu.refreshFileTree') }}
         </MenubarItem>
         <MenubarSeparator/>
         <MenubarItem>
-          Workspace Settings
+          {{ t('menu.workspaceSettings') }}
         </MenubarItem>
       </MenubarContent>
     </MenubarMenu>
 
     <MenubarMenu>
-      <MenubarTrigger>View</MenubarTrigger>
+      <MenubarTrigger>{{ t('menu.view') }}</MenubarTrigger>
       <MenubarContent>
         <MenubarCheckboxItem
           :checked="editorStore.showConsole"
           @click="handleToggleConsole"
         >
-          Show Console
+          {{ t('menu.showConsole') }}
           <MenubarShortcut>{{ cmdKey }}{{ plusSeparator }}J</MenubarShortcut>
         </MenubarCheckboxItem>
         <MenubarCheckboxItem
           :checked="editorStore.showInspector"
           @click="handleToggleInspector"
         >
-          Show Inspector
+          {{ t('menu.showInspector') }}
           <MenubarShortcut>{{ cmdKey }}{{ plusSeparator }}I</MenubarShortcut>
         </MenubarCheckboxItem>
         <MenubarSeparator/>
         <MenubarItem>
-          Zoom In
+          {{ t('menu.zoomIn') }}
           <MenubarShortcut>{{ cmdKey }}{{ plusSeparator }}+</MenubarShortcut>
         </MenubarItem>
         <MenubarItem>
-          Zoom Out
+          {{ t('menu.zoomOut') }}
           <MenubarShortcut>{{ cmdKey }}{{ plusSeparator }}-</MenubarShortcut>
         </MenubarItem>
         <MenubarItem>
-          Reset Zoom
+          {{ t('menu.resetZoom') }}
           <MenubarShortcut>{{ cmdKey }}{{ plusSeparator }}0</MenubarShortcut>
         </MenubarItem>
       </MenubarContent>
     </MenubarMenu>
 
     <MenubarMenu>
-      <MenubarTrigger>Help</MenubarTrigger>
+      <MenubarTrigger>{{ t('menu.help') }}</MenubarTrigger>
       <MenubarContent>
         <MenubarItem>
-          Documentation
+          {{ t('menu.documentation') }}
         </MenubarItem>
         <MenubarItem>
-          Keyboard Shortcuts
+          {{ t('menu.keyboardShortcuts') }}
           <MenubarShortcut>{{ cmdKey }}{{ plusSeparator }}K {{ cmdKey }}{{ plusSeparator }}S</MenubarShortcut>
         </MenubarItem>
         <MenubarSeparator/>
         <MenubarItem>
-          Check for Updates
+          {{ t('menu.checkUpdates') }}
         </MenubarItem>
         <MenubarSeparator/>
         <MenubarItem @click="openAboutModal">
-          About Lore Designer
+          {{ t('menu.about') }}
         </MenubarItem>
       </MenubarContent>
     </MenubarMenu>
   </Menubar>
 
-  <!-- Create File Modal -->
   <CreateFileModal
     v-model:is-open="isCreateModalOpen"
     :parent-path="selectedParentPath"

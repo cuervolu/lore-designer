@@ -6,9 +6,11 @@ import { createPinia } from 'pinia'
 import '@fontsource-variable/inter'
 import '@fontsource-variable/fira-code';
 
+
 import App from './App.vue'
 import router from './router'
 import { usePreferencesStore } from '@common/stores/preferences.store'
+import { i18n } from '@/i18n.ts'
 
 async function initializeApp() {
   const app = createApp(App)
@@ -16,6 +18,7 @@ async function initializeApp() {
 
   app.use(pinia)
   app.use(router)
+  app.use(i18n)
 
   app.mount('#app')
 

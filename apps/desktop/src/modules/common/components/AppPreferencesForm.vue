@@ -1,6 +1,6 @@
 ﻿<script setup lang="ts">
-import { ref } from 'vue';
-
+import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n';
 import { usePreferencesStore } from '@common/stores/preferences.store';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -8,28 +8,37 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 
 const preferencesStore = usePreferencesStore();
+const { t, locale } = useI18n();
 
-const themeOptions = [
-  { value: 'auto', label: 'System Default' },
-  { value: 'light', label: 'Light' },
-  { value: 'dark', label: 'Dark' },
-];
+const themeOptions = computed(() => [
+  { value: 'auto', label: t('settings.appearance.themeOptions.system') },
+  { value: 'light', label: t('settings.appearance.themeOptions.light') },
+  { value: 'dark', label: t('settings.appearance.themeOptions.dark') },
+]);
 
-const languageOptions = [
-  { value: 'en', label: 'English' },
-  { value: 'es', label: 'Español' },
-  // Add more languages as needed
-];
+const languageOptions = computed(() => [
+  { value: 'en', label: t('settings.appearance.languageOptions.en') },
+  { value: 'es', label: t('settings.appearance.languageOptions.es') },
+]);
+
+
+const selectedLanguage = computed({
+  get() {
+    return preferencesStore.language;
+  },
+  set(value: string) {
+    preferencesStore.setLanguage(value);
+  }
+});
+
+
+
 
 const fontSizes = ref([preferencesStore.font_size]);
 const autoSaveIntervals = ref([preferencesStore.auto_save_interval_seconds]);
 
 const handleThemeChange = (value: string) => {
   preferencesStore.setTheme(value as 'dark' | 'light' | 'auto');
-};
-
-const handleLanguageChange = (value: string) => {
-  preferencesStore.setLanguage(value);
 };
 
 const handleFontSizeChange = (event: Event) => {
@@ -50,18 +59,18 @@ const handleIntervalChange = (event: Event) => {
 <template>
   <div class="space-y-6">
     <div class="bg-card text-card-foreground p-6 rounded-md shadow-sm border">
-      <h2 class="text-xl font-medium mb-4">Appearance</h2>
+      <h2 class="text-xl font-medium mb-4">{{ $t('settings.appearance.title') }}</h2>
 
       <div class="space-y-4">
         <div class="flex items-center justify-between">
-          <Label for="theme">Theme</Label>
+          <Label for="theme">{{ $t('settings.appearance.theme') }}</Label>
           <div class="w-[180px]">
             <Select
               :model-value="preferencesStore.theme"
               @update:model-value="handleThemeChange"
             >
               <SelectTrigger id="theme">
-                <SelectValue placeholder="Select theme" />
+                <SelectValue :placeholder="$t('settings.appearance.selectTheme')" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem
@@ -77,30 +86,31 @@ const handleIntervalChange = (event: Event) => {
         </div>
 
         <div class="flex items-center justify-between">
-          <Label for="language">Language</Label>
-          <div class="w-[180px]">
-            <Select
-              :model-value="preferencesStore.language"
-              @update:model-value="handleLanguageChange"
-            >
-              <SelectTrigger id="language">
-                <SelectValue placeholder="Select language" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem
-                  v-for="option in languageOptions"
-                  :key="option.value"
-                  :value="option.value"
-                >
-                  {{ option.label }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
+          <div>
+            <Label for="language-select" class="font-medium">{{ $t('settings.appearance.language') }}</Label>
+            <p class="text-sm text-muted-foreground">{{ $t('settings.appearance.languageDescription') }}</p>
           </div>
+          <Select
+            id="language-select"
+            v-model="selectedLanguage"
+          >
+            <SelectTrigger class="w-[180px]">
+              <SelectValue placeholder="Select language" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem
+                v-for="option in languageOptions"
+                :key="option.value"
+                :value="option.value"
+              >
+                {{ option.label }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div class="flex items-center justify-between">
-          <Label for="font-size">Font Size: {{ preferencesStore.font_size }}px</Label>
+          <Label for="font-size">{{ $t('settings.appearance.fontSize', { size: preferencesStore.font_size }) }}</Label>
           <div class="w-[180px]">
             <Input
               id="font-size"
@@ -117,13 +127,13 @@ const handleIntervalChange = (event: Event) => {
     </div>
 
     <div class="bg-card text-card-foreground p-6 rounded-md shadow-sm border">
-      <h2 class="text-xl font-medium mb-4">Application Behavior</h2>
+      <h2 class="text-xl font-medium mb-4">{{ $t('settings.behavior.title') }}</h2>
 
       <div class="space-y-4">
         <div class="flex items-center justify-between">
           <div>
-            <h3 class="font-medium">Auto Save</h3>
-            <p class="text-sm text-muted-foreground">Automatically save changes</p>
+            <h3 class="font-medium">{{ $t('settings.behavior.autoSave') }}</h3>
+            <p class="text-sm text-muted-foreground">{{ $t('settings.behavior.autoSaveDescription') }}</p>
           </div>
           <Switch
             :model-value="preferencesStore.auto_save"
@@ -133,7 +143,7 @@ const handleIntervalChange = (event: Event) => {
 
         <div v-if="preferencesStore.auto_save" class="flex items-center justify-between">
           <Label for="save-interval">
-            Save Interval: {{ preferencesStore.auto_save_interval_seconds }}s
+            {{ $t('settings.behavior.saveInterval', { seconds: preferencesStore.auto_save_interval_seconds }) }}
           </Label>
           <div class="w-[180px]">
             <Input

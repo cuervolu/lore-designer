@@ -3,6 +3,7 @@ import { getVersion } from '@tauri-apps/api/app'
 import { error } from '@tauri-apps/plugin-log'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import {
   Sidebar,
   SidebarContent,
@@ -14,13 +15,14 @@ import {
 
 const router = useRouter()
 const route = useRoute()
+const { t } = useI18n()
 const logoPath = new URL('@/assets/logo.webp', import.meta.url).href
-const menuItems = [
-  { name: 'Workspaces', route: { name: 'workspaces' } },
-  { name: 'Plugins', route: { name: 'plugins' } },
-  { name: 'Settings', route: { name: 'settings' } },
-  { name: 'Learn', route: { name: 'learn' } },
-]
+const menuItems = computed(() => [
+  { name: t('wizard.sidebar.workspaces'), route: { name: 'workspaces' } },
+  { name: t('welcome.routeTitles.plugins'), route: { name: 'plugins' } },
+  { name: t('welcome.routeTitles.settings'), route: { name: 'settings' } },
+  { name: t('welcome.routeTitles.learn'), route: { name: 'learn' } },
+])
 
 const currentRouteName = computed(() => route.name)
 const appVersion = ref('0.1.0') // Default value until loaded
@@ -40,21 +42,21 @@ const navigateTo = (routeName: string) => {
 
 <template>
   <Sidebar
-  :style="{
+    :style="{
   '--sidebar-top-offset': '36px'
   }"
   >
-  <SidebarHeader class="p-6">
-    <div class="flex items-center space-x-3">
-      <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shadow-sm">
-        <img :src="logoPath" alt="Logo" class="w-7 h-7" />
+    <SidebarHeader class="p-6">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shadow-sm">
+          <img :src="logoPath" :alt="$t('wizard.sidebar.logoAlt')" class="w-7 h-7" />
+        </div>
+        <div>
+          <h1 class="text-lg font-semibold">{{ $t('app.title') }}</h1>
+          <p class="text-xs text-muted-foreground">v{{ appVersion }}</p>
+        </div>
       </div>
-      <div>
-        <h1 class="text-lg font-semibold">Lore Designer</h1>
-        <p class="text-xs text-muted-foreground">v{{ appVersion }}</p>
-      </div>
-    </div>
-  </SidebarHeader>
+    </SidebarHeader>
 
   <SidebarContent class="px-3">
     <SidebarMenu class="space-y-1.5">

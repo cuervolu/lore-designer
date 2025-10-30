@@ -1,0 +1,148 @@
+{
+  "app": {
+    "title": "Lore Designer",
+    "maximize": "Maximize Window",
+    "restore": "Restore Window",
+    "minimize": "Minimize Window",
+    "close": "Close Window"
+  },
+  "menu": {
+    "file": "File",
+    "newFile": "New File",
+    "openFile": "Open File",
+    "save": "Save",
+    "saveAs": "Save As",
+    "closeFile": "Close File",
+    "exitToWorkspaces": "Exit to Workspaces",
+    "edit": "Edit",
+    "undo": "Undo",
+    "redo": "Redo",
+    "cut": "Cut",
+    "copy": "Copy",
+    "paste": "Paste",
+    "findSubMenu": "Find",
+    "find": "Find",
+    "replace": "Replace",
+    "findInFiles": "Find in Files",
+    "workspace": "Workspace",
+    "workspacesHome": "Workspaces Home",
+    "newWorkspace": "New Workspace",
+    "refreshFileTree": "Refresh File Tree",
+    "workspaceSettings": "Workspace Settings",
+    "view": "View",
+    "showConsole": "Show Console",
+    "showInspector": "Show Inspector",
+    "zoomIn": "Zoom In",
+    "zoomOut": "Zoom Out",
+    "resetZoom": "Reset Zoom",
+    "help": "Help",
+    "documentation": "Documentation",
+    "keyboardShortcuts": "Keyboard Shortcuts",
+    "checkUpdates": "Check for Updates",
+    "about": "About Lore Designer",
+    "exit": "Exit"
+  },
+  "welcome": {
+    "routeTitles": {
+      "welcome": "Welcome to Lore Designer",
+      "newWorkspace": "Create New Workspace",
+      "plugins": "Plugins",
+      "settings": "Settings",
+      "learn": "Learn"
+    },
+    "newWorkspace": "New Workspace",
+    "openWorkspace": "Open Workspace"
+  },
+  "errors": {
+    "workspace": {
+      "manifestNotFound": "Could not find workspace manifest at {path}",
+      "ioError": "I/O Error: {message}"
+    }
+  },
+  "editor": {
+    "messages": {
+      "selectNewFileLocation": "Select location for new file",
+      "failedToSelectDir": "Failed to select directory",
+      "fileCreatedSuccess": "Created {extension} file successfully",
+      "failedToCreateFile": "Failed to create file",
+      "openFileTitle": "Open File",
+      "failedToOpenFile": "Failed to open file",
+      "noActiveFileToSave": "No active file to save",
+      "saveTriggered": "Save action triggered",
+      "saveWillBeImplemented": "Save functionality will be implemented in the editor component",
+      "fileTreeRefreshed": "File tree refreshed"
+    }
+  },
+  "common": {
+    "back": "Back",
+    "browse": "Browse",
+    "cancel": "Cancel"
+  },
+  "wizard": {
+    "new": {
+      "description": "Set up a new workspace for your project",
+      "detailsTitle": "Workspace Details",
+      "nameLabel": "Workspace Name",
+      "namePlaceholder": "The Gray Garden",
+      "nameDescription": "The display name for your workspace. Spaces and special characters will be converted to underscores for the folder name.",
+      "locationLabel": "Location",
+      "locationPlaceholder": "Select a folder",
+      "openAfterCreationLabel": "Open in editor after creation",
+      "creating": "Creating...",
+      "createButton": "Create Workspace",
+      "browseTitle": "Select Workspace Directory",
+      "browsing": "Browsing...",
+      "errors": {
+        "selectFailed": "Failed to select directory: {err}",
+        "missingFields": "Please provide both a name and location",
+        "createFailed": "Failed to create workspace: {err}"
+      }
+    },
+    "workspaces": {
+      "import": "Import",
+      "open": "Open",
+      "searchPlaceholder": "Search workspaces",
+      "loading": "Loading workspaces...",
+      "openTitle": "Open Workspace",
+      "empty": {
+        "message": "No workspaces found",
+        "createButton": "Create Your First Workspace"
+      },
+      "errors": {
+        "loadFailed": "Failed to load recent workspaces",
+        "openFailed": "Failed to open workspace"
+      }
+    },
+    "sidebar": {
+      "workspaces": "Workspaces",
+      "logoAlt": "Lore Designer Logo"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "appearance": {
+      "title": "Appearance",
+      "theme": "Theme",
+      "selectTheme": "Select theme",
+      "selectLanguage": "Select language",
+      "fontSize": "Font Size: {size}px",
+      "themeOptions": {
+        "system": "System Default",
+        "light": "Light",
+        "dark": "Dark"
+      },
+      "language": "Language",
+      "languageDescription": "Select the application language.",
+      "languageOptions": {
+        "en": "English",
+        "es": "Español"
+      }
+    },
+    "behavior": {
+      "title": "Application Behavior",
+      "autoSave": "Auto Save",
+      "autoSaveDescription": "Automatically save changes",
+      "saveInterval": "Save Interval: {seconds}s"
+    }
+  }
+}
