@@ -30,6 +30,8 @@ export const useEditorStore = defineStore('editor', () => {
   const isLoading = ref(false)
   const editorError = ref<string | null>(null)
   const fileSystemUnlistener = ref<UnlistenFn | null>(null)
+  const isInspectorOpen = ref(true)
+  const isConsoleOpen = ref(false)
 
   // Temporary state for the content being edited in EditorContent
   const activeFileContent = ref<string>('');
@@ -757,12 +759,12 @@ export const useEditorStore = defineStore('editor', () => {
   }
 
   async function toggleConsole() {
-    showConsole.value = !showConsole.value
+    isConsoleOpen.value = !isConsoleOpen.value
     await saveEditorState()
   }
 
   async function toggleInspector() {
-    showInspector.value = !showInspector.value
+    isInspectorOpen.value = !isInspectorOpen.value
     await saveEditorState()
   }
 
@@ -794,6 +796,7 @@ export const useEditorStore = defineStore('editor', () => {
   }
 
 
+
   return {
     // State
     currentWorkspace,
@@ -811,6 +814,8 @@ export const useEditorStore = defineStore('editor', () => {
     activeFileWordCount,
     activeFileCharCount,
     activeFileType,
+    isConsoleOpen,
+    isInspectorOpen,
 
     // Computed
     activeTab,

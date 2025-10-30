@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "cross-env RUST_BACKTRACE=1 RUST_LOG=debug tauri dev",
+    "dev": "cross-env RUST_BACKTRACE=1 RUST_LOG=warn,lore_designer_lib=trace tauri dev",
     "vite:dev": "vite",
     "vite:build": "run-p type-check \"build-only {@}\" --",
     "preview": "vite preview",

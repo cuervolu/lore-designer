@@ -177,7 +177,7 @@ onMounted(() => {
     </SidebarContent>
 
     <!-- Footer Buttons -->
-    <SidebarFooter class="border-t pt-1.5 pb-2">
+    <SidebarFooter class="border-t pt-1.5 pb-8">
       <SidebarMenu>
         <div class="flex items-center justify-between px-2">
           <SidebarMenuItem class="flex-1">

@@ -200,19 +200,6 @@ html, body {
   display: none;  /* Chrome, Safari, Opera */
 }
 
-.titlebar-fixed {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 50;
-  width: 100%;
-}
-
-.content-below-titlebar {
-  padding-top: 36px;
-}
-
 /* Base style for all entity links */
 .entity-link {
   padding: 2px 8px;

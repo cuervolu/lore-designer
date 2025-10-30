@@ -31,12 +31,7 @@ const indexingProgress = computed(() => {
 </script>
 
 <template>
-  <div class="flex flex-col h-[calc(100vh-36px)] w-full">
-    <EditorMenubar
-      @toggle-console="toggleConsole"
-      class="flex-shrink-0 z-30 relative"
-    />
-
+  <div class="flex flex-col h-screen w-full">
     <SidebarProvider class="flex flex-col flex-1 min-h-0 overflow-hidden">
       <div class="flex flex-1 min-h-0 overflow-hidden relative">
         <div class="lg:hidden absolute top-4 left-4 z-10">
