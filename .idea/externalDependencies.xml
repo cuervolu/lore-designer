@@ -9,5 +9,6 @@
     <plugin id="org.intellij.plugins.markdown" />
     <plugin id="org.jetbrains.plugins.astro" />
     <plugin id="org.jetbrains.plugins.vue" />
+    <plugin id="com.github.oxc.project.oxcintellijplugin" />
   </component>
 </project>
