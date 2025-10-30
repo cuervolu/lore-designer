@@ -5,8 +5,7 @@ import WizardSidebar from '../components/WizardSidebar.vue';
 
 <template>
   <SidebarProvider>
-    <!-- The h-[calc(100vh-36px)] subtracts the titlebar height from the full viewport height -->
-    <main class="flex h-[calc(100vh-36px)] w-screen overflow-hidden">
+    <main class="flex h-top w-screen overflow-hidden">
       <WizardSidebar />
       <div class="flex-1 overflow-auto">
         <router-view />
