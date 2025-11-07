@@ -99,13 +99,15 @@
       }
     },
     "workspaces": {
+      "subtitle": "Manage and organize your creative projects",
       "import": "Import",
       "open": "Open",
       "searchPlaceholder": "Search workspaces",
       "loading": "Loading workspaces...",
       "openTitle": "Open Workspace",
       "empty": {
-        "message": "No workspaces found",
+        "title": "No Workspaces Yet",
+        "description": "Create your first workspace to start building your world, characters, and stories.",
         "createButton": "Create Your First Workspace"
       },
       "errors": {
