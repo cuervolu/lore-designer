@@ -1,0 +1,6 @@
+{
+  "workspace": {
+    "manifestNotFound": "Could not find workspace manifest at {path}",
+    "ioError": "I/O Error: {message}"
+  }
+}
