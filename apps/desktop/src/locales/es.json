@@ -74,77 +74,139 @@
     }
   },
   "common": {
-    "back": "Volver",
-    "browse": "Buscar",
+    "browse": "Examinar",
+    "back": "Atrás",
     "cancel": "Cancelar"
   },
   "wizard": {
     "new": {
-      "description": "Configura un nuevo workspace para tu proyecto",
+      "description": "Configura un nuevo workspace para tu proyecto creativo",
       "detailsTitle": "Detalles del Workspace",
       "nameLabel": "Nombre del Workspace",
-      "namePlaceholder": "El Jardín Gris",
-      "nameDescription": "El nombre para mostrar de tu workspace. Los espacios y caracteres especiales se convertirán a guiones bajos para el nombre de la carpeta.",
+      "namePlaceholder": "Mi Proyecto Increíble",
+      "nameDescription": "Este será el nombre de la carpeta de tu workspace",
       "locationLabel": "Ubicación",
-      "locationPlaceholder": "Selecciona una carpeta",
-      "openAfterCreationLabel": "Abrir en el editor después de crear",
-      "creating": "Creando...",
+      "locationPlaceholder": "Selecciona una carpeta...",
+      "browseTitle": "Seleccionar Ubicación del Workspace",
+      "browsing": "Examinando...",
+      "openAfterCreationLabel": "Abrir workspace después de crear",
       "createButton": "Crear Workspace",
-      "browseTitle": "Selecciona el Directorio del Workspace",
-      "browsing": "Buscando...",
+      "creating": "Creando...",
+      "steps": {
+        "basicInfo": {
+          "title": "Información Básica",
+          "description": "Nombra tu proyecto",
+          "heading": "Nombra tu Workspace",
+          "subheading": "Elige un nombre memorable para tu proyecto",
+          "nameLabel": "Nombre del Workspace",
+          "namePlaceholder": "Mi Mundo de Fantasía Épico",
+          "nameHint": "Este será el nombre de la carpeta de tu workspace"
+        },
+        "template": {
+          "title": "Plantilla",
+          "description": "Elige un punto de partida",
+          "heading": "Elige una Plantilla",
+          "subheading": "Comienza con una estructura predefinida o construye desde cero",
+          "empty": "Vacío",
+          "emptyDesc": "Comienza con un lienzo en blanco",
+          "fantasy": "Fantasía",
+          "scifi": "Ciencia Ficción",
+          "comingSoon": "Próximamente"
+        },
+        "location": {
+          "title": "Ubicación",
+          "description": "Dónde guardar",
+          "heading": "Elige Ubicación",
+          "subheading": "¿Dónde debemos guardar tu workspace?",
+          "locationLabel": "Ubicación de Guardado",
+          "locationPlaceholder": "Haz clic en Examinar para seleccionar...",
+          "browsing": "Examinando...",
+          "browse": "Examinar",
+          "openAfterCreation": "Abrir workspace después de crear"
+        }
+      },
+      "actions": {
+        "cancel": "Cancelar",
+        "back": "Atrás",
+        "continue": "Continuar",
+        "create": "Crear Workspace",
+        "creating": "Creando..."
+      },
       "errors": {
-        "selectFailed": "Error al seleccionar directorio: {err}",
-        "missingFields": "Por favor, proporciona un nombre y una ubicación",
-        "createFailed": "Error al crear el workspace: {err}"
+        "missingFields": "Por favor completa todos los campos requeridos",
+        "createFailed": "Error al crear workspace: {err}",
+        "selectFailed": "Error al seleccionar directorio: {err}"
       }
     },
     "workspaces": {
       "subtitle": "Gestiona y organiza tus proyectos creativos",
+      "searchPlaceholder": "Buscar workspaces...",
+      "loading": "Cargando workspaces...",
       "import": "Importar",
       "open": "Abrir",
-      "searchPlaceholder": "Buscar workspaces",
-      "loading": "Cargando workspaces...",
-      "openTitle": "Abrir Workspace",
+      "openTitle": "Abrir Workspace Existente",
       "empty": {
         "title": "Aún no hay Workspaces",
         "description": "Crea tu primer workspace para comenzar a construir tu mundo, personajes e historias.",
+        "message": "No se encontraron workspaces",
         "createButton": "Crear tu Primer Workspace"
       },
       "errors": {
-        "loadFailed": "Error al cargar workspaces recientes",
-        "openFailed": "Error al abrir el workspace"
+        "loadFailed": "Error al cargar workspaces",
+        "openFailed": "Error al abrir workspace"
+      },
+      "card": {
+        "notFound": "El workspace ya no existe",
+        "notFoundBadge": "No Encontrado",
+        "failedToOpen": "Error al abrir la ubicación",
+        "pathCopied": "Ruta copiada al portapapeles",
+        "openInEditor": "Abrir en el Editor",
+        "showInExplorer": "Mostrar en el Explorador",
+        "copyPath": "Copiar Ruta",
+        "removeFromList": "Quitar de la Lista",
+        "lastOpened": "Abierto recientemente"
       }
-    },
-    "sidebar": {
-      "workspaces": "Workspaces",
-      "logoAlt": "Logo de Lore Designer"
     }
   },
-    "settings": {
-      "title": "Configuración",
-      "appearance": {
-        "title": "Apariencia",
-        "theme": "Tema",
-        "selectTheme": "Selecciona un tema",
-        "selectLanguage": "Selecciona un idioma",
-        "fontSize": "Tamaño de Fuente: {size}px",
-        "themeOptions": {
-          "system": "Predeterminado del Sistema",
-          "light": "Claro",
-          "dark": "Oscuro"
-        },
-        "language": "Idioma",
-        "languageDescription": "Selecciona el idioma de la aplicación.",
-        "languageOptions": {
-          "en": "Inglés",
-          "es": "Español"
-        }
+  "sidebar": {
+    "workspaces": "Workspaces",
+    "logoAlt": "Logo de Lore Designer"
+  },
+  "settings": {
+    "title": "Configuración",
+    "subtitle": "Personaliza tu experiencia en Lore Designer",
+    "appearance": {
+      "title": "Apariencia",
+      "description": "Personaliza el aspecto de la aplicación",
+      "theme": "Tema",
+      "themeOptions": {
+        "system": "Predeterminado del Sistema",
+        "light": "Claro",
+        "dark": "Oscuro"
       },
-      "behavior": {
-        "title": "Comportamiento de la Aplicación",
-        "autoSave": "Auto Guardado",
-        "autoSaveDescription": "Guardar cambios automáticamente",
-        "saveInterval": "Intervalo de Guardado: {seconds}s"
+      "fontSizeLabel": "Tamaño de Fuente",
+      "fontSizeDescription": "Ajusta el tamaño base de fuente en toda la app",
+      "language": "Idioma",
+      "languageDescription": "Selecciona tu idioma preferido",
+      "languageOptions": {
+        "en": "English",
+        "es": "Español"
       }
+    },
+    "behavior": {
+      "title": "Comportamiento",
+      "description": "Configura cómo se comporta la aplicación",
+      "autoSave": "Guardado Automático",
+      "autoSaveDescription": "Guarda automáticamente tu trabajo mientras editas",
+      "saveIntervalLabel": "Intervalo de Guardado",
+      "saveIntervalDescription": "Con qué frecuencia guardar automáticamente"
+    },
+    "notifications": {
+      "themeChanged": "Tema cambiado exitosamente",
+      "languageChanged": "Idioma cambiado exitosamente",
+      "fontSizeChanged": "Tamaño de fuente actualizado",
+      "autoSaveEnabled": "Guardado automático activado",
+      "autoSaveDisabled": "Guardado automático desactivado"
     }
+  }
 }

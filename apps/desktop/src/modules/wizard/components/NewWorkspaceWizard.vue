@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
 import { ChevronLeft, ChevronRight, Sparkles, Folder, Check } from "lucide-vue-next";
+import { useI18n } from "vue-i18n";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
+
+const { t } = useI18n();
 
 const props = defineProps<{
   workspaceName: string;
@@ -27,11 +30,23 @@ const emit = defineEmits<{
 const currentStep = ref(1);
 const selectedTemplate = ref<"empty" | "fantasy" | "scifi">("empty");
 
-const steps = [
-  { id: 1, title: "Basic Info", description: "Name your project" },
-  { id: 2, title: "Template", description: "Choose a starting point" },
-  { id: 3, title: "Location", description: "Where to save" },
-];
+const steps = computed(() => [
+  {
+    id: 1,
+    title: t("wizard.new.steps.basicInfo.title"),
+    description: t("wizard.new.steps.basicInfo.description"),
+  },
+  {
+    id: 2,
+    title: t("wizard.new.steps.template.title"),
+    description: t("wizard.new.steps.template.description"),
+  },
+  {
+    id: 3,
+    title: t("wizard.new.steps.location.title"),
+    description: t("wizard.new.steps.location.description"),
+  },
+]);
 
 const canProceed = computed(() => {
   if (currentStep.value === 1) return props.workspaceName.length > 0;
@@ -91,31 +106,33 @@ const handleCreate = () => {
         <div v-if="currentStep === 1" key="step1" class="space-y-4">
           <div class="text-center mb-6">
             <Sparkles class="w-12 h-12 mx-auto mb-4 text-primary" />
-            <h2 class="text-2xl font-bold mb-2">Name Your Workspace</h2>
-            <p class="text-muted-foreground">Choose a memorable name for your project</p>
+            <h2 class="text-2xl font-bold mb-2">{{ $t("wizard.new.steps.basicInfo.heading") }}</h2>
+            <p class="text-muted-foreground">{{ $t("wizard.new.steps.basicInfo.subheading") }}</p>
           </div>
 
           <div class="max-w-md mx-auto">
-            <Label for="workspace-name" class="text-base">Workspace Name</Label>
+            <Label for="workspace-name" class="text-base">{{
+              $t("wizard.new.steps.basicInfo.nameLabel")
+            }}</Label>
             <Input
               id="workspace-name"
               :model-value="workspaceName"
               @update:model-value="emit('update:workspaceName', String($event))"
-              placeholder="My Epic Fantasy World"
+              :placeholder="$t('wizard.new.steps.basicInfo.namePlaceholder')"
               class="mt-2 text-lg"
               autofocus
             />
             <p class="text-xs text-muted-foreground mt-2">
-              This will be the name of your workspace folder
+              {{ $t("wizard.new.steps.basicInfo.nameHint") }}
             </p>
           </div>
         </div>
 
         <div v-else-if="currentStep === 2" key="step2" class="space-y-4">
           <div class="text-center mb-6">
-            <h2 class="text-2xl font-bold mb-2">Choose a Template</h2>
+            <h2 class="text-2xl font-bold mb-2">{{ $t("wizard.new.steps.template.heading") }}</h2>
             <p class="text-muted-foreground">
-              Start with a pre-made structure or build from scratch
+              {{ $t("wizard.new.steps.template.subheading") }}
             </p>
           </div>
 
@@ -127,8 +144,10 @@ const handleCreate = () => {
             >
               <CardContent class="p-6 text-center">
                 <Folder class="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
-                <h3 class="font-semibold mb-1">Empty</h3>
-                <p class="text-xs text-muted-foreground">Start with a blank canvas</p>
+                <h3 class="font-semibold mb-1">{{ $t("wizard.new.steps.template.empty") }}</h3>
+                <p class="text-xs text-muted-foreground">
+                  {{ $t("wizard.new.steps.template.emptyDesc") }}
+                </p>
               </CardContent>
             </Card>
 
@@ -142,8 +161,10 @@ const handleCreate = () => {
                   class="w-12 h-12 mx-auto mb-3 rounded"
                   alt="Fantasy"
                 />
-                <h3 class="font-semibold mb-1">Fantasy</h3>
-                <p class="text-xs text-muted-foreground">Coming soon</p>
+                <h3 class="font-semibold mb-1">{{ $t("wizard.new.steps.template.fantasy") }}</h3>
+                <p class="text-xs text-muted-foreground">
+                  {{ $t("wizard.new.steps.template.comingSoon") }}
+                </p>
               </CardContent>
             </Card>
 
@@ -157,8 +178,10 @@ const handleCreate = () => {
                   class="w-12 h-12 mx-auto mb-3 rounded"
                   alt="Sci-Fi"
                 />
-                <h3 class="font-semibold mb-1">Sci-Fi</h3>
-                <p class="text-xs text-muted-foreground">Coming soon</p>
+                <h3 class="font-semibold mb-1">{{ $t("wizard.new.steps.template.scifi") }}</h3>
+                <p class="text-xs text-muted-foreground">
+                  {{ $t("wizard.new.steps.template.comingSoon") }}
+                </p>
               </CardContent>
             </Card>
           </div>
@@ -167,20 +190,22 @@ const handleCreate = () => {
         <div v-else-if="currentStep === 3" key="step3" class="space-y-4">
           <div class="text-center mb-6">
             <Folder class="w-12 h-12 mx-auto mb-4 text-primary" />
-            <h2 class="text-2xl font-bold mb-2">Choose Location</h2>
-            <p class="text-muted-foreground">Where should we save your workspace?</p>
+            <h2 class="text-2xl font-bold mb-2">{{ $t("wizard.new.steps.location.heading") }}</h2>
+            <p class="text-muted-foreground">{{ $t("wizard.new.steps.location.subheading") }}</p>
           </div>
 
           <div class="max-w-md mx-auto space-y-4">
             <div>
-              <Label for="workspace-location" class="text-base">Save Location</Label>
+              <Label for="workspace-location" class="text-base">{{
+                $t("wizard.new.steps.location.locationLabel")
+              }}</Label>
               <div class="flex gap-2 mt-2">
                 <Input
                   id="workspace-location"
                   :model-value="workspacePath"
                   @update:model-value="emit('update:workspacePath', String($event))"
                   readonly
-                  placeholder="Click Browse to select..."
+                  :placeholder="$t('wizard.new.steps.location.locationPlaceholder')"
                 />
                 <Button
                   variant="outline"
@@ -188,7 +213,11 @@ const handleCreate = () => {
                   @click="emit('browse')"
                   :disabled="isBrowsing"
                 >
-                  {{ isBrowsing ? "Browsing..." : "Browse" }}
+                  {{
+                    isBrowsing
+                      ? $t("wizard.new.steps.location.browsing")
+                      : $t("wizard.new.steps.location.browse")
+                  }}
                 </Button>
               </div>
             </div>
@@ -203,7 +232,9 @@ const handleCreate = () => {
                 "
                 class="h-4 w-4 rounded border-gray-300"
               />
-              <Label for="open-after-creation">Open workspace after creation</Label>
+              <Label for="open-after-creation">{{
+                $t("wizard.new.steps.location.openAfterCreation")
+              }}</Label>
             </div>
 
             <div
@@ -224,16 +255,16 @@ const handleCreate = () => {
         :disabled="isCreating"
       >
         <ChevronLeft class="w-4 h-4 mr-2" />
-        {{ currentStep === 1 ? "Cancel" : "Back" }}
+        {{ currentStep === 1 ? $t("wizard.new.actions.cancel") : $t("wizard.new.actions.back") }}
       </Button>
 
       <Button v-if="currentStep < 3" @click="nextStep" :disabled="!canProceed">
-        Continue
+        {{ $t("wizard.new.actions.continue") }}
         <ChevronRight class="w-4 h-4 ml-2" />
       </Button>
 
       <Button v-else @click="handleCreate" :disabled="!canProceed || isCreating">
-        {{ isCreating ? "Creating..." : "Create Workspace" }}
+        {{ isCreating ? $t("wizard.new.actions.creating") : $t("wizard.new.actions.create") }}
         <Check class="w-4 h-4 ml-2" />
       </Button>
     </div>

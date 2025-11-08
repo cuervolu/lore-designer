@@ -15,5 +15,8 @@
     "**/*.rpa": true,
     "**/*.rpymc": true,
     "**/cache/": true
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   }
 }

@@ -1,13 +1,13 @@
 ﻿<script setup lang="ts">
-import { SidebarProvider } from '@/components/ui/sidebar';
-import WizardSidebar from '../components/WizardSidebar.vue';
+import { SidebarProvider } from "@/components/ui/sidebar";
+import WizardSidebar from "../components/WizardSidebar.vue";
 </script>
 
 <template>
   <SidebarProvider>
-    <main class="flex h-top w-screen overflow-hidden">
+    <main class="flex h-screen w-screen overflow-hidden">
       <WizardSidebar />
-      <div class="flex-1 overflow-auto">
+      <div class="flex-1 overflow-y-auto">
         <router-view />
       </div>
     </main>
