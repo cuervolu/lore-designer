@@ -4,6 +4,7 @@ import { error } from "@tauri-apps/plugin-log";
 import { ref, computed, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
+import { FolderOpen, Settings } from "lucide-vue-next";
 import {
   Sidebar,
   SidebarContent,
@@ -18,12 +19,20 @@ const route = useRoute();
 const { t } = useI18n();
 const logoPath = new URL("@/assets/logo.webp", import.meta.url).href;
 const menuItems = computed(() => [
-  { name: t("wizard.sidebar.workspaces"), route: { name: "workspaces" } },
-  { name: t("welcome.routeTitles.settings"), route: { name: "settings" } },
+  {
+    name: t("wizard.sidebar.workspaces"),
+    route: { name: "workspaces" },
+    icon: FolderOpen,
+  },
+  {
+    name: t("welcome.routeTitles.settings"),
+    route: { name: "settings" },
+    icon: Settings,
+  },
 ]);
 
 const currentRouteName = computed(() => route.name);
-const appVersion = ref("0.1.0"); // Default value until loaded
+const appVersion = ref("0.1.0");
 
 onMounted(async () => {
   try {
@@ -69,6 +78,7 @@ const navigateTo = (routeName: string) => {
                 : 'hover:bg-muted',
             ]"
           >
+            <component :is="item.icon" class="w-4 h-4 mr-2" />
             {{ item.name }}
           </SidebarMenuButton>
         </SidebarMenuItem>
