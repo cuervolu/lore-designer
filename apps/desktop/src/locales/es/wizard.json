@@ -86,9 +86,5 @@
       "removeFromList": "Quitar de la Lista",
       "lastOpened": "Abierto recientemente"
     }
-  },
-  "sidebar": {
-    "workspaces": "Workspaces",
-    "logoAlt": "Lore Designer Logo"
   }
 }
