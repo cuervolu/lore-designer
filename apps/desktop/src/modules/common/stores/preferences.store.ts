@@ -45,7 +45,7 @@ export const usePreferencesStore = defineStore("preferences", {
         this.applyFontSize(preferences.font_size);
 
         if (preferences.language) {
-          i18n.global.locale = preferences.language as AppLocale;
+          i18n.global.locale.value = preferences.language as AppLocale;
         }
 
         return preferences;
@@ -79,7 +79,7 @@ export const usePreferencesStore = defineStore("preferences", {
       try {
         await invoke("set_language", { language });
         this.language = language;
-        i18n.global.locale = language as AppLocale;
+        i18n.global.locale.value = language as AppLocale;
       } catch (error) {
         await logError(`Failed to set language: ${error}`);
         throw error;
