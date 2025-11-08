@@ -1,0 +1,37 @@
+{
+  "title": "Configuración",
+  "subtitle": "Personaliza tu experiencia en Lore Designer",
+  "appearance": {
+    "title": "Apariencia",
+    "description": "Personaliza el aspecto de la aplicación",
+    "theme": "Tema",
+    "themeOptions": {
+      "system": "Predeterminado del Sistema",
+      "light": "Claro",
+      "dark": "Oscuro"
+    },
+    "fontSizeLabel": "Tamaño de Fuente",
+    "fontSizeDescription": "Ajusta el tamaño base de fuente en toda la app",
+    "language": "Idioma",
+    "languageDescription": "Selecciona tu idioma preferido",
+    "languageOptions": {
+      "en": "English",
+      "es": "Español"
+    }
+  },
+  "behavior": {
+    "title": "Comportamiento",
+    "description": "Configura cómo se comporta la aplicación",
+    "autoSave": "Guardado Automático",
+    "autoSaveDescription": "Guarda automáticamente tu trabajo mientras editas",
+    "saveIntervalLabel": "Intervalo de Guardado",
+    "saveIntervalDescription": "Con qué frecuencia guardar automáticamente"
+  },
+  "notifications": {
+    "themeChanged": "Tema cambiado exitosamente",
+    "languageChanged": "Idioma cambiado exitosamente",
+    "fontSizeChanged": "Tamaño de fuente actualizado",
+    "autoSaveEnabled": "Guardado automático activado",
+    "autoSaveDisabled": "Guardado automático desactivado"
+  }
+}

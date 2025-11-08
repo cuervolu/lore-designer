@@ -1,0 +1,90 @@
+{
+  "new": {
+    "description": "Configura un nuevo workspace para tu proyecto creativo",
+    "detailsTitle": "Detalles del Workspace",
+    "nameLabel": "Nombre del Workspace",
+    "namePlaceholder": "Mi Proyecto Increíble",
+    "nameDescription": "Este será el nombre de la carpeta de tu workspace",
+    "locationLabel": "Ubicación",
+    "locationPlaceholder": "Selecciona una carpeta...",
+    "browseTitle": "Seleccionar Ubicación del Workspace",
+    "browsing": "Examinando...",
+    "openAfterCreationLabel": "Abrir workspace después de crear",
+    "createButton": "Crear Workspace",
+    "creating": "Creando...",
+    "steps": {
+      "basicInfo": {
+        "title": "Información Básica",
+        "description": "Nombra tu proyecto",
+        "heading": "Nombra tu Workspace",
+        "subheading": "Elige un nombre memorable para tu proyecto",
+        "nameLabel": "Nombre del Workspace",
+        "namePlaceholder": "Mi Mundo de Fantasía Épico",
+        "nameHint": "Este será el nombre de la carpeta de tu workspace"
+      },
+      "template": {
+        "title": "Plantilla",
+        "description": "Elige un punto de partida",
+        "heading": "Elige una Plantilla",
+        "subheading": "Comienza con una estructura predefinida o construye desde cero",
+        "empty": "Vacío",
+        "emptyDesc": "Comienza con un lienzo en blanco",
+        "fantasy": "Fantasía",
+        "scifi": "Ciencia Ficción",
+        "comingSoon": "Próximamente"
+      },
+      "location": {
+        "title": "Ubicación",
+        "description": "Dónde guardar",
+        "heading": "Elige Ubicación",
+        "subheading": "¿Dónde debemos guardar tu workspace?",
+        "locationLabel": "Ubicación de Guardado",
+        "locationPlaceholder": "Haz clic en Examinar para seleccionar...",
+        "browsing": "Examinando...",
+        "browse": "Examinar",
+        "openAfterCreation": "Abrir workspace después de crear"
+      }
+    },
+    "actions": {
+      "cancel": "Cancelar",
+      "back": "Atrás",
+      "continue": "Continuar",
+      "create": "Crear Workspace",
+      "creating": "Creando..."
+    },
+    "errors": {
+      "missingFields": "Por favor completa todos los campos requeridos",
+      "createFailed": "Error al crear workspace: {err}",
+      "selectFailed": "Error al seleccionar directorio: {err}"
+    }
+  },
+  "workspaces": {
+    "subtitle": "Gestiona y organiza tus proyectos creativos",
+    "searchPlaceholder": "Buscar workspaces...",
+    "loading": "Cargando workspaces...",
+    "import": "Importar",
+    "open": "Abrir",
+    "openTitle": "Abrir Workspace Existente",
+    "empty": {
+      "title": "Aún no hay Workspaces",
+      "description": "Crea tu primer workspace para comenzar a construir tu mundo, personajes e historias.",
+      "message": "No se encontraron workspaces",
+      "createButton": "Crear tu Primer Workspace"
+    },
+    "errors": {
+      "loadFailed": "Error al cargar workspaces",
+      "openFailed": "Error al abrir workspace"
+    },
+    "card": {
+      "notFound": "El workspace ya no existe",
+      "notFoundBadge": "No Encontrado",
+      "failedToOpen": "Error al abrir la ubicación",
+      "pathCopied": "Ruta copiada al portapapeles",
+      "openInEditor": "Abrir en el Editor",
+      "showInExplorer": "Mostrar en el Explorador",
+      "copyPath": "Copiar Ruta",
+      "removeFromList": "Quitar de la Lista",
+      "lastOpened": "Abierto recientemente"
+    }
+  }
+}
