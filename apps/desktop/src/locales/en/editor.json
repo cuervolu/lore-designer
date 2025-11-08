@@ -1,0 +1,14 @@
+{
+  "messages": {
+    "selectNewFileLocation": "Select location for new file",
+    "failedToSelectDir": "Failed to select directory",
+    "fileCreatedSuccess": "Created {extension} file successfully",
+    "failedToCreateFile": "Failed to create file",
+    "openFileTitle": "Open File",
+    "failedToOpenFile": "Failed to open file",
+    "noActiveFileToSave": "No active file to save",
+    "saveTriggered": "Save action triggered",
+    "saveWillBeImplemented": "Save functionality will be implemented in the editor component",
+    "fileTreeRefreshed": "File tree refreshed"
+  }
+}

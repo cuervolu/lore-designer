@@ -1,0 +1,14 @@
+{
+  "messages": {
+    "selectNewFileLocation": "Selecciona la ubicación para el nuevo archivo",
+    "failedToSelectDir": "No se pudo seleccionar el directorio",
+    "fileCreatedSuccess": "Archivo {extension} creado con éxito",
+    "failedToCreateFile": "No se pudo crear el archivo",
+    "openFileTitle": "Abrir Archivo",
+    "failedToOpenFile": "No se pudo abrir el archivo",
+    "noActiveFileToSave": "No hay ningún archivo activo para guardar",
+    "saveTriggered": "Acción de guardar disparada",
+    "saveWillBeImplemented": "La funcionalidad de guardado se implementará en el componente del editor",
+    "fileTreeRefreshed": "Árbol de archivos actualizado"
+  }
+}

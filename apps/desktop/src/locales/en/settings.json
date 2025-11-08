@@ -1,0 +1,37 @@
+{
+  "title": "Settings",
+  "subtitle": "Customize your Lore Designer experience",
+  "appearance": {
+    "title": "Appearance",
+    "description": "Customize the look and feel of the application",
+    "theme": "Theme",
+    "themeOptions": {
+      "system": "System Default",
+      "light": "Light",
+      "dark": "Dark"
+    },
+    "fontSizeLabel": "Font Size",
+    "fontSizeDescription": "Adjust the base font size throughout the app",
+    "language": "Language",
+    "languageDescription": "Select your preferred language",
+    "languageOptions": {
+      "en": "English",
+      "es": "Español"
+    }
+  },
+  "behavior": {
+    "title": "Behavior",
+    "description": "Configure how the application behaves",
+    "autoSave": "Auto Save",
+    "autoSaveDescription": "Automatically save your work while editing",
+    "saveIntervalLabel": "Save Interval",
+    "saveIntervalDescription": "How often to save automatically"
+  },
+  "notifications": {
+    "themeChanged": "Theme changed successfully",
+    "languageChanged": "Language changed successfully",
+    "fontSizeChanged": "Font size updated",
+    "autoSaveEnabled": "Auto save enabled",
+    "autoSaveDisabled": "Auto save disabled"
+  }
+}
