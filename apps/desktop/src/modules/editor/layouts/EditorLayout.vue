@@ -12,6 +12,10 @@ import StatusFooter from '@editor/components/StatusFooter.vue'
 
 const editorStore = useEditorStore()
 
+const isCharacterFile = computed(() => {
+  return editorStore.activeTab?.path?.endsWith('.character.md') || false
+})
+
 const toggleConsole = () => {
   editorStore.toggleConsole()
 }
@@ -71,7 +75,7 @@ const indexingProgress = computed(() => {
         </div>
 
         <InspectorPanel
-          v-if="editorStore.showInspector"
+          v-if="editorStore.showInspector && !isCharacterFile"
           :file="editorStore.activeTab"
           class="flex-shrink-0 h-full"
         />
