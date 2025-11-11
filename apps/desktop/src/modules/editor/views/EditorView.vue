@@ -7,13 +7,12 @@ import EditorLayout from '@editor/layouts/EditorLayout.vue';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { usePlatform } from '@common/composables/usePlatform';
+import {useAutoSave} from "@editor/composables/useAutoSave.ts";
 
 const route = useRoute();
 const router = useRouter();
 const editorStore = useEditorStore();
 const { setEditorTitle, resetTitle } = useAppTitle();
-const { platform } = usePlatform();
-
 const workspacePath = ref('');
 const isLoadingWorkspace = ref(true);
 const errorMessage = ref('');
@@ -26,33 +25,8 @@ const indexProgress = computed(() => {
   return Math.floor((processed / total) * 100);
 });
 
-const handleKeyDown = (event: KeyboardEvent) => {
-  const isMacPlatform = platform.value === 'macos';
-  const isSaveShortcut = (isMacPlatform && event.metaKey && event.key === 's') ||
-    (!isMacPlatform && event.ctrlKey && event.key === 's');
 
-  if (isSaveShortcut) {
-    event.preventDefault();
-    triggerSave();
-  }
-};
 
-const triggerSave = async () => {
-  if (!editorStore.activeTab) {
-    return;
-  }
-  if (!editorStore.activeTab.hasUnsavedChanges) {
-    return;
-  }
-  const contentToSave = editorStore.activeFileContent;
-  const frontmatterToSave = editorStore.activeFileFrontmatter;
-
-  await editorStore.saveFileContent(
-    editorStore.activeTab.path,
-    contentToSave,
-    frontmatterToSave
-  );
-};
 
 watch(
   () => editorStore.activeTab,
@@ -73,7 +47,6 @@ watch(
 );
 
 onMounted(async () => {
-  window.addEventListener('keydown', handleKeyDown);
   // Get workspace path from query parameter
   const workspacePathParam = route.query.path;
 
@@ -95,9 +68,9 @@ onMounted(async () => {
   }
 });
 
+
 // Cleanup on component unmount
 onBeforeUnmount(async () => {
-  window.removeEventListener('keydown', handleKeyDown);
   await resetTitle();
   // Clean up workspace resources
   await editorStore.closeWorkspace();

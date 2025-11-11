@@ -6,7 +6,7 @@ export type FieldType =
   | 'multiselect'
   | 'image'
   | 'date'
-
+  | 'CustomProperties'
 
 export interface FieldDefinition {
   key: string
@@ -19,12 +19,12 @@ export interface FieldDefinition {
   rows?: number
 }
 
-
 export interface FormConfig {
-  fields: FieldDefinition[]
-  imageField?: string
+  sections: {
+    key: string
+    fields: FieldDefinition[]
+  }[]
 }
-
 
 export interface CharacterFormData {
   frontmatter: Record<string, unknown>

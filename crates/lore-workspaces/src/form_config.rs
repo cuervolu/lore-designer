@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use tokio::fs;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -13,6 +13,7 @@ pub enum FieldType {
     Multiselect,
     Image,
     Date,
+    CustomProperties,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -23,6 +24,7 @@ pub struct FieldDefinition {
     #[serde(rename = "type")]
     pub field_type: FieldType,
     #[serde(default)]
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub required: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub default: Option<Value>,
@@ -34,16 +36,21 @@ pub struct FieldDefinition {
     pub rows: Option<u32>,
 }
 
+// NUEVO: struct FormSection
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct FormSection {
+    pub key: String,
+    pub fields: Vec<FieldDefinition>,
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct FormConfig {
-    pub fields: Vec<FieldDefinition>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub image_field: Option<String>,
+    pub sections: Vec<FormSection>,
 }
 
-
-fn get_config_path(workspace_path: &PathBuf) -> PathBuf {
+fn get_config_path(workspace_path: &Path) -> PathBuf {
     workspace_path
         .join(".lore")
         .join("character_form_config.toml")
@@ -51,47 +58,136 @@ fn get_config_path(workspace_path: &PathBuf) -> PathBuf {
 
 fn default_character_config() -> FormConfig {
     FormConfig {
-        image_field: Some("avatar".to_string()),
-        fields: vec![
-            FieldDefinition {
-                key: "name".to_string(),
-                label: "Name".to_string(),
-                field_type: FieldType::Text,
-                required: true,
-                default: Some(Value::String("New Character".to_string())),
-                options: None,
-                placeholder: Some("Enter character name...".to_string()),
-                rows: None,
+        sections: vec![
+            FormSection {
+                key: "hero".to_string(),
+                fields: vec![
+                    FieldDefinition {
+                        key: "name".to_string(),
+                        label: "Name".to_string(),
+                        field_type: FieldType::Text,
+                        required: true,
+                        default: Some(Value::String("New Character".to_string())),
+                        options: None,
+                        placeholder: Some("Character Name".to_string()),
+                        rows: None,
+                    },
+                    FieldDefinition {
+                        key: "aliases".to_string(),
+                        label: "Aliases".to_string(),
+                        field_type: FieldType::Multiselect,
+                        required: false,
+                        default: Some(Value::Array(vec![])),
+                        options: None,
+                        placeholder: Some("+ Add Alias".to_string()),
+                        rows: None,
+                    },
+                ],
             },
-            FieldDefinition {
-                key: "avatar".to_string(),
-                label: "Avatar".to_string(),
-                field_type: FieldType::Image,
-                required: false,
-                default: None,
-                options: None,
-                placeholder: None,
-                rows: None,
+            FormSection {
+                key: "sidebar".to_string(),
+                fields: vec![
+                    FieldDefinition {
+                        key: "avatar".to_string(),
+                        label: "Avatar".to_string(),
+                        field_type: FieldType::Image,
+                        required: false,
+                        default: None,
+                        options: None,
+                        placeholder: None,
+                        rows: None,
+                    },
+                ],
             },
-            FieldDefinition {
-                key: "status".to_string(),
-                label: "Status".to_string(),
-                field_type: FieldType::Select,
-                required: false,
-                default: Some(Value::String("Alive".to_string())),
-                options: Some(vec!["Alive".to_string(), "Deceased".to_string(), "Unknown".to_string()]),
-                placeholder: None,
-                rows: None,
+            FormSection {
+                key: "grid".to_string(),
+                fields: vec![
+                    FieldDefinition {
+                        key: "age".to_string(),
+                        label: "Age:".to_string(),
+                        field_type: FieldType::Number,
+                        required: false,
+                        default: None,
+                        options: None,
+                        placeholder: Some("15".to_string()),
+                        rows: None,
+                    },
+                    FieldDefinition {
+                        key: "family".to_string(),
+                        label: "Family:".to_string(),
+                        field_type: FieldType::Text,
+                        required: false,
+                        default: None,
+                        options: None,
+                        placeholder: Some("Select Family...".to_string()),
+                        rows: None,
+                    },
+                    FieldDefinition {
+                        key: "role".to_string(),
+                        label: "Role:".to_string(),
+                        field_type: FieldType::Text,
+                        required: false,
+                        default: None,
+                        options: None,
+                        placeholder: Some("e.g., protagonist".to_string()),
+                        rows: None,
+                    },
+                    FieldDefinition {
+                        key: "status".to_string(),
+                        label: "Status:".to_string(),
+                        field_type: FieldType::Select,
+                        required: false,
+                        default: Some(Value::String("Alive".to_string())),
+                        options: Some(vec!["Alive".to_string(), "Deceased".to_string(), "Unknown".to_string()]),
+                        placeholder: Some("Select status...".to_string()),
+                        rows: None,
+                    },
+                    FieldDefinition {
+                        key: "gender".to_string(),
+                        label: "Gender:".to_string(),
+                        field_type: FieldType::Text,
+                        required: false,
+                        default: None,
+                        options: None,
+                        placeholder: Some("Gender".to_string()),
+                        rows: None,
+                    },
+                    FieldDefinition {
+                        key: "species".to_string(),
+                        label: "Species:".to_string(),
+                        field_type: FieldType::Text,
+                        required: false,
+                        default: None,
+                        options: None,
+                        placeholder: Some("e.g., human, elf".to_string()),
+                        rows: None,
+                    },
+                    FieldDefinition {
+                        key: "occupation".to_string(),
+                        label: "Occupation:".to_string(),
+                        field_type: FieldType::Text,
+                        required: false,
+                        default: None,
+                        options: None,
+                        placeholder: Some("Occupation".to_string()),
+                        rows: None,
+                    },
+                ],
             },
-            FieldDefinition {
-                key: "synopsis".to_string(),
-                label: "Synopsis".to_string(),
-                field_type: FieldType::Textarea,
-                required: false,
-                default: None,
-                options: None,
-                placeholder: Some("A brief summary of the character...".to_string()),
-                rows: Some(4),
+            FormSection {
+                key: "custom".to_string(),
+                fields: vec![
+                    FieldDefinition {
+                        key: "customProperties".to_string(),
+                        label: "Add Property".to_string(),
+                        field_type: FieldType::CustomProperties,
+                        required: false,
+                        default: Some(Value::Array(vec![])),
+                        options: None,
+                        placeholder: None,
+                        rows: None,
+                    },
+                ],
             },
         ],
     }

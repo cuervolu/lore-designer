@@ -2,9 +2,13 @@
 import { computed } from 'vue'
 import type { FieldDefinition } from '@/modules/editor/types/form.type'
 import { Label } from '@/components/ui/label'
+
 import DynamicTextInput from './DynamicTextInput.vue'
 import DynamicTextarea from './DynamicTextarea.vue'
 import DynamicSelect from './DynamicSelect.vue'
+import DynamicMultiselect from './DynamicMultiselect.vue'
+import DynamicImageUpload from './DynamicImageUpload.vue'
+import DynamicCustomProperties from './DynamicCustomProperties.vue'
 
 const props = defineProps<{
   fieldDefinition: FieldDefinition
@@ -12,7 +16,6 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits(['update:modelValue'])
-
 const field = computed(() => props.fieldDefinition)
 
 const value = computed({
@@ -21,11 +24,24 @@ const value = computed({
     emit('update:modelValue', newValue)
   },
 })
+
+const showLabel = computed(() => {
+  const type = field.value.type
+  if (
+    type === 'image'
+    || type === 'multiselect'
+    || type === 'CustomProperties'
+    || field.value.key === 'name'
+  ) {
+    return false
+  }
+  return true
+})
 </script>
 
 <template>
   <div class="grid w-full items-center gap-1.5">
-    <Label :for="field.key">{{ field.label }}</Label>
+    <Label v-if="showLabel" :for="field.key">{{ field.label }}</Label>
 
     <DynamicTextInput
       v-if="field.type === 'text' || field.type === 'number'"
@@ -39,6 +55,21 @@ const value = computed({
     />
     <DynamicSelect
       v-else-if="field.type === 'select'"
+      v-model="value"
+      :field-definition="field"
+    />
+    <DynamicMultiselect
+      v-else-if="field.type === 'multiselect'"
+      v-model="value"
+      :field-definition="field"
+    />
+    <DynamicImageUpload
+      v-else-if="field.type === 'image'"
+      v-model="value"
+      :field-definition="field"
+    />
+    <DynamicCustomProperties
+      v-else-if="field.type === 'CustomProperties'"
       v-model="value"
       :field-definition="field"
     />

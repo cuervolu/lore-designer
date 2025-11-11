@@ -1,6 +1,6 @@
 import { ref, shallowRef } from 'vue'
 import {error as logError} from "@tauri-apps/plugin-log";
-import { invoke } from '@tauri-apps/api/tauri'
+import { invoke } from '@tauri-apps/api/core'
 import { useEditorStore } from '@/modules/editor/stores/editor.store'
 import type { FormConfig } from '@/modules/editor/types/form.type'
 
@@ -14,7 +14,7 @@ export function useFormConfig() {
 
 
   async function loadConfig() {
-    const workspacePath = editorStore.currentWorkspacePath
+    const workspacePath = editorStore.currentWorkspace?.path
     if (!workspacePath) {
       error.value = 'No workspace path is set.'
       return
@@ -40,7 +40,7 @@ export function useFormConfig() {
   }
 
   async function saveConfig(newConfig: FormConfig) {
-    const workspacePath = editorStore.currentWorkspacePath
+    const workspacePath = editorStore.currentWorkspace?.path
     if (!workspacePath) {
       error.value = 'No workspace path is set.'
       return
