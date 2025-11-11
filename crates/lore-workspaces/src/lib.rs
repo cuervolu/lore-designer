@@ -3,6 +3,7 @@ mod icons;
 mod manifest;
 mod model;
 mod recent;
+pub mod form_config;
 
 pub use crate::model::{WORKSPACE_VERSION, WorkspaceError};
 use anyhow::Context;

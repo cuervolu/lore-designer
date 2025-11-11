@@ -61,6 +61,8 @@ pub fn run() {
             lore_workspaces::add_recent_workspace_command,
             lore_workspaces::remove_recent_workspace_command,
             lore_workspaces::check_workspace_exists_command,
+            lore_workspaces::get_character_form_config,
+            lore_workspaces::save_character_form_config,
             lore_editor::open_workspace_in_editor,
             lore_editor::get_workspace_file_tree,
             lore_editor::get_indexing_progress,
