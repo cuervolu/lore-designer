@@ -16,13 +16,14 @@ import AboutModal from '@common/components/AboutModal.vue'
 import { open } from '@tauri-apps/plugin-dialog'
 import { toast } from 'vue-sonner'
 import { error as logError } from '@tauri-apps/plugin-log'
+import {useAutoSave} from "@editor/composables/useAutoSave.ts";
 
 const preferencesStore = usePreferencesStore()
 const route = useRoute()
 const router = useRouter()
 const i18n = useI18n()
 const { t, locale } = i18n
-
+const { saveNow } = useAutoSave()
 const platform = usePlatform()
 const editorStore = useEditorStore()
 const uiStore = useUiStore()
@@ -39,9 +40,7 @@ const menuActions = {
       toast.error(t('editor.errors.openFileFailed', { err }))
     }
   },
-  onSave: () => {
-    // TODO:
-  },
+  onSave: saveNow,
   onSaveAs: () => {
     /* TODO: editorStore.saveActiveFileAs() no existe aún */
   },
@@ -51,7 +50,7 @@ const menuActions = {
   onExitToWorkspaces: () => router.push({ name: 'workspaces' }),
   onWorkspacesHome: () => router.push({ name: 'workspaces' }),
   onNewWorkspace: () => router.push({ name: 'new-workspace' }),
-  onRefreshFileTree: () => editorStore.refreshFileTree(), // Corregido: Este método sí existe
+  onRefreshFileTree: () => editorStore.refreshFileTree(),
   onWorkspaceSettings: () => {
     /* TODO */
   },
