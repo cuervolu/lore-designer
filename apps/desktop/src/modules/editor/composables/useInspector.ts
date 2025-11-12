@@ -1,5 +1,5 @@
 import {lstat} from '@tauri-apps/plugin-fs';
-import {debug, error as logError, warn} from '@tauri-apps/plugin-log';
+import {debug, error as logError, warn} from 'tauri-plugin-tracing';
 import {computed, nextTick, ref, type Ref, watch} from 'vue';
 import {parse as yamlParse, stringify as yamlStringify} from 'yaml';
 import {toast} from 'vue-sonner';

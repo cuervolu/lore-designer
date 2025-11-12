@@ -1,7 +1,7 @@
 ﻿<script setup lang="ts">
 import {invoke} from '@tauri-apps/api/core'
 import {open} from '@tauri-apps/plugin-dialog'
-import {error, info} from '@tauri-apps/plugin-log'
+import {error, info} from 'tauri-plugin-tracing'
 import {ref} from 'vue'
 import {useRouter} from 'vue-router'
 import { useI18n } from 'vue-i18n'

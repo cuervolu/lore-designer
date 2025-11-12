@@ -1,0 +1,21 @@
+[package]
+name = "tauri-plugin-tracing"
+version = "0.1.0"
+authors = [ "Ángel Cuervo <angel.cuervo187@gmail.com>"]
+description = "A Tauri plugin that replaces tauri-plugin-log with a flexible tracing backend."
+edition = "2021"
+rust-version = "1.77.2"
+exclude = ["/examples", "/dist-js", "/guest-js", "/node_modules"]
+links = "tauri-plugin-tracing"
+
+[dependencies]
+tauri = {workspace = true}
+serde = {workspace = true}
+thiserror = {workspace = true}
+chrono = { workspace = true }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt", "json", "registry"] }
+tracing-appender = "0.2"
+
+[build-dependencies]
+tauri-plugin = { version = "2.5.1", features = ["build"] }

@@ -2,7 +2,7 @@
 import { invoke, convertFileSrc } from "@tauri-apps/api/core";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
-import { error as logError } from "@tauri-apps/plugin-log";
+import { error as logError } from "tauri-plugin-tracing";
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";

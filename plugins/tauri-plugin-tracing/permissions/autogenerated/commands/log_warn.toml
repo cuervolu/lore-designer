@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-log-warn"
+description = "Enables the log_warn command without any pre-configured scope."
+commands.allow = ["log_warn"]
+
+[[permission]]
+identifier = "deny-log-warn"
+description = "Denies the log_warn command without any pre-configured scope."
+commands.deny = ["log_warn"]

@@ -4,7 +4,7 @@ import {
   extname,
   join,
 } from "@tauri-apps/api/path";
-import {error as logError, warn} from "@tauri-apps/plugin-log";
+import {error as logError, warn} from "tauri-plugin-tracing";
 import {open as openDialog} from "@tauri-apps/plugin-dialog";
 import {
   copyFile,

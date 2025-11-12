@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {convertFileSrc} from '@tauri-apps/api/core';
-import {error as logError, debug} from "@tauri-apps/plugin-log";
+import {error as logError, debug} from "tauri-plugin-tracing";
 import {computed, ref, watch} from 'vue';
 import {toast} from 'vue-sonner';
 import { marked } from 'marked';

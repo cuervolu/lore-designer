@@ -20,7 +20,7 @@ tauri-build = { version = "2.3.0", features = [] }
 [dependencies]
 serde_json = {workspace = true}
 serde = {workspace = true}
-log = {workspace = true}
+#log = {workspace = true}
 tauri = {workspace = true}
 tauri-plugin-log = { version = "2", features = ["colored"] }
 tauri-plugin-clipboard-manager = "2"
@@ -34,7 +34,8 @@ tauri-plugin-drpc = "0.1.6"
 chrono = { version = "0.4" }
 sysinfo = "0.37.0"
 thiserror = {workspace = true}
-
+tracing = {workspace = true}
+tauri-plugin-tracing = { path = "../../../plugins/tauri-plugin-tracing" }
 lore-workspaces = { path = "../../../crates/lore-workspaces" }
 lore-editor = { path = "../../../crates/lore-editor" }
 

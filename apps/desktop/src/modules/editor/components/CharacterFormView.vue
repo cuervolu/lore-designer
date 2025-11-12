@@ -5,7 +5,7 @@ import MilkdownEditor from '@editor/components/MilkdownEditor.vue'
 import { useEditorStore } from '@editor/stores/editor.store'
 import type { EditorFile } from '@editor/types/editor.types'
 import { parse, stringify } from 'yaml'
-import { error as logError } from '@tauri-apps/plugin-log'
+import { error as logError } from 'tauri-plugin-tracing'
 
 import { useFormConfig } from '@editor/composables/useFormConfig'
 import DynamicField from './dynamic-form/DynamicField.vue'

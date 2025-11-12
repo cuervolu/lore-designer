@@ -15,7 +15,7 @@ import {
 import AboutModal from '@common/components/AboutModal.vue'
 import { open } from '@tauri-apps/plugin-dialog'
 import { toast } from 'vue-sonner'
-import { error as logError } from '@tauri-apps/plugin-log'
+import { error as logError } from 'tauri-plugin-tracing'
 import {useAutoSave} from "@editor/composables/useAutoSave.ts";
 
 const preferencesStore = usePreferencesStore()

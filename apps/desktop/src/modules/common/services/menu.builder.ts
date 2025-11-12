@@ -7,7 +7,7 @@ import {
 } from '@tauri-apps/api/menu'
 import type { Composer } from 'vue-i18n'
 import type { Ref } from 'vue'
-import { error as logError } from '@tauri-apps/plugin-log'
+import { error as logError } from 'tauri-plugin-tracing'
 
 interface UsePlatformReturn {
   platform: Readonly<Ref<string>>

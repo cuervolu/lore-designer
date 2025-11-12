@@ -65,6 +65,22 @@
           "takesValue": true
         }
       ]
+    },
+    "tracing": {
+      "level": "debug",
+      "targets": [
+        "stdout",
+        "webview",
+        {
+          "logDir": {
+            "fileName": null
+          }
+        }
+      ],
+      "rotation": {
+        "strategy": "daily",
+        "maxFiles": 5
+      }
     }
   },
   "bundle": {

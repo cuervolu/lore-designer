@@ -36,6 +36,13 @@
     "store:allow-save",
     "store:allow-values",
     "log:default",
-    "fs:default"
+    "fs:default",
+    "tracing:allow-log-error",
+    "tracing:allow-log-warn",
+    "tracing:allow-log-info",
+    "tracing:allow-log-debug",
+    "tracing:allow-log-trace",
+    "tracing:allow-get-log-history",
+    "tracing:allow-clear-log-buffer"
   ]
 }

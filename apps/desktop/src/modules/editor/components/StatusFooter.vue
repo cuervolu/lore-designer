@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import {Loader2} from 'lucide-vue-next';
 import {Progress} from '@/components/ui/progress';
-import {onMounted, ref, computed} from 'vue'; // Import computed
+import {onMounted, ref, computed} from 'vue';
 import {getVersion} from '@tauri-apps/api/app';
-import {error} from '@tauri-apps/plugin-log';
+import {error} from 'tauri-plugin-tracing';
 import {useEditorStore} from '@editor/stores/editor.store';
 
 

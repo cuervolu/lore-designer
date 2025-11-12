@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["apps/desktop/src-tauri", "crates/*"]
+members = ["apps/desktop/src-tauri", "crates/*", "plugins/*"]
 
 
 [workspace.dependencies]
@@ -13,6 +13,7 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 tauri = { version = "2", features = ["protocol-asset"] }
 tauri-plugin-store = "2"
+tracing = "0.1"
 chrono = "0.4"
 
 [profile.dev]

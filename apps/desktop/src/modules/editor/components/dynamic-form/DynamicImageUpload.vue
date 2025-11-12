@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import type { FieldDefinition } from '@/modules/editor/types/form.type'
 import { Upload, User, Trash2 } from 'lucide-vue-next'
-import { error as logError } from '@tauri-apps/plugin-log'
+import { error as logError } from 'tauri-plugin-tracing'
 
 const props = defineProps<{
   fieldDefinition: FieldDefinition

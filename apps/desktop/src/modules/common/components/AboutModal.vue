@@ -1,7 +1,7 @@
 ﻿<script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { getVersion } from '@tauri-apps/api/app';
-import { error as logError } from '@tauri-apps/plugin-log';
+import { error as logError } from 'tauri-plugin-tracing';
 import { Github } from 'lucide-vue-next';
 import {
   Dialog,

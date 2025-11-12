@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-log-info"
+description = "Enables the log_info command without any pre-configured scope."
+commands.allow = ["log_info"]
+
+[[permission]]
+identifier = "deny-log-info"
+description = "Denies the log_info command without any pre-configured scope."
+commands.deny = ["log_info"]
