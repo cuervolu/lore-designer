@@ -1,6 +1,6 @@
 ﻿<script setup lang="ts">
 import { getVersion } from "@tauri-apps/api/app";
-import { error } from "@tauri-apps/plugin-log";
+import { error } from "tauri-plugin-tracing";
 import { ref, computed, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";

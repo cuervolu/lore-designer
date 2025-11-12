@@ -1,7 +1,7 @@
 ﻿<script setup lang="ts">
 import {invoke} from "@tauri-apps/api/core"
 import {open} from '@tauri-apps/plugin-dialog'
-import {error} from '@tauri-apps/plugin-log'
+import {error} from 'tauri-plugin-tracing'
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { Search, Plus, FolderOpen } from 'lucide-vue-next'

@@ -2,27 +2,27 @@ mod core;
 mod system_info;
 
 use core::config::{commands, preferences};
-use log::{error, info};
-use tauri_plugin_log::{fern::colors::ColoredLevelConfig, RotationStrategy};
+use tracing::{error, info};
+// use tauri_plugin_log::{fern::colors::ColoredLevelConfig, RotationStrategy};
 
-fn setup_logger(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
-    let base_log_level = if cfg!(debug_assertions) {
-        log::LevelFilter::Debug
-    } else {
-        log::LevelFilter::Info
-    };
-
-    let builder = tauri_plugin_log::Builder::new()
-        .max_file_size(1024 * 1024 * 10) // 10 MB
-        .rotation_strategy(RotationStrategy::KeepAll)
-        .timezone_strategy(tauri_plugin_log::TimezoneStrategy::UseLocal)
-        .with_colors(ColoredLevelConfig::default())
-        .level(base_log_level);
-
-    app.handle().plugin(builder.build())?;
-
-    Ok(())
-}
+// fn setup_logger(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
+//     let base_log_level = if cfg!(debug_assertions) {
+//         log::LevelFilter::Debug
+//     } else {
+//         log::LevelFilter::Info
+//     };
+//
+//     let builder = tauri_plugin_log::Builder::new()
+//         .max_file_size(1024 * 1024 * 10) // 10 MB
+//         .rotation_strategy(RotationStrategy::KeepAll)
+//         .timezone_strategy(tauri_plugin_log::TimezoneStrategy::UseLocal)
+//         .with_colors(ColoredLevelConfig::default())
+//         .level(base_log_level);
+//
+//     app.handle().plugin(builder.build())?;
+//
+//     Ok(())
+// }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -37,8 +37,9 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_clipboard_manager::init())
+        .plugin(tauri_plugin_tracing::init())
         .setup(|app| {
-            setup_logger(app)?;
+            // setup_logger(app)?;
 
             info!("==================== Starting Lore Designer ====================");
 

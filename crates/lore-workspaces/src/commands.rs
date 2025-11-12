@@ -4,7 +4,7 @@ use crate::recent::{
     RecentWorkspace, add_recent_workspace, check_workspace_exists, get_recent_workspaces,
     remove_recent_workspace,
 };
-use log::{error, info};
+use tracing::{error, info};
 use std::path::{Path, PathBuf};
 use tauri::AppHandle;
 

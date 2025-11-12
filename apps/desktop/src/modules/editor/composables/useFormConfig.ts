@@ -1,5 +1,5 @@
 import { ref, shallowRef } from 'vue'
-import {error as logError} from "@tauri-apps/plugin-log";
+import {error as logError} from "tauri-plugin-tracing";
 import { invoke } from '@tauri-apps/api/core'
 import { useEditorStore } from '@/modules/editor/stores/editor.store'
 import type { FormConfig } from '@/modules/editor/types/form.type'

@@ -1,5 +1,5 @@
 import {invoke} from '@tauri-apps/api/core'
-import {debug, error as logError, warn} from '@tauri-apps/plugin-log'
+import {debug, error as logError, warn} from 'tauri-plugin-tracing'
 import {listen, type UnlistenFn} from '@tauri-apps/api/event'
 import {defineStore} from 'pinia'
 import {ref, computed} from 'vue'
@@ -760,6 +760,7 @@ export const useEditorStore = defineStore('editor', () => {
 
   async function toggleConsole() {
     isConsoleOpen.value = !isConsoleOpen.value
+    showConsole.value = isConsoleOpen.value
     await saveEditorState()
   }
 

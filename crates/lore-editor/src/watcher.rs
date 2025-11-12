@@ -1,7 +1,7 @@
 use crate::IndexManager;
 use anyhow::Context;
 use crossbeam_channel::Sender;
-use log::{debug, error};
+use tracing::{debug, error};
 use notify::{
     Event, EventHandler, RecommendedWatcher, RecursiveMode, Watcher,
     event::{AccessKind, AccessMode, EventKind, ModifyKind, RenameMode},

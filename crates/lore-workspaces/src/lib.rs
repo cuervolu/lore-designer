@@ -9,7 +9,7 @@ pub use crate::model::{WORKSPACE_VERSION, WorkspaceError};
 use anyhow::Context;
 pub use commands::*;
 pub use icons::*;
-use log::{debug, info, warn};
+use tracing::{debug, info, warn};
 pub use manifest::*;
 pub use model::*;
 pub use recent::*;

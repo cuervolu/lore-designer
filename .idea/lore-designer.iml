@@ -7,6 +7,8 @@
       <sourceFolder url="file://$MODULE_DIR$/crates/lore-workspaces/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/lore-editor/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/lore-test-utils/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/plugins/tauri-plugin-tracing/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/plugins/tauri-plugin-tracing/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />

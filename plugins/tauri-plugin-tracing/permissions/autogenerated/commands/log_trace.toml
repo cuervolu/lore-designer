@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-log-trace"
+description = "Enables the log_trace command without any pre-configured scope."
+commands.allow = ["log_trace"]
+
+[[permission]]
+identifier = "deny-log-trace"
+description = "Denies the log_trace command without any pre-configured scope."
+commands.deny = ["log_trace"]

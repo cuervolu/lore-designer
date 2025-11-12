@@ -1,6 +1,6 @@
 import './assets/global.css'
 
-import { error } from '@tauri-apps/plugin-log'
+import { error } from 'tauri-plugin-tracing'
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import '@fontsource-variable/inter'

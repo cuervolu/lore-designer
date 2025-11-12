@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core'
-import { error as logError } from '@tauri-apps/plugin-log'
+import { error as logError } from 'tauri-plugin-tracing'
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 

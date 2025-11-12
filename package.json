@@ -3,7 +3,8 @@
   "private": true,
   "workspaces": [
     "apps/*",
-    "packages/*"
+    "packages/*",
+    "plugins/tauri-plugin-tracing"
   ],
   "scripts": {
     "dev:desktop": "cd apps/desktop && bun run dev",

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { error as logError } from "@tauri-apps/plugin-log";
+import { error as logError } from "tauri-plugin-tracing";
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
 import { defaultValueCtx, Editor, editorViewOptionsCtx, rootCtx } from '@milkdown/kit/core';

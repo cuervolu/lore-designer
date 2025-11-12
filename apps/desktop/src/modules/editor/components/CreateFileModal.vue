@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {error as logError} from "@tauri-apps/plugin-log";
+import {error as logError} from "tauri-plugin-tracing";
 import {ref, computed} from 'vue';
 import {
   FileText, User, MapPin, BookOpen, PenTool, type LucideIcon

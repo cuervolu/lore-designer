@@ -1,4 +1,4 @@
-import {error as logError} from "@tauri-apps/plugin-log";
+import {error as logError} from "tauri-plugin-tracing";
 import {ref} from 'vue';
 import {useMagicKeys, whenever, useIntervalFn} from '@vueuse/core';
 import {toast} from 'vue-sonner';

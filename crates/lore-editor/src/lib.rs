@@ -17,7 +17,7 @@ pub use watcher::*;
 use crate::frontmatter::combine_frontmatter_and_content;
 use anyhow::Context;
 use gray_matter::{Matter, engine::YAML};
-use log::{debug, info};
+use tracing::{debug, info};
 use std::path::Path;
 
 /// Main structure for editor functionality
