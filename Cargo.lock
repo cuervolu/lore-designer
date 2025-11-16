@@ -2558,8 +2558,10 @@ name = "lore-workspaces"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "chrono",
  "serde",
  "serde_json",
+ "sha2",
  "tauri",
  "tauri-plugin-store",
  "thiserror 2.0.17",

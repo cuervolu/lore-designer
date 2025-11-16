@@ -25,7 +25,7 @@
     ],
     "security": {
       "csp": {
-        "default-src": "'self' blob: data: filesystem: ws: wss: http: https: tauri: 'unsafe-inline' asset: https://asset.localhost",
+        "default-src": "'self' blob: data: filesystem: ws: wss: http: https: tauri: 'unsafe-inline' asset: https://asset.localhost; media-src",
         "script-src": "'self' 'unsafe-eval'",
         "connect-src": "'self' ipc: http://ipc.localhost tauri: asset: https://asset.localhost",
         "img-src": [
@@ -41,8 +41,10 @@
       "assetProtocol": {
         "enable": true,
         "scope": [
-          "**/*"
-        ]
+              "**/*",
+              "**/.*",
+              "**/.*/**"
+            ]
       }
     }
   },
@@ -66,6 +68,9 @@
         }
       ]
     },
+    "fs": {
+        "requireLiteralLeadingDot": false
+    },
     "tracing": {
       "level": "debug",
       "targets": [
@@ -84,7 +89,7 @@
     }
   },
   "bundle": {
-    "fileAssociations": [ 
+    "fileAssociations": [
       {
         "ext": [
           "lore"
@@ -107,10 +112,12 @@
     "createUpdaterArtifacts": true,
     "targets": [
       "appimage",
-      "nsis", 
-      "msi", 
+      "nsis",
+      "msi",
       "deb",
-      "rpm"
+      "rpm",
+      "app",
+      "dmg"
     ],
     "icon": [
       "icons/32x32.png",
