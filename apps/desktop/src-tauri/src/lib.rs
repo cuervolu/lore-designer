@@ -81,6 +81,11 @@ pub fn run() {
             lore_editor::search_files_by_type,
             lore_editor::get_file_frontmatter,
             lore_editor::get_all_workspace_files,
+            lore_workspaces::register_image,
+            lore_workspaces::update_image_references,
+            lore_workspaces::validate_image_index,
+            lore_workspaces::find_image_candidates,
+            lore_workspaces::bulk_update_image_path,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

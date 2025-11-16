@@ -10,5 +10,25 @@
     "saveTriggered": "Save action triggered",
     "saveWillBeImplemented": "Save functionality will be implemented in the editor component",
     "fileTreeRefreshed": "File tree refreshed"
+  },
+  "imageMissing": "Image Missing",
+  "relocateImage": "Relocate",
+  "removeReference": "Remove",
+  "workspace": {
+      "health": {
+        "title": "Workspace Health",
+        "description": "Issues detected with images in your workspace",
+        "missingImages": "{count} missing image(s)",
+        "orphanedImages": "{count} unused image(s)",
+        "orphanedImagesDescription": "These images exist in your assets folder but are not referenced by any files.",
+        "usedBy": "Used by {count} file(s)",
+        "affectedFiles": "Affected files",
+        "cleanupOrphans": "Cleanup Unused Images",
+        "noIssues": "No image issues detected"
+      }
+  },
+  "common": {
+    "comingSoon": "Coming Soon",
+    "loading": "Loading"
   }
 }

@@ -10,6 +10,7 @@ import { error as logError } from 'tauri-plugin-tracing'
 import { useFormConfig } from '@editor/composables/useFormConfig'
 import DynamicField from './dynamic-form/DynamicField.vue'
 import { Skeleton } from '@/components/ui/skeleton'
+import { invoke } from '@tauri-apps/api/core'
 
 const props = defineProps<{
   file: EditorFile
@@ -108,19 +109,54 @@ function saveChanges() {
   }
 }
 
-function updateStoreState() {
+async function updateStoreState() {
   if (isUpdatingFromStore.value) return
 
   try {
     editorStore.activeFileFrontmatter = serializeToYaml()
     editorStore.activeFileContent = bodyContent.value
     editorStore.markTabAsChanged()
-
+    
+    await updateImageReferences()
   } catch (e) {
     logError(`Failed to stringify/update store state: ${e}`)
   }
 }
 
+async function updateImageReferences() {
+  const currentFilePath = editorStore.activeTab?.path
+  if (!currentFilePath || !editorStore.currentWorkspace?.path) {
+    return
+  }
+
+  const imagePaths: string[] = []
+  
+  const allFields = [
+    ...(heroFields.value || []),
+    ...(sidebarFields.value || []),
+    ...(gridFields.value || []),
+    ...(customFields.value || []),
+  ]
+
+  for (const field of allFields) {
+    if (field.type === 'image' && formData.value[field.key]) {
+      imagePaths.push(formData.value[field.key])
+    }
+  }
+
+  // Only update if there are images
+  if (imagePaths.length > 0 || editorStore.activeTab?.path) {
+    try {
+      await invoke('update_image_references', {
+        workspacePath: editorStore.currentWorkspace.path,
+        filePath: currentFilePath,
+        imagePaths,
+      })
+    } catch (err) {
+      await logError(`Failed to update image references: ${err}`)
+    }
+  }
+}
 
 function handleBodyUpdate(text: string) {
   if (isUpdatingFromStore.value) return

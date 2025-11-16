@@ -1,5 +1,5 @@
 import {invoke} from '@tauri-apps/api/core'
-import {debug, error as logError, warn} from 'tauri-plugin-tracing'
+import {debug, error as logError, warn, info} from 'tauri-plugin-tracing'
 import {listen, type UnlistenFn} from '@tauri-apps/api/event'
 import {defineStore} from 'pinia'
 import {ref, computed} from 'vue'
@@ -16,6 +16,7 @@ import type {
   IndexingProgress,
   SaveFileRequest
 } from "@editor/types/editor.types";
+import type {ValidationReport} from '@editor/types/image.types';
 
 export const useEditorStore = defineStore('editor', () => {
   const preferencesStore = usePreferencesStore()
@@ -32,6 +33,8 @@ export const useEditorStore = defineStore('editor', () => {
   const fileSystemUnlistener = ref<UnlistenFn | null>(null)
   const isInspectorOpen = ref(true)
   const isConsoleOpen = ref(false)
+  const imageValidationReport = ref<ValidationReport | null>(null);
+  const isValidatingImages = ref(false);
 
   // Temporary state for the content being edited in EditorContent
   const activeFileContent = ref<string>('');
@@ -61,6 +64,7 @@ export const useEditorStore = defineStore('editor', () => {
 
       currentWorkspace.value = workspace;
 
+      await validateWorkspaceImages();
       await loadFileTree();
       await startIndexingProgressPoll();
       await loadEditorState(); // Load saved tabs, etc.
@@ -781,6 +785,36 @@ export const useEditorStore = defineStore('editor', () => {
       await debug(`Marked tab ${tabId} as having unsaved changes.`);
     }
   }
+  
+  
+  const validateWorkspaceImages = async () => {
+    if (!currentWorkspace.value?.path) {
+      return;
+    }
+  
+    isValidatingImages.value = true;
+  
+    try {
+      const report = await invoke<ValidationReport>('validate_image_index', {
+        workspacePath: currentWorkspace.value.path,
+      });
+  
+      imageValidationReport.value = report;
+  
+      if (report.missing_images.length > 0) {
+        await info(`Found ${report.missing_images.length} missing images`);
+      }
+    } catch (err) {
+      await logError(`Failed to validate image index: ${err}`);
+      imageValidationReport.value = null;
+    } finally {
+      isValidatingImages.value = false;
+    }
+  };
+
+  
+  
+  
 
   function updateFileStats(
     stats: { lines: number; words: number; characters: number } | null
@@ -817,6 +851,8 @@ export const useEditorStore = defineStore('editor', () => {
     activeFileType,
     isConsoleOpen,
     isInspectorOpen,
+    imageValidationReport,
+    isValidatingImages,
 
     // Computed
     activeTab,
@@ -837,6 +873,8 @@ export const useEditorStore = defineStore('editor', () => {
     getWelcomeText,
     markTabAsChanged,
     saveEditorState,
-    updateFileStats
+    updateFileStats,
+
+    validateWorkspaceImages,
   };
 });
