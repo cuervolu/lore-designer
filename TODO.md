@@ -11,14 +11,15 @@
 - [Feature] Complete translation system with Crowdin
 
 ## To Do (Prioritized)
-- [Bug] Auto-save doesn't work consistently
 - [Enhancement] Visual feedback improvements for long operations
-- [Feature] Dynamic character forms configuration (includes custom fields in `.lore/character_form_config.toml`)
 - [Feature] Add "Trash" view (`.lore/trash`)
 - [Refactor] Refactor `editor-store.ts` (too large)
 - [Docs] Write documentation for the `.lore` format
 
 ## In Progress
-- [Bug] Cannot scroll in the log console
-- [Feature] Add [vue-virtual-scroller](https://github.com/Akryum/vue-virtual-scroller) to the log console
+- [Bug] Auto-save doesn't work consistently
+- [Feature] Dynamic character forms configuration (includes custom fields in `.lore/character_form_config.toml`)
+
 ## Done
+[Bug] Cannot scroll in the log console - 2025-11-16
+[Feature] Add vue-virtual-scroller to the log console - 2025-11-16

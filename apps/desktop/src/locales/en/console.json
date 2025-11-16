@@ -1,0 +1,17 @@
+{
+  "tabs": {
+    "console": "Console",
+    "problems": "Problems",
+    "output": "Output"
+  },
+  "actions": {
+    "clear": "Clear",
+    "maximize": "Maximize",
+    "close": "Close"
+  },
+  "empty": {
+    "console": "No console messages",
+    "problems": "No problems detected",
+    "output": "No output messages"
+  }
+}

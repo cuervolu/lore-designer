@@ -1,8 +1,10 @@
 import './assets/global.css'
+import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 
 import { error } from 'tauri-plugin-tracing'
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
+import VueVirtualScroller from 'vue-virtual-scroller'
 import '@fontsource-variable/inter'
 import '@fontsource-variable/fira-code';
 
@@ -19,6 +21,7 @@ async function initializeApp() {
   app.use(pinia)
   app.use(router)
   app.use(i18n)
+  app.use(VueVirtualScroller)
 
   app.mount('#app')
 
