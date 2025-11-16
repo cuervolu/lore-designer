@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { Button } from '@/components/ui/button'
 import { AlertCircle, Info, ChevronUp, X, Trash2 } from 'lucide-vue-next'
-import { ScrollArea } from '@/components/ui/scroll-area'
+import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller'
+import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 import {
   listenToLogs,
   getHistory,
@@ -10,37 +12,73 @@ import {
   type LogEntry as PluginLogEntry
 } from 'tauri-plugin-tracing'
 
+const { t } = useI18n()
+
 const activeTab = ref('console')
+const consoleScrollerRef = ref<InstanceType<typeof DynamicScroller> | null>(null)
+const problemsScrollerRef = ref<InstanceType<typeof DynamicScroller> | null>(null)
+const outputScrollerRef = ref<InstanceType<typeof DynamicScroller> | null>(null)
 let unlisten: (() => void) | null = null
 
-// Message types (tu tipo local)
-type MessageType = 'ERROR' | 'DEBUG' | 'INFO' | 'WARNING';
+type MessageType = 'ERROR' | 'DEBUG' | 'INFO' | 'WARNING'
 
 interface LogMessage {
-  timestamp: string;
-  type: MessageType;
-  message: string;
-  source?: string;
+  id: string
+  timestamp: string
+  type: MessageType
+  message: string
+  source?: string
 }
 
 interface Problem {
-  type: 'error' | 'warning';
-  message: string;
-  file?: string;
-  line?: number;
+  id: string
+  type: 'error' | 'warning'
+  message: string
+  file?: string
+  line?: number
 }
 
-// Output message interface
 interface OutputMessage {
-  timestamp: string;
-  message: string;
+  id: string
+  timestamp: string
+  message: string
 }
 
 const consoleMessages = ref<LogMessage[]>([])
-
 const problems = ref<Problem[]>([])
-
 const outputs = ref<OutputMessage[]>([])
+
+let messageIdCounter = 0
+const generateId = () => `msg-${Date.now()}-${messageIdCounter++}`
+
+const scrollToBottom = async () => {
+  await nextTick()
+
+  let scroller: InstanceType<typeof DynamicScroller> | null = null
+
+  if (activeTab.value === 'console') {
+    scroller = consoleScrollerRef.value
+  } else if (activeTab.value === 'problems') {
+    scroller = problemsScrollerRef.value
+  } else if (activeTab.value === 'output') {
+    scroller = outputScrollerRef.value
+  }
+
+  if (scroller) {
+    try {
+      scroller.scrollToBottom()
+    } catch (e) {
+      const itemCount =
+        activeTab.value === 'console' ? consoleMessages.value.length :
+        activeTab.value === 'problems' ? problems.value.length :
+        outputs.value.length
+
+      if (itemCount > 0) {
+        scroller.scrollToItem(itemCount - 1)
+      }
+    }
+  }
+}
 
 const transformLogEntry = (entry: PluginLogEntry): LogMessage => {
   let messageType: MessageType
@@ -63,6 +101,7 @@ const transformLogEntry = (entry: PluginLogEntry): LogMessage => {
   }
 
   return {
+    id: generateId(),
     timestamp: entry.timestamp,
     type: messageType,
     message: entry.message,
@@ -71,41 +110,49 @@ const transformLogEntry = (entry: PluginLogEntry): LogMessage => {
 }
 
 const addConsoleMessage = (type: MessageType, message: string, source?: string) => {
-  consoleMessages.value.unshift({
+  const newMessage: LogMessage = {
+    id: generateId(),
     timestamp: new Date().toLocaleTimeString(),
     type,
     message,
     source
-  })
+  }
+
+  consoleMessages.value.push(newMessage)
+
+  if (type === 'ERROR' || type === 'WARNING') {
+    problems.value.push({
+      id: generateId(),
+      type: type === 'ERROR' ? 'error' : 'warning',
+      message,
+      file: source,
+      line: undefined
+    })
+
+    if (problems.value.length > 50) {
+      problems.value.shift()
+    }
+  }
 
   if (consoleMessages.value.length > 100) {
-    consoleMessages.value.pop()
+    consoleMessages.value.shift()
   }
-}
 
-const addProblem = (type: 'error' | 'warning', message: string, file?: string, line?: number) => {
-  problems.value.unshift({
-    type,
-    message,
-    file,
-    line
-  })
-
-  if (problems.value.length > 50) {
-    problems.value.pop()
-  }
+  scrollToBottom()
 }
 
 const addOutput = (message: string) => {
-  outputs.value.unshift({
+  outputs.value.push({
+    id: generateId(),
     timestamp: new Date().toLocaleTimeString(),
     message
   })
 
-  // Limit to 100 messages
   if (outputs.value.length > 100) {
-    outputs.value.pop()
+    outputs.value.shift()
   }
+
+  scrollToBottom()
 }
 
 const clearCurrentTab = async () => {
@@ -119,10 +166,34 @@ const clearCurrentTab = async () => {
   }
 }
 
+const consoleSizeDependencies = computed(() =>
+  consoleMessages.value.map(m => m.message.length)
+)
+const problemsSizeDependencies = computed(() =>
+  problems.value.map(p => p.message.length)
+)
+const outputsSizeDependencies = computed(() =>
+  outputs.value.map(o => o.message.length)
+)
+
 onMounted(async () => {
   try {
     const history = await getHistory()
-    consoleMessages.value = history.map(transformLogEntry).reverse()
+    consoleMessages.value = history.map(transformLogEntry)
+
+    consoleMessages.value.forEach(msg => {
+      if (msg.type === 'ERROR' || msg.type === 'WARNING') {
+        problems.value.push({
+          id: generateId(),
+          type: msg.type === 'ERROR' ? 'error' : 'warning',
+          message: msg.message,
+          file: msg.source,
+          line: undefined
+        })
+      }
+    })
+
+    scrollToBottom()
   } catch (e) {
     console.error('Failed to load log history:', e)
     addConsoleMessage('ERROR', `Failed to load log history: ${e}`, 'ConsolePanel')
@@ -131,19 +202,35 @@ onMounted(async () => {
   try {
     unlisten = await listenToLogs((event) => {
       const newEntries = event.payload.map(transformLogEntry)
-      consoleMessages.value.unshift(...newEntries.reverse())
+
+      newEntries.forEach(entry => {
+        consoleMessages.value.push(entry)
+
+        if (entry.type === 'ERROR' || entry.type === 'WARNING') {
+          problems.value.push({
+            id: generateId(),
+            type: entry.type === 'ERROR' ? 'error' : 'warning',
+            message: entry.message,
+            file: entry.source,
+            line: undefined
+          })
+        }
+      })
 
       if (consoleMessages.value.length > 100) {
-        consoleMessages.value = consoleMessages.value.slice(0, 100)
+        consoleMessages.value = consoleMessages.value.slice(-100)
       }
+
+      if (problems.value.length > 50) {
+        problems.value = problems.value.slice(-50)
+      }
+
+      scrollToBottom()
     })
   } catch (e) {
     console.error('Failed to listen to logs:', e)
     addConsoleMessage('ERROR', `Failed to listen to logs: ${e}`, 'ConsolePanel')
   }
-
-  addProblem('warning', 'Missing reference in character relationship', 'Characters/Hero.character', 42)
-  addOutput('Workspace loaded successfully')
 })
 
 onUnmounted(() => {
@@ -168,98 +255,178 @@ const handleClose = () => {
           class="px-4 py-2 text-sm border-r hover:bg-muted/50"
           :class="{ 'bg-muted/50 font-medium': activeTab === 'console' }"
         >
-          Console
+          {{ t('console.tabs.console') }}
         </button>
         <button
           @click="activeTab = 'problems'"
           class="px-4 py-2 text-sm border-r hover:bg-muted/50"
           :class="{ 'bg-muted/50 font-medium': activeTab === 'problems' }"
         >
-          Problems
+          {{ t('console.tabs.problems') }}
         </button>
         <button
           @click="activeTab = 'output'"
           class="px-4 py-2 text-sm hover:bg-muted/50"
           :class="{ 'bg-muted/50 font-medium': activeTab === 'output' }"
         >
-          Output
+          {{ t('console.tabs.output') }}
         </button>
       </div>
 
       <div class="ml-auto flex items-center">
-        <Button @click="clearCurrentTab" variant="ghost" size="sm" class="h-7 w-7 p-0"
-                title="Clear">
+        <Button
+          @click="clearCurrentTab"
+          variant="ghost"
+          size="sm"
+          class="h-7 w-7 p-0"
+          :title="t('console.actions.clear')"
+        >
           <Trash2 class="h-4 w-4" />
         </Button>
-        <Button variant="ghost" size="sm" class="h-7 w-7 p-0" title="Maximize">
+        <Button
+          variant="ghost"
+          size="sm"
+          class="h-7 w-7 p-0"
+          :title="t('console.actions.maximize')"
+        >
           <ChevronUp class="h-4 w-4" />
         </Button>
-        <Button @click="handleClose" variant="ghost" size="sm" class="h-7 w-7 p-0" title="Close">
+        <Button
+          @click="handleClose"
+          variant="ghost"
+          size="sm"
+          class="h-7 w-7 p-0"
+          :title="t('console.actions.close')"
+        >
           <X class="h-4 w-4" />
         </Button>
       </div>
     </div>
 
-    <ScrollArea class="flex-1">
-      <div v-if="activeTab === 'console'" class="font-mono text-xs p-1">
-        <div v-for="(message, index) in consoleMessages" :key="index"
-             class="my-1 border-b border-muted/30 pb-1">
-          <span class="text-muted-foreground">{{ message.timestamp }}</span>
-          <span v-if="message.source" class="ml-2 text-purple-400">[{{ message.source }}]</span>
-          <span
-            class="ml-2 font-medium px-1 rounded"
-            :class="{
-              'bg-destructive/10 text-destructive': message.type === 'ERROR',
-              'bg-blue-500/10 text-blue-500': message.type === 'DEBUG',
-              'bg-green-500/10 text-green-500': message.type === 'INFO',
-              'bg-amber-500/10 text-amber-500': message.type === 'WARNING'
-            }"
-          >
-            [{{ message.type }}]
-          </span>
-          <span class="ml-2">{{ message.message }}</span>
-        </div>
+    <DynamicScroller
+      v-if="activeTab === 'console'"
+      ref="consoleScrollerRef"
+      :items="consoleMessages"
+      :min-item-size="40"
+      class="flex-1 font-mono text-xs"
+      key-field="id"
+    >
+      <template #default="{ item, index, active }">
+        <DynamicScrollerItem
+          :item="item"
+          :active="active"
+          :data-index="index"
+          :size-dependencies="[item.message.length]"
+          class="p-1"
+        >
+          <div class="my-1 border-b border-muted/30 pb-1">
+            <span class="text-muted-foreground">{{ item.timestamp }}</span>
+            <span v-if="item.source" class="ml-2 text-purple-400">[{{ item.source }}]</span>
+            <span
+              class="ml-2 font-medium px-1 rounded"
+              :class="{
+                'bg-destructive/10 text-destructive': item.type === 'ERROR',
+                'bg-blue-500/10 text-blue-500': item.type === 'DEBUG',
+                'bg-green-500/10 text-green-500': item.type === 'INFO',
+                'bg-amber-500/10 text-amber-500': item.type === 'WARNING'
+              }"
+            >
+              [{{ item.type }}]
+            </span>
+            <span class="ml-2">{{ item.message }}</span>
+          </div>
+        </DynamicScrollerItem>
+      </template>
 
+      <template #after>
         <div v-if="consoleMessages.length === 0" class="p-2 text-muted-foreground text-center">
-          No console messages
+          {{ t('console.empty.console') }}
         </div>
-      </div>
+      </template>
+    </DynamicScroller>
 
-      <div v-else-if="activeTab === 'problems'" class="font-mono text-xs p-1">
-        <div v-for="(problem, index) in problems" :key="index"
-             class="my-1 flex items-start border-b border-muted/30 pb-1">
-          <AlertCircle
-            v-if="problem.type === 'error'"
-            class="h-4 w-4 text-destructive mr-2 mt-0.5 flex-shrink-0"
-          />
-          <Info
-            v-else
-            class="h-4 w-4 text-amber-500 mr-2 mt-0.5 flex-shrink-0"
-          />
-          <div>
-            <div>{{ problem.message }}</div>
-            <div v-if="problem.file" class="text-muted-foreground text-xs">
-              {{ problem.file }}{{ problem.line ? `:${problem.line}` : '' }}
+    <!-- Problems Tab -->
+    <DynamicScroller
+      v-else-if="activeTab === 'problems'"
+      ref="problemsScrollerRef"
+      :items="problems"
+      :min-item-size="60"
+      class="flex-1 font-mono text-xs"
+      key-field="id"
+    >
+      <template #default="{ item, index, active }">
+        <DynamicScrollerItem
+          :item="item"
+          :active="active"
+          :data-index="index"
+          :size-dependencies="[item.message.length, item.file?.length || 0]"
+          class="p-1"
+        >
+          <div class="my-1 flex items-start border-b border-muted/30 pb-1">
+            <AlertCircle
+              v-if="item.type === 'error'"
+              class="h-4 w-4 text-destructive mr-2 mt-0.5 shrink-0"
+            />
+            <Info
+              v-else
+              class="h-4 w-4 text-amber-500 mr-2 mt-0.5 shrink-0"
+            />
+            <div>
+              <div>{{ item.message }}</div>
+              <div v-if="item.file" class="text-muted-foreground text-xs">
+                {{ item.file }}{{ item.line ? `:${item.line}` : '' }}
+              </div>
             </div>
           </div>
-        </div>
+        </DynamicScrollerItem>
+      </template>
 
+      <template #after>
         <div v-if="problems.length === 0" class="p-2 text-muted-foreground text-center">
-          No problems detected
+          {{ t('console.empty.problems') }}
         </div>
-      </div>
+      </template>
+    </DynamicScroller>
 
-      <div v-else class="font-mono text-xs p-1">
-        <div v-for="(output, index) in outputs" :key="index" class="my-1">
-          <span class="text-muted-foreground">{{ new Date(output.timestamp).toLocaleTimeString()
-            }}:</span>
-          <span class="ml-2">{{ output.message }}</span>
-        </div>
+    <!-- Output Tab -->
+    <DynamicScroller
+      v-else
+      ref="outputScrollerRef"
+      :items="outputs"
+      :min-item-size="30"
+      class="flex-1 font-mono text-xs"
+      key-field="id"
+    >
+      <template #default="{ item, index, active }">
+        <DynamicScrollerItem
+          :item="item"
+          :active="active"
+          :data-index="index"
+          :size-dependencies="[item.message.length]"
+          class="p-1"
+        >
+          <div class="my-1">
+            <span class="text-muted-foreground">{{ item.timestamp }}:</span>
+            <span class="ml-2">{{ item.message }}</span>
+          </div>
+        </DynamicScrollerItem>
+      </template>
 
+      <template #after>
         <div v-if="outputs.length === 0" class="p-2 text-muted-foreground text-center">
-          No output messages
+          {{ t('console.empty.output') }}
         </div>
-      </div>
-    </ScrollArea>
+      </template>
+    </DynamicScroller>
   </div>
 </template>
+
+<style scoped>
+:deep(.vue-recycle-scroller__item-wrapper) {
+  overflow: visible;
+}
+
+:deep(.vue-recycle-scroller__item-view) {
+  overflow: visible;
+}
+</style>
