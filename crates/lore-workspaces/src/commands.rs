@@ -1,11 +1,11 @@
-use super::{WorkspaceError, WorkspaceManager, WorkspaceResponse, create_default_settings, INTERNAL_DIR};
+use super::{WorkspaceError, WorkspaceManager, WorkspaceResponse, create_default_settings, INTERNAL_DIR, form_config};
 use crate::icons::get_workspace_icon_path;
 use crate::recent::{
     RecentWorkspace, add_recent_workspace, check_workspace_exists, get_recent_workspaces,
     remove_recent_workspace,
 };
-use log::{error, info};
-use std::path::Path;
+use tracing::{error, info};
+use std::path::{Path, PathBuf};
 use tauri::AppHandle;
 
 #[tauri::command]
@@ -127,4 +127,17 @@ pub async fn open_existing_workspace(
         path: workspace_path.clone(),
         message: format!("Workspace '{}' opened successfully.", dir_name),
     })
+}
+
+#[tauri::command]
+pub async fn get_character_form_config(workspace_path: PathBuf) -> Result<form_config::FormConfig, String> {
+    form_config::get_config(&workspace_path).await
+}
+
+#[tauri::command]
+pub async fn save_character_form_config(
+    workspace_path: PathBuf,
+    config: form_config::FormConfig,
+) -> Result<(), String> {
+    form_config::save_config(&workspace_path, &config).await
 }

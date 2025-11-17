@@ -1,5 +1,5 @@
 ﻿import { getCurrentWindow } from '@tauri-apps/api/window';
-import { error as logError} from '@tauri-apps/plugin-log'
+import { error as logError} from 'tauri-plugin-tracing'
 import { ref, readonly } from 'vue';
 
 // Create a reactive title state that can be shared across components

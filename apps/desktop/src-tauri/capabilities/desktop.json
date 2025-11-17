@@ -35,12 +35,13 @@
     "fs:scope-app-index",
     "fs:allow-appcache-read-recursive",
     "fs:allow-appcache-write-recursive",
+    "fs:allow-exists",
     {
       "identifier": "fs:scope",
       "allow": [
-        {
-          "path": "**/*"
-        }
+              "**/*",    
+              "**/.*",    
+              "**/.*/**" 
       ]
     },
     "cli:default",

@@ -1,7 +1,7 @@
 use crate::model::WorkspaceError;
 use crate::{LORE_DESIGNER_EXT, SETTINGS_FILE_NAME, WORKSPACE_VERSION};
 use anyhow::Context;
-use log::info;
+use tracing::info;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};

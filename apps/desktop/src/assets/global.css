@@ -162,6 +162,7 @@
   body {
     @apply bg-background text-foreground;
     font-family: 'Inter Variable', sans-serif;
+    font-size: var(--font-size-base);
   }
 }
 
@@ -246,4 +247,14 @@ html, body {
 .entity-link.entity-type--lore:hover {
   background-color: hsl(var(--chart-5) / 0.2);
   border-color: hsl(var(--chart-5) / 0.4);
+}
+
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type='number'] {
+  -moz-appearance: textfield;
 }

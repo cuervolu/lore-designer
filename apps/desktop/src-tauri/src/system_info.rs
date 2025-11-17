@@ -1,5 +1,5 @@
 ﻿use chrono::Local;
-use log::info;
+use tracing::info;
 use sysinfo::System;
 use tauri::AppHandle;
 

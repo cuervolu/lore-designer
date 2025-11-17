@@ -2,27 +2,27 @@ mod core;
 mod system_info;
 
 use core::config::{commands, preferences};
-use log::{error, info};
-use tauri_plugin_log::{fern::colors::ColoredLevelConfig, RotationStrategy};
+use tracing::{error, info};
+// use tauri_plugin_log::{fern::colors::ColoredLevelConfig, RotationStrategy};
 
-fn setup_logger(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
-    let base_log_level = if cfg!(debug_assertions) {
-        log::LevelFilter::Debug
-    } else {
-        log::LevelFilter::Info
-    };
-
-    let builder = tauri_plugin_log::Builder::new()
-        .max_file_size(1024 * 1024 * 10) // 10 MB
-        .rotation_strategy(RotationStrategy::KeepAll)
-        .timezone_strategy(tauri_plugin_log::TimezoneStrategy::UseLocal)
-        .with_colors(ColoredLevelConfig::default())
-        .level(base_log_level);
-
-    app.handle().plugin(builder.build())?;
-
-    Ok(())
-}
+// fn setup_logger(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
+//     let base_log_level = if cfg!(debug_assertions) {
+//         log::LevelFilter::Debug
+//     } else {
+//         log::LevelFilter::Info
+//     };
+//
+//     let builder = tauri_plugin_log::Builder::new()
+//         .max_file_size(1024 * 1024 * 10) // 10 MB
+//         .rotation_strategy(RotationStrategy::KeepAll)
+//         .timezone_strategy(tauri_plugin_log::TimezoneStrategy::UseLocal)
+//         .with_colors(ColoredLevelConfig::default())
+//         .level(base_log_level);
+//
+//     app.handle().plugin(builder.build())?;
+//
+//     Ok(())
+// }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -37,8 +37,9 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_clipboard_manager::init())
+        .plugin(tauri_plugin_tracing::init())
         .setup(|app| {
-            setup_logger(app)?;
+            // setup_logger(app)?;
 
             info!("==================== Starting Lore Designer ====================");
 
@@ -61,6 +62,8 @@ pub fn run() {
             lore_workspaces::add_recent_workspace_command,
             lore_workspaces::remove_recent_workspace_command,
             lore_workspaces::check_workspace_exists_command,
+            lore_workspaces::get_character_form_config,
+            lore_workspaces::save_character_form_config,
             lore_editor::open_workspace_in_editor,
             lore_editor::get_workspace_file_tree,
             lore_editor::get_indexing_progress,
@@ -78,6 +81,11 @@ pub fn run() {
             lore_editor::search_files_by_type,
             lore_editor::get_file_frontmatter,
             lore_editor::get_all_workspace_files,
+            lore_workspaces::register_image,
+            lore_workspaces::update_image_references,
+            lore_workspaces::validate_image_index,
+            lore_workspaces::find_image_candidates,
+            lore_workspaces::bulk_update_image_path,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {convertFileSrc} from '@tauri-apps/api/core';
-import {error as logError, debug} from "@tauri-apps/plugin-log";
+import {error as logError, debug} from "tauri-plugin-tracing";
 import {computed, ref, watch} from 'vue';
 import {toast} from 'vue-sonner';
 import { marked } from 'marked';
@@ -17,6 +17,7 @@ import {Textarea} from "@/components/ui/textarea";
 import {useEditorStore} from '@editor/stores/editor.store';
 import type {EditorFile, FileContent} from "@editor/types/editor.types.ts";
 import MilkdownEditor from "@editor/components/MilkdownEditor.vue";
+import CharacterFormView from "@editor/components/CharacterFormView.vue";
 
 const props = defineProps<{
   file: EditorFile | null;
@@ -208,12 +209,13 @@ function getIconComponent(iconName: string | undefined): LucideIcon {
   };
   return iconMap[iconName?.toLowerCase() || 'file'] || File;
 }
+const isCharacterForm = computed(() => fileType.value === 'Character');
 </script>
 
 <template>
   <div class="flex flex-col h-full bg-background">
     <div
-      v-if="file"
+      v-if="file && !isCharacterForm"
       class="w-full h-24 md:h-32 bg-muted/30 flex-shrink-0 relative border-b"
     >
       <div
@@ -236,16 +238,21 @@ function getIconComponent(iconName: string | undefined): LucideIcon {
         </div>
       </div>
     </div>
-    <div v-else class="h-24 md:h-32 bg-muted/30 flex-shrink-0 border-b">
+    <div v-else-if="!file" class="h-24 md:h-32 bg-muted/30 flex-shrink-0 border-b">
       <div class="flex items-center justify-center h-full">
         <span class="text-muted-foreground">No file selected</span>
       </div>
     </div>
 
-    <div class="flex-1 overflow-y-auto pt-10 md:pt-12 px-4 pb-6">
+    <div :class="isCharacterForm ? 'flex-1 overflow-hidden' : 'flex-1 overflow-y-auto pt-10 md:pt-12 px-4 pb-6'">
       <div class="h-full">
         <div v-if="isLoading" class="flex items-center justify-center h-48">
           <div class="text-muted-foreground">Loading content...</div>
+        </div>
+
+        <!-- Character Form View -->
+        <div v-else-if="isCharacterForm && file" class="h-full">
+          <CharacterFormView :file="file" />
         </div>
 
         <div

@@ -1,6 +1,6 @@
 use crate::model::WorkspaceError;
 use anyhow::Context;
-use log::debug;
+use tracing::debug;
 use std::fs;
 use std::path::{Path, PathBuf};
 use tauri::{AppHandle, Manager};

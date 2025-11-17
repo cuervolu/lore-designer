@@ -1,5 +1,5 @@
 ﻿import { platform } from '@tauri-apps/plugin-os';
-import { error as logError } from '@tauri-apps/plugin-log'
+import { error as logError } from 'tauri-plugin-tracing'
 import { ref, onMounted, readonly } from 'vue';
 
 

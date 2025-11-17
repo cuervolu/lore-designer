@@ -1,0 +1,13 @@
+[default]
+description = "Default permissions for the tracing plugin. Allows logging from frontend and reading history."
+permissions = [
+    # Allow sending logs from the frontend
+    "allow-log_trace",
+    "allow-log_debug",
+    "allow-log_info",
+    "allow-log_warn",
+    "allow-log_error",
+    # Allow the webview console to read history
+    "allow-get_log_history",
+    "allow-clear_log_buffer"
+]

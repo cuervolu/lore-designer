@@ -12,4 +12,7 @@ toml = {workspace = true}
 uuid = {workspace = true}
 serde = {workspace = true}
 serde_json = {workspace = true}
-log = {workspace = true}
+tracing = {workspace = true}
+tokio = { version = "1", features = ["fs", "macros", "rt-multi-thread"] }
+sha2 = "0.10"
+chrono = {workspace = true}

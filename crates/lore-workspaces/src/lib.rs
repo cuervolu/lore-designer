@@ -3,12 +3,16 @@ mod icons;
 mod manifest;
 mod model;
 mod recent;
+pub mod form_config;
+pub mod image_manager; 
+pub mod image_commands; 
 
+pub use image_commands::*;
 pub use crate::model::{WORKSPACE_VERSION, WorkspaceError};
 use anyhow::Context;
 pub use commands::*;
 pub use icons::*;
-use log::{debug, info, warn};
+use tracing::{debug, info, warn};
 pub use manifest::*;
 pub use model::*;
 pub use recent::*;
@@ -18,7 +22,7 @@ use tauri::AppHandle;
 
 pub const DEFAULT_FOLDERS: [&str; 4] = ["Characters", "Lore", "Story", "Notes"];
 pub const INTERNAL_DIR: &str = ".lore";
-pub const INTERNAL_SUBDIRS: [&str; 2] = ["trash", "logs"];
+pub const INTERNAL_SUBDIRS: [&str; 3] = ["trash", "logs", "assets"]; 
 
 pub const SETTINGS_FILE_NAME: &str = "settings.toml";
 pub const LORE_DESIGNER_EXT: &str = ".lore";
@@ -98,6 +102,13 @@ impl WorkspaceManager {
             ))?;
             debug!("Created internal subdir: {}", subdir_path.display());
         }
+        
+        let images_path = dot_lore_path.join("assets").join("images");
+                fs::create_dir(&images_path).context(format!(
+                    "Failed to create images directory: {}",
+                    images_path.display()
+                ))?;
+                debug!("Created images directory: {}", images_path.display());
 
         for folder in DEFAULT_FOLDERS.iter() {
             let folder_path = workspace_path.join(folder);

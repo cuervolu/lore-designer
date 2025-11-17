@@ -1,22 +1,22 @@
-import {convertFileSrc} from "@tauri-apps/api/core";
+import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import {
-  basename,
-  extname,
-  join,
+    basename,
+    extname,
+    join,
 } from "@tauri-apps/api/path";
-import {error as logError, warn} from "@tauri-apps/plugin-log";
-import {open as openDialog} from "@tauri-apps/plugin-dialog";
+import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import {
-  copyFile,
-  create,
-  exists,
+    copyFile,
+    create,
+    exists,
 } from "@tauri-apps/plugin-fs";
-import {ref} from "vue";
+import { error as logError, warn } from "tauri-plugin-tracing";
+import { ref } from "vue";
 
-import {useEditorStore} from "@editor/stores/editor.store";
+import { useEditorStore } from "@editor/stores/editor.store";
 import type {
-  ManagedImage,
-  ImageManagerError,
+    ImageManagerError,
+    ManagedImage,
 } from "@editor/types/image.types";
 
 export function useImage() {
@@ -41,94 +41,106 @@ export function useImage() {
 
 
   /**
-   * Prompts the user to select an image, copies it to the workspace assets,
-   * and returns paths for display and storage.
-   * @returns A Promise resolving to ManagedImage or null if cancelled/error.
-   */
-  const selectAndCopyImageToWorkspace = async (): Promise<ManagedImage | null> => {
-    isProcessing.value = true;
-    error.value = null;
+     * Prompts the user to select an image, copies it to the workspace assets,
+     * registers it in the index, and returns paths for display and storage.
+     * @param usedByFilePath - Optional file path that will use this image
+     * @returns A Promise resolving to ManagedImage or null if cancelled/error.
+     */
+    const selectAndCopyImageToWorkspace = async (
+      usedByFilePath?: string
+    ): Promise<ManagedImage | null> => {
+      isProcessing.value = true;
+      error.value = null;
 
-    if (!editorStore.currentWorkspace?.path) {
-      error.value = {
-        type: "NoWorkspace",
-        message: "No active workspace to save the image.",
-      };
-      isProcessing.value = false;
-      return null;
-    }
-
-    try {
-      const selected = await openDialog({
-        multiple: false,
-        directory: false,
-        filters: [
-          {
-            name: "Images",
-            extensions: ["png", "jpg", "jpeg", "gif", "webp", "svg"],
-          },
-        ],
-      });
-
-      if (!selected) {
-        // User cancelled the dialog
-        error.value = {type: "DialogCancelled", message: "Image selection was cancelled."};
+      if (!editorStore.currentWorkspace?.path) {
+        error.value = {
+          type: "NoWorkspace",
+          message: "No active workspace to save the image.",
+        };
         isProcessing.value = false;
         return null;
       }
 
-      const selectedPath = selected;
-      const originalFileNameWithExt = await basename(selectedPath);
-      const ext = await extname(selectedPath);
-      const originalFileNameWithoutExt = originalFileNameWithExt.substring(
-        0,
-        originalFileNameWithExt.length - ext.length
-      );
+      try {
+        const selected = await openDialog({
+          multiple: false,
+          directory: false,
+          filters: [
+            {
+              name: "Images",
+              extensions: ["png", "jpg", "jpeg", "gif", "webp", "svg"],
+            },
+          ],
+        });
 
-      const sanitizedBaseName = sanitizeFilename(originalFileNameWithoutExt);
-      // Ensure unique name to prevent overwrites and caching issues
-      const uniqueFileName = `${Date.now()}-${sanitizedBaseName}${ext}`;
+        if (!selected) {
+          error.value = {type: "DialogCancelled", message: "Image selection was cancelled."};
+          isProcessing.value = false;
+          return null;
+        }
 
-      const workspaceAssetsDir = await join(
-        editorStore.currentWorkspace.path,
-        ASSETS_SUBDIR
-      );
+        const selectedPath = selected;
+        const originalFileNameWithExt = await basename(selectedPath);
+        const ext = await extname(selectedPath);
+        const originalFileNameWithoutExt = originalFileNameWithExt.substring(
+          0,
+          originalFileNameWithExt.length - ext.length
+        );
 
-      // Ensure the assets directory exists
-      if (!(await exists(workspaceAssetsDir))) {
-        await create(workspaceAssetsDir);
+        const sanitizedBaseName = sanitizeFilename(originalFileNameWithoutExt);
+        const uniqueFileName = `${Date.now()}-${sanitizedBaseName}${ext}`;
+
+        const workspaceAssetsDir = await join(
+          editorStore.currentWorkspace.path,
+          ASSETS_SUBDIR
+        );
+
+        if (!(await exists(workspaceAssetsDir))) {
+          await create(workspaceAssetsDir);
+        }
+
+        const newImageAbsoluteDiskPath = await join(workspaceAssetsDir, uniqueFileName);
+        await copyFile(selectedPath, newImageAbsoluteDiskPath);
+
+        const displaySrc = convertFileSrc(newImageAbsoluteDiskPath);
+        const relativeStoragePath = `${ASSETS_SUBDIR}/${uniqueFileName}`.replace(/\\/g, '/');
+
+        // Register image in the index if used_by file is provided
+        if (usedByFilePath && editorStore.currentWorkspace?.path) {
+          try {
+            await invoke('register_image', {
+              workspacePath: editorStore.currentWorkspace.path,
+              relativePath: relativeStoragePath,
+              usedByFile: usedByFilePath,
+            });
+          } catch (err) {
+            await logError(`Failed to register image in index: ${err}`);
+            // Don't block the operation, just log the error
+          }
+        }
+
+        isProcessing.value = false;
+        return {
+          displaySrc,
+          relativeStoragePath,
+          absoluteDiskPath: newImageAbsoluteDiskPath,
+          altText: sanitizedBaseName,
+          originalFileName: originalFileNameWithExt,
+        };
+      } catch (err: any) {
+        await logError(`Error copying image: ${err}`);
+        error.value = {
+          type: "Unknown",
+          message: err.message || "An unknown error occurred while processing the image.",
+          details: err,
+        };
+        if (err.message?.toLowerCase().includes('copy')) {
+          error.value.type = "CopyFailed";
+        }
+        isProcessing.value = false;
+        return null;
       }
-
-      const newImageAbsoluteDiskPath = await join(workspaceAssetsDir, uniqueFileName);
-
-      await copyFile(selectedPath, newImageAbsoluteDiskPath);
-
-      const displaySrc = convertFileSrc(newImageAbsoluteDiskPath);
-      const relativeStoragePath = `${ASSETS_SUBDIR}/${uniqueFileName}`.replace(/\\/g, '/');
-
-      isProcessing.value = false;
-      return {
-        displaySrc,
-        relativeStoragePath,
-        absoluteDiskPath: newImageAbsoluteDiskPath,
-        altText: sanitizedBaseName,
-        originalFileName: originalFileNameWithExt,
-      };
-    // biome-ignore lint/suspicious/noExplicitAny: Generic error handling
-    } catch (err: any) {
-      await logError(`Error copying image: ${err}`);
-      error.value = {
-        type: "Unknown", // Or more specific if possible
-        message: err.message || "An unknown error occurred while processing the image.",
-        details: err,
-      };
-      if (err.message?.toLowerCase().includes('copy')) {
-        error.value.type = "CopyFailed";
-      }
-      isProcessing.value = false;
-      return null;
-    }
-  };
+    };
 
   /**
    * Converts a workspace-relative image path to an asset:// URL for display.
@@ -148,6 +160,28 @@ export function useImage() {
       return null;
     }
   };
+
+
+  /**
+     * Validates that an image exists physically on disk
+     * @param relativePath - Path relative to workspace root
+     * @returns true if image exists, false otherwise
+     */
+    const validateImage = async (relativePath: string): Promise<boolean> => {
+      if (!editorStore.currentWorkspace?.path) {
+        return false;
+      }
+
+      try {
+        const absolutePath = await join(
+          editorStore.currentWorkspace.path,
+          relativePath
+        );
+        return await exists(absolutePath);
+      } catch {
+        return false;
+      }
+    };
 
   /**
    * Converts an asset:// display URL back to a workspace-relative path.
@@ -211,6 +245,7 @@ export function useImage() {
     selectAndCopyImageToWorkspace,
     getDisplaySrcFromRelativePath,
     getRelativePathFromDisplaySrc,
+    validateImage,
     ASSETS_SUBDIR,
   };
 }
