@@ -15,7 +15,7 @@
   "relocateImage": "Reubicar",
   "removeReference": "Eliminar",
   "workspace": {
-      "health": {
+    "health": {
         "title": "Salud del Proyecto",
         "description": "Se detectaron problemas con imágenes en tu proyecto",
         "missingImages": "{count} imagen(es) faltante(s)",
@@ -25,10 +25,10 @@
         "affectedFiles": "Archivos afectados",
         "cleanupOrphans": "Limpiar Imágenes Sin Usar",
         "noIssues": "No se detectaron problemas con imágenes"
-      }
-    },
-    "common": {
-      "comingSoon": "Próximamente",
-      "loading": "Cargando"
     }
+  },
+  "common": {
+    "comingSoon": "Próximamente",
+    "loading": "Cargando"
+  }
 }
