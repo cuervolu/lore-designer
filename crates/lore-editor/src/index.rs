@@ -1,10 +1,13 @@
+use crate::FileSystemWatcher;
+
 use super::{EditorError, FileSearchResult, FileTreeItem, FileType, IndexedDirectory, IndexedFile};
-use ignore::Walk;
-use tracing::{debug, error, info, warn};
+use ignore::WalkBuilder;
+use tauri::Emitter;
 use std::collections::HashMap;
 use std::path::Path;
 use std::sync::{Arc, LazyLock, Mutex};
 use std::time::SystemTime;
+use tracing::{debug, error, info, warn};
 
 /// Special folder names that get custom icons
 pub const SPECIAL_FOLDERS: [&str; 5] = ["characters", "lore", "locations", "story", "notes"];
@@ -60,6 +63,13 @@ impl IndexManager {
         workspace_path: &Path,
         changed_path: &Path,
     ) -> Result<(), EditorError> {
+        // Early return if path is in .lore
+        if let Ok(rel_path) = changed_path.strip_prefix(workspace_path)
+            && rel_path.starts_with(".lore")
+        {
+            return Ok(());
+        }
+
         debug!(
             "Performing incremental update for: {}",
             changed_path.display()
@@ -126,14 +136,18 @@ impl IndexManager {
         workspace_path: &Path,
         progress: Arc<Mutex<IndexingProgress>>,
     ) -> Result<(), EditorError> {
-        // First, count the total files (for progress reporting)
-        let mut total_files = 0;
-        for result in Walk::new(workspace_path) {
-            match result {
-                Ok(_) => total_files += 1,
-                Err(err) => warn!("Error walking directory: {err}"),
-            }
-        }
+        let walker = WalkBuilder::new(workspace_path)
+            .hidden(false)
+            .ignore(true)
+            .git_ignore(false)
+            .require_git(false)
+            .follow_links(false)
+            .add_custom_ignore_filename(".loreignore")
+            .build();
+
+        let entries: Vec<_> = walker.filter_map(|e| e.ok()).collect();
+
+        let total_files = entries.len();
 
         {
             let mut guard = progress.lock().unwrap();
@@ -143,43 +157,32 @@ impl IndexManager {
         let mut files = Vec::new();
         let mut directories = Vec::new();
 
-        for result in Walk::new(workspace_path) {
-            match result {
-                Ok(entry) => {
-                    let path = entry.path();
+        for entry in entries {
+            let path = entry.path();
 
-                    {
-                        let mut guard = progress.lock().unwrap();
-                        guard.processed += 1;
-                        guard.current_file = path
-                            .strip_prefix(workspace_path)
-                            .ok()
-                            .and_then(|p| p.to_str())
-                            .map(|s| s.to_string());
-                    }
-                    if let Ok(rel_path) = path.strip_prefix(workspace_path) {
-                        let path_str = rel_path.to_string_lossy();
-                        if path_str.starts_with(".lore/") {
-                            continue;
-                        }
-                    }
+            {
+                let mut guard = progress.lock().unwrap();
+                guard.processed += 1;
+                guard.current_file = path
+                    .strip_prefix(workspace_path)
+                    .ok()
+                    .and_then(|p| p.to_str())
+                    .map(|s| s.to_string());
+            }
 
-                    if path.is_file() {
-                        if let Ok(indexed_file) = Self::index_file(workspace_path, path) {
-                            files.push(indexed_file);
-                        }
-                    } else if path.is_dir() && path != workspace_path {
-                        if let Ok(indexed_dir) = Self::index_directory(workspace_path, path) {
-                            directories.push(indexed_dir);
-                        }
-                    }
+            let file_type = entry.file_type();
+
+            if file_type.is_some_and(|ft| ft.is_file()) {
+                if let Ok(indexed_file) = Self::index_file(workspace_path, path) {
+                    files.push(indexed_file);
                 }
-                Err(err) => {
-                    warn!("Error processing entry: {err}");
+            } else if file_type.is_some_and(|ft| ft.is_dir()) && path != workspace_path {
+                // Index directories explicitly, even if empty
+                if let Ok(indexed_dir) = Self::index_directory(workspace_path, path) {
+                    directories.push(indexed_dir);
                 }
             }
 
-            // Small delay to not hog CPU
             std::thread::sleep(std::time::Duration::from_millis(5));
         }
 
@@ -188,7 +191,20 @@ impl IndexManager {
             guard.completed = true;
             guard.current_file = None;
         }
+
         Self::save_index(workspace_path, &files, &directories)?;
+
+        if let Some(watcher) = FileSystemWatcher::get(workspace_path)
+            && let Some(app) = &watcher.app {
+                let _ = app.emit(
+                    "indexing-complete",
+                    serde_json::json!({
+                        "workspace_path": workspace_path.display().to_string(),
+                        "file_count": files.len(),
+                        "directory_count": directories.len(),
+                    }),
+                );
+            }
 
         Ok(())
     }
@@ -281,16 +297,17 @@ impl IndexManager {
         Ok(())
     }
 
-    pub fn load_index(
+    fn load_index(
         workspace_path: &Path,
     ) -> Result<(Vec<IndexedFile>, Vec<IndexedDirectory>), EditorError> {
-        let index_file = workspace_path.join(".lore").join("index.json");
+        let index_path = workspace_path.join(".lore").join("index.json");
 
-        if !index_file.exists() {
+        if !index_path.exists() {
+            debug!("Index file doesn't exist yet, returning empty index");
             return Ok((Vec::new(), Vec::new()));
         }
 
-        let index_json = std::fs::read_to_string(index_file)?;
+        let index_json = std::fs::read_to_string(&index_path)?;
         let index_data: serde_json::Value = serde_json::from_str(&index_json)?;
 
         let files: Vec<IndexedFile> = serde_json::from_value(index_data["files"].clone())?;
@@ -525,5 +542,11 @@ impl IndexManager {
         } else {
             None
         }
+    }
+
+    pub fn clear_indexing_state(workspace_path: &str) {
+        let mut state = INDEXING_STATE.lock().unwrap();
+        state.remove(workspace_path);
+        debug!("Cleared indexing state for: {}", workspace_path);
     }
 }

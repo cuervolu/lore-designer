@@ -6,6 +6,7 @@ mod model;
 mod state;
 mod templates;
 mod watcher;
+mod ignore;
 
 pub use commands::*;
 pub use editor::*;
@@ -13,6 +14,7 @@ pub use index::*;
 pub use model::*;
 pub use state::*;
 pub use watcher::*;
+pub use ignore::*;
 
 use crate::frontmatter::combine_frontmatter_and_content;
 use anyhow::Context;

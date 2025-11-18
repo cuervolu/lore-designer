@@ -1,7 +1,6 @@
-use crate::IndexManager;
+use crate::{IgnoreMatcher, IndexManager};
 use anyhow::Context;
 use crossbeam_channel::Sender;
-use tracing::{debug, error};
 use notify::{
     Event, EventHandler, RecommendedWatcher, RecursiveMode, Watcher,
     event::{AccessKind, AccessMode, EventKind, ModifyKind, RenameMode},
@@ -11,8 +10,9 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, LazyLock, Mutex};
 use std::time::{Duration, Instant};
 use tauri::{AppHandle, Emitter};
+use tracing::{debug, error};
 
-const DEBOUNCE_MS: u64 = 300;
+const DEBOUNCE_MS: u64 = 500;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum FileEvent {
@@ -35,8 +35,10 @@ pub struct FileSystemWatcher {
     /// Last event time for debouncing
     last_events: Mutex<HashMap<PathBuf, Instant>>,
 
+    ignore_matcher: Arc<Mutex<IgnoreMatcher>>,
+
     /// Tauri app handle
-    app: Option<AppHandle>,
+    pub(crate) app: Option<AppHandle>,
 }
 
 struct FileSystemEventHandler {
@@ -65,6 +67,8 @@ impl FileSystemWatcher {
             }
         }
 
+        let ignore_matcher = Arc::new(Mutex::new(IgnoreMatcher::new(&path)?));
+
         let (event_sender, event_receiver) = crossbeam_channel::unbounded();
 
         let event_handler = FileSystemEventHandler {
@@ -74,7 +78,6 @@ impl FileSystemWatcher {
         };
 
         let mut watcher = notify::recommended_watcher(event_handler)?;
-
         watcher.watch(&path, RecursiveMode::Recursive)?;
 
         debug!("Started watching directory: {}", path.display());
@@ -83,6 +86,7 @@ impl FileSystemWatcher {
             path,
             _watcher: Mutex::new(Some(watcher)),
             last_events: Mutex::new(HashMap::new()),
+            ignore_matcher,
             app,
         });
 
@@ -121,98 +125,139 @@ impl FileSystemWatcher {
     }
 
     fn process_events(&self, receiver: crossbeam_channel::Receiver<FileEvent>) {
-        for event in receiver {
-            // Skip if this is a duplicate event within the debounce period
-            let should_process = {
-                let mut last_events = self.last_events.lock().unwrap();
-                let now = Instant::now();
+        let mut pending_events: HashMap<PathBuf, FileEvent> = HashMap::new();
+        let mut last_process = Instant::now();
 
-                let path = match &event {
-                    FileEvent::Created(path) => path,
-                    FileEvent::Modified(path) => path,
-                    FileEvent::Deleted(path) => path,
-                    FileEvent::Renamed(old_path, _) => old_path,
-                };
+        loop {
+            let timeout = Duration::from_millis(DEBOUNCE_MS);
 
-                if let Some(last_time) = last_events.get(path) {
-                    if now.duration_since(*last_time) < Duration::from_millis(DEBOUNCE_MS) {
-                        false
-                    } else {
-                        last_events.insert(path.clone(), now);
-                        true
+            match receiver.recv_timeout(timeout) {
+                Ok(event) => {
+                    let path = match &event {
+                        FileEvent::Created(p) | FileEvent::Modified(p) | FileEvent::Deleted(p) => {
+                            p.clone()
+                        }
+                        FileEvent::Renamed(_, new_p) => new_p.clone(),
+                    };
+
+                    if self.should_ignore(&path) {
+                        continue;
                     }
-                } else {
-                    last_events.insert(path.clone(), now);
-                    true
-                }
-            };
 
-            if !should_process {
-                continue;
-            }
-
-            debug!("Processing file event: {:?}", event);
-
-            // Update file index based on the event
-            match &event {
-                FileEvent::Created(path) | FileEvent::Modified(path) => {
-                    if let Err(e) = self.handle_file_change(path) {
-                        error!("Failed to handle file change: {}", e);
-                    }
+                    pending_events.insert(path, event);
                 }
-                FileEvent::Deleted(path) => {
-                    if let Err(e) = self.handle_file_deletion(path) {
-                        error!("Failed to handle file deletion: {}", e);
-                    }
-                }
-                FileEvent::Renamed(old_path, new_path) => {
-                    if let Err(e) = self.handle_file_rename(old_path, new_path) {
-                        error!("Failed to handle file rename: {}", e);
+                Err(_) => {
+                    if !pending_events.is_empty()
+                        && last_process.elapsed() >= Duration::from_millis(DEBOUNCE_MS)
+                    {
+                        for (path, event) in pending_events.drain() {
+                            if let Err(e) = self.handle_event(&path, &event) {
+                                error!("Failed to handle event for {:?}: {}", path, e);
+                            }
+                        }
+                        last_process = Instant::now();
                     }
                 }
             }
         }
     }
 
-    fn handle_file_change(&self, path: &Path) -> anyhow::Result<()> {
-        // If path is in .lore directory, ignore it
-        if is_in_lore_dir(path, &self.path) {
-            return Ok(());
-        }
+    fn should_ignore(&self, path: &Path) -> bool {
+        let matcher = self.ignore_matcher.lock().unwrap();
+        matcher.should_ignore(path)
+    }
 
-        IndexManager::trigger_incremental_update(&self.path, path)?;
+    fn handle_event(&self, path: &Path, event: &FileEvent) -> anyhow::Result<()> {
+        debug!("Processing file event: {:?} for {:?}", event, path);
 
-        if let Some(app) = &self.app {
-            emit_file_change_event(app, self.path.display().to_string())?;
+        match event {
+            FileEvent::Created(_) | FileEvent::Modified(_) => {
+                IndexManager::trigger_incremental_update(&self.path, path)?;
+                self.emit_granular_event("file-modified", path)?;
+            }
+            FileEvent::Deleted(_) => {
+                IndexManager::trigger_incremental_update(&self.path, path)?;
+                self.emit_granular_event("file-deleted", path)?;
+            }
+            FileEvent::Renamed(old_path, new_path) => {
+                IndexManager::trigger_incremental_update(&self.path, new_path)?;
+                self.emit_rename_event(old_path, new_path)?;
+            }
         }
 
         Ok(())
     }
 
-    /// Handle file deletion
-    fn handle_file_deletion(&self, path: &Path) -> anyhow::Result<()> {
-        if is_in_lore_dir(path, &self.path) {
-            return Ok(());
-        }
-
-        IndexManager::trigger_incremental_update(&self.path, path)?;
-
+    fn emit_granular_event(&self, event_name: &str, path: &Path) -> anyhow::Result<()> {
         if let Some(app) = &self.app {
-            emit_file_change_event(app, self.path.display().to_string())?;
-        }
+            let rel_path = path
+                .strip_prefix(&self.path)
+                .unwrap_or(path)
+                .display()
+                .to_string();
 
+            app.emit(
+                event_name,
+                serde_json::json!({
+                    "workspace_path": self.path.display().to_string(),
+                    "file_path": rel_path,
+                    "timestamp": std::time::SystemTime::now()
+                        .duration_since(std::time::UNIX_EPOCH)
+                        .unwrap_or_default()
+                        .as_secs()
+                }),
+            )
+            .context(format!("Failed to emit {} event", event_name))?;
+        }
         Ok(())
     }
 
-    fn handle_file_rename(&self, old_path: &Path, new_path: &Path) -> anyhow::Result<()> {
-        if is_in_lore_dir(old_path, &self.path) || is_in_lore_dir(new_path, &self.path) {
-            return Ok(());
-        }
-
-        IndexManager::trigger_incremental_update(&self.path, new_path)?;
-
+    fn emit_rename_event(&self, old_path: &Path, new_path: &Path) -> anyhow::Result<()> {
         if let Some(app) = &self.app {
-            emit_file_change_event(app, self.path.display().to_string())?;
+            let old_rel = old_path
+                .strip_prefix(&self.path)
+                .unwrap_or(old_path)
+                .display()
+                .to_string();
+
+            let new_rel = new_path
+                .strip_prefix(&self.path)
+                .unwrap_or(new_path)
+                .display()
+                .to_string();
+
+            app.emit(
+                "file-renamed",
+                serde_json::json!({
+                    "workspace_path": self.path.display().to_string(),
+                    "old_path": old_rel,
+                    "new_path": new_rel,
+                    "timestamp": std::time::SystemTime::now()
+                        .duration_since(std::time::UNIX_EPOCH)
+                        .unwrap_or_default()
+                        .as_secs()
+                }),
+            )
+            .context("Failed to emit file-renamed event")?;
+        }
+        Ok(())
+    }
+
+    pub fn reload_ignore_rules(&self) -> anyhow::Result<()> {
+        let mut matcher = self.ignore_matcher.lock().unwrap();
+        matcher.reload()
+    }
+
+    pub fn stop_all() -> anyhow::Result<()> {
+        let mut watchers = WATCHERS.lock().unwrap();
+        let paths: Vec<String> = watchers.keys().cloned().collect();
+
+        for path in paths {
+            if let Some(watcher) = watchers.remove(&path) {
+                let mut watcher_guard = watcher._watcher.lock().unwrap();
+                *watcher_guard = None;
+                debug!("Stopped watching directory: {}", path);
+            }
         }
 
         Ok(())
@@ -222,90 +267,43 @@ impl FileSystemWatcher {
 impl EventHandler for FileSystemEventHandler {
     fn handle_event(&mut self, result: notify::Result<Event>) {
         match result {
-            Ok(event) => {
-                // Skip events for .lore directory
-                if event
-                    .paths
-                    .iter()
-                    .any(|p| is_in_lore_dir(p, &self.workspace_path))
-                {
-                    return;
+            Ok(event) => match event.kind {
+                EventKind::Create(_) => {
+                    if let Some(path) = event.paths.first() {
+                        let _ = self.event_sender.send(FileEvent::Created(path.clone()));
+                    }
                 }
-
-                match event.kind {
-                    // File created
-                    EventKind::Create(_) => {
+                EventKind::Modify(kind) => match kind {
+                    ModifyKind::Data(_) | ModifyKind::Metadata(_) => {
                         if let Some(path) = event.paths.first() {
-                            let _ = self.event_sender.send(FileEvent::Created(path.clone()));
+                            let _ = self.event_sender.send(FileEvent::Modified(path.clone()));
                         }
                     }
-
-                    // File modified
-                    EventKind::Modify(kind) => match kind {
-                        ModifyKind::Data(_) | ModifyKind::Metadata(_) => {
-                            if let Some(path) = event.paths.first() {
-                                let _ = self.event_sender.send(FileEvent::Modified(path.clone()));
-                            }
-                        }
-                        ModifyKind::Name(RenameMode::Both) => {
-                            if event.paths.len() >= 2 {
-                                let _ = self.event_sender.send(FileEvent::Renamed(
-                                    event.paths[0].clone(),
-                                    event.paths[1].clone(),
-                                ));
-                            }
-                        }
-                        _ => {}
-                    },
-
-                    // File removed
-                    EventKind::Remove(_) => {
-                        if let Some(path) = event.paths.first() {
-                            let _ = self.event_sender.send(FileEvent::Deleted(path.clone()));
+                    ModifyKind::Name(RenameMode::Both) => {
+                        if event.paths.len() >= 2 {
+                            let _ = self.event_sender.send(FileEvent::Renamed(
+                                event.paths[0].clone(),
+                                event.paths[1].clone(),
+                            ));
                         }
                     }
-
-                    // File accessed - we usually don't care about this, but just in case
-                    EventKind::Access(kind) => {
-                        if matches!(kind, AccessKind::Close(AccessMode::Write)) {
-                            if let Some(path) = event.paths.first() {
-                                let _ = self.event_sender.send(FileEvent::Modified(path.clone()));
-                            }
-                        }
-                    }
-
-                    // Other events we don't care about at the moment
                     _ => {}
+                },
+                EventKind::Remove(_) => {
+                    if let Some(path) = event.paths.first() {
+                        let _ = self.event_sender.send(FileEvent::Deleted(path.clone()));
+                    }
                 }
-            }
+                EventKind::Access(AccessKind::Close(AccessMode::Write)) => {
+                    if let Some(path) = event.paths.first() {
+                        let _ = self.event_sender.send(FileEvent::Modified(path.clone()));
+                    }
+                }
+                _ => {}
+            },
             Err(e) => {
                 error!("Error watching files: {}", e);
             }
         }
     }
-}
-
-fn is_in_lore_dir(path: &Path, workspace_path: &Path) -> bool {
-    if let Ok(rel_path) = path.strip_prefix(workspace_path) {
-        let path_str = rel_path.to_string_lossy();
-        path_str.starts_with(".lore/")
-    } else {
-        false
-    }
-}
-
-fn emit_file_change_event(app: &AppHandle, workspace_path: String) -> anyhow::Result<()> {
-    app.emit(
-        "file-system-changed",
-        serde_json::json!({
-            "workspace_path": workspace_path,
-            "timestamp": std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap_or_default()
-                .as_secs()
-        }),
-    )
-    .context("Failed to emit file-system-changed event")?;
-
-    Ok(())
 }

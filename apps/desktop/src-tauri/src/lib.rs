@@ -74,7 +74,6 @@ pub fn run() {
             lore_editor::open_file_in_editor,
             lore_editor::create_new_file,
             lore_editor::get_welcome_text,
-            lore_editor::stop_watching_workspace,
             lore_editor::refresh_file_tree,
             lore_editor::create_file_from_template,
             lore_workspaces::open_existing_workspace,
@@ -86,7 +85,16 @@ pub fn run() {
             lore_workspaces::validate_image_index,
             lore_workspaces::find_image_candidates,
             lore_workspaces::bulk_update_image_path,
+            lore_editor::get_ignore_rules,
+            lore_editor::update_ignore_rules,
+            lore_editor::close_workspace,
         ])
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::Destroyed = event {
+                // Cleanup when window is destroyed
+                let _ = lore_editor::FileSystemWatcher::stop_all();
+            }
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
