@@ -96,11 +96,6 @@ pub async fn get_welcome_text(workspace_name: String) -> String {
 }
 
 #[tauri::command]
-pub async fn stop_watching_workspace(workspace_path: String) -> Result<(), EditorError> {
-    FileSystemWatcher::stop(Path::new(&workspace_path)).map_err(EditorError::Operation)
-}
-
-#[tauri::command]
 pub async fn refresh_file_tree(workspace_path: String) -> Result<Vec<FileTreeItem>, EditorError> {
     // Reindex the workspace first
     IndexManager::start_indexing(Path::new(&workspace_path))?;
@@ -157,4 +152,35 @@ pub async fn get_all_workspace_files(
     workspace_path: String,
 ) -> Result<Vec<FileSearchResult>, EditorError> {
     IndexManager::get_all_workspace_files(Path::new(&workspace_path))
+}
+
+#[tauri::command]
+pub async fn get_ignore_rules(workspace_path: String) -> Result<String, EditorError> {
+    crate::ignore::get_loreignore_content(&workspace_path).map_err(EditorError::Operation)
+}
+
+#[tauri::command]
+pub async fn update_ignore_rules(
+    workspace_path: String,
+    content: String,
+) -> Result<(), EditorError> {
+    crate::ignore::update_loreignore_content(&workspace_path, content)
+        .map_err(EditorError::Operation)?;
+
+    if let Some(watcher) = FileSystemWatcher::get(&workspace_path) {
+        watcher
+            .reload_ignore_rules()
+            .map_err(EditorError::Operation)?;
+    }
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn close_workspace(workspace_path: String) -> Result<(), EditorError> {
+    FileSystemWatcher::stop(Path::new(&workspace_path)).map_err(EditorError::Operation)?;
+    
+    IndexManager::clear_indexing_state(&workspace_path);
+    
+    Ok(())
 }

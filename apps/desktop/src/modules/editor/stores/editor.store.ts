@@ -1,11 +1,11 @@
-import {invoke} from '@tauri-apps/api/core'
-import {debug, error as logError, warn, info} from 'tauri-plugin-tracing'
-import {listen, type UnlistenFn} from '@tauri-apps/api/event'
-import {defineStore} from 'pinia'
-import {ref, computed} from 'vue'
-import {toast} from 'vue-sonner'
-import {usePreferencesStore} from '@common/stores/preferences.store'
-import {useFileIndexStore} from './file-index.store';
+import { invoke } from "@tauri-apps/api/core";
+import { debug, error as logError, warn, info } from "tauri-plugin-tracing";
+import { listen, type UnlistenFn } from "@tauri-apps/api/event";
+import { defineStore } from "pinia";
+import { ref, computed } from "vue";
+import { toast } from "vue-sonner";
+import { usePreferencesStore } from "@common/stores/preferences.store";
+import { useFileIndexStore } from "./file-index.store";
 import type {
   WorkspaceInfo,
   FileTree,
@@ -14,40 +14,40 @@ import type {
   EditorState,
   TabInfo,
   IndexingProgress,
-  SaveFileRequest
+  SaveFileRequest,
 } from "@editor/types/editor.types";
-import type {ValidationReport} from '@editor/types/image.types';
+import type { ValidationReport } from "@editor/types/image.types";
 
-export const useEditorStore = defineStore('editor', () => {
-  const preferencesStore = usePreferencesStore()
+export const useEditorStore = defineStore("editor", () => {
+  const preferencesStore = usePreferencesStore();
 
-  const currentWorkspace = ref<WorkspaceInfo | null>(null)
-  const fileTree = ref<FileTree[]>([])
-  const openTabs = ref<EditorFile[]>([])
-  const activeTabId = ref<string | null>(null)
-  const showConsole = ref(false)
-  const showInspector = ref(true)
-  const indexingProgress = ref<IndexingProgress | null>(null)
-  const isLoading = ref(false)
-  const editorError = ref<string | null>(null)
-  const fileSystemUnlistener = ref<UnlistenFn | null>(null)
-  const isInspectorOpen = ref(true)
-  const isConsoleOpen = ref(false)
+  const currentWorkspace = ref<WorkspaceInfo | null>(null);
+  const fileTree = ref<FileTree[]>([]);
+  const openTabs = ref<EditorFile[]>([]);
+  const activeTabId = ref<string | null>(null);
+  const showConsole = ref(false);
+  const showInspector = ref(true);
+  const indexingProgress = ref<IndexingProgress | null>(null);
+  const isLoading = ref(false);
+  const editorError = ref<string | null>(null);
+  const fileSystemUnlistener = ref<UnlistenFn | null>(null);
+  const isInspectorOpen = ref(true);
+  const isConsoleOpen = ref(false);
   const imageValidationReport = ref<ValidationReport | null>(null);
   const isValidatingImages = ref(false);
 
   // Temporary state for the content being edited in EditorContent
-  const activeFileContent = ref<string>('');
+  const activeFileContent = ref<string>("");
   // Temporary state for the frontmatter YAML string being edited in InspectorPanel
   const activeFileFrontmatter = ref<string | null>(null);
-  const activeFileType = ref<FileContent['type'] | null>(null);
+  const activeFileType = ref<FileContent["type"] | null>(null);
   const activeFileLineCount = ref<number | null>(null);
   const activeFileWordCount = ref<number | null>(null);
   const activeFileCharCount = ref<number | null>(null);
 
   const activeTab = computed(() => {
-    return openTabs.value.find(tab => tab.id === activeTabId.value) || null
-  })
+    return openTabs.value.find((tab) => tab.id === activeTabId.value) || null;
+  });
 
   // Actions
 
@@ -57,7 +57,7 @@ export const useEditorStore = defineStore('editor', () => {
       editorError.value = null;
       await debug(`Attempting to open workspace: ${workspacePath}`);
 
-      const workspace = await invoke<WorkspaceInfo>('open_workspace_in_editor', {
+      const workspace = await invoke<WorkspaceInfo>("open_workspace_in_editor", {
         workspacePath,
       });
       await debug(`Workspace opened successfully: ${workspace.name}`);
@@ -65,11 +65,25 @@ export const useEditorStore = defineStore('editor', () => {
       currentWorkspace.value = workspace;
 
       await validateWorkspaceImages();
-      await loadFileTree();
       await startIndexingProgressPoll();
       await loadEditorState(); // Load saved tabs, etc.
       await preferencesStore.updateLastProject(workspacePath);
       await setupFileSystemListener(); // Start watching for FS changes
+      await loadFileTree();
+      const unlistenIndexing = await listen<{
+        workspace_path: string;
+        file_count: number;
+        directory_count: number;
+      }>("indexing-complete", async (event) => {
+        if (event.payload.workspace_path === workspace.path) {
+          await debug(
+            `Indexing completed: ${event.payload.file_count} files, ${event.payload.directory_count} directories`
+          );
+          // Reload file tree after indexing completes
+          await loadFileTree();
+          unlistenIndexing();
+        }
+      });
 
       const fileIndexStore = useFileIndexStore();
       await fileIndexStore.refreshIndex();
@@ -79,7 +93,7 @@ export const useEditorStore = defineStore('editor', () => {
       const errorMessage = `Failed to open workspace at ${workspacePath}: ${err}`;
       await logError(errorMessage);
       editorError.value = errorMessage;
-      toast.error('Failed to open workspace', {
+      toast.error("Failed to open workspace", {
         description: String(err),
       });
       currentWorkspace.value = null;
@@ -91,13 +105,13 @@ export const useEditorStore = defineStore('editor', () => {
 
   async function setupFileSystemListener() {
     if (fileSystemUnlistener.value) {
-      await debug('Stopping existing file system listener.');
+      await debug("Stopping existing file system listener.");
       fileSystemUnlistener.value(); // Call the unlisten function
       fileSystemUnlistener.value = null;
     }
 
     if (!currentWorkspace.value) {
-      await warn('No current workspace, skipping file system listener setup.');
+      await warn("No current workspace, skipping file system listener setup.");
       return;
     }
 
@@ -105,26 +119,27 @@ export const useEditorStore = defineStore('editor', () => {
     await debug(`Setting up file system listener for: ${workspacePath}`);
 
     try {
-      fileSystemUnlistener.value = await listen(
-        'file-system-changed',
-        async (event) => {
-          await debug(`File system change detected: ${JSON.stringify(event.payload)}`);
-          const eventData = event.payload as {
-            workspace_path: string;
-            timestamp: number;
-          };
+      fileSystemUnlistener.value = await listen("file-system-changed", async (event) => {
+        await debug(`File system change detected: ${JSON.stringify(event.payload)}`);
+        const eventData = event.payload as {
+          workspace_path: string;
+          timestamp: number;
+        };
 
-          if (currentWorkspace.value && eventData.workspace_path === currentWorkspace.value.path) {
-            await debug(`Refreshing file tree for ${currentWorkspace.value.path} due to filesystem change.`);
-            await loadFileTree(); // Refresh the file tree in the UI
+        if (currentWorkspace.value && eventData.workspace_path === currentWorkspace.value.path) {
+          await debug(
+            `Refreshing file tree for ${currentWorkspace.value.path} due to filesystem change.`
+          );
+          await loadFileTree(); // Refresh the file tree in the UI
 
-            const fileIndexStore = useFileIndexStore();
-            await fileIndexStore.handleFileSystemChange();
-          } else {
-            await warn(`Ignoring file system event for different workspace: ${eventData.workspace_path}`);
-          }
+          const fileIndexStore = useFileIndexStore();
+          await fileIndexStore.handleFileSystemChange();
+        } else {
+          await warn(
+            `Ignoring file system event for different workspace: ${eventData.workspace_path}`
+          );
         }
-      );
+      });
       await debug(`File system listener successfully set up for: ${workspacePath}`);
     } catch (err) {
       await logError(`Failed to set up file system listener for ${workspacePath}: ${err}`);
@@ -135,7 +150,7 @@ export const useEditorStore = defineStore('editor', () => {
   async function closeWorkspace() {
     const path = currentWorkspace.value?.path;
     if (!path) {
-      await warn('Attempted to close workspace, but none was open.');
+      await warn("Attempted to close workspace, but none was open.");
       return;
     }
 
@@ -150,7 +165,7 @@ export const useEditorStore = defineStore('editor', () => {
     }
     try {
       await debug(`Invoking backend to stop watching workspace: ${path}`);
-      await invoke('stop_watching_workspace', {workspacePath: path});
+      await invoke("close_workspace", { workspacePath: path });
       await debug(`Backend stopped watching workspace: ${path}`);
     } catch (err) {
       await logError(`Failed to stop backend file watcher for ${path}: ${err}`);
@@ -172,7 +187,7 @@ export const useEditorStore = defineStore('editor', () => {
 
   async function loadFileTree() {
     if (!currentWorkspace.value) {
-      await warn('Cannot load file tree: No workspace is open.');
+      await warn("Cannot load file tree: No workspace is open.");
       fileTree.value = [];
       return [];
     }
@@ -180,7 +195,7 @@ export const useEditorStore = defineStore('editor', () => {
     await debug(`Loading file tree for: ${workspacePath}`);
 
     try {
-      const tree = await invoke<FileTree[]>('get_workspace_file_tree', {
+      const tree = await invoke<FileTree[]>("get_workspace_file_tree", {
         workspacePath,
       });
       fileTree.value = tree;
@@ -190,8 +205,8 @@ export const useEditorStore = defineStore('editor', () => {
       const errorMessage = `Failed to load file tree for ${workspacePath}: ${err}`;
       await logError(errorMessage);
       if (!indexingProgress.value || indexingProgress.value.completed) {
-        toast.error('Failed to load file tree', {
-          description: 'Please try refreshing manually.',
+        toast.error("Failed to load file tree", {
+          description: "Please try refreshing manually.",
         });
       }
       fileTree.value = [];
@@ -201,26 +216,26 @@ export const useEditorStore = defineStore('editor', () => {
 
   async function refreshFileTree() {
     if (!currentWorkspace.value) {
-      await warn('Cannot refresh file tree: No workspace is open.');
+      await warn("Cannot refresh file tree: No workspace is open.");
       return [];
     }
     const workspacePath = currentWorkspace.value.path;
     await debug(`Refreshing file tree for: ${workspacePath}`);
-    toast.info('Refreshing file tree...');
+    toast.info("Refreshing file tree...");
 
     try {
-      const tree = await invoke<FileTree[]>('refresh_file_tree', {
+      const tree = await invoke<FileTree[]>("refresh_file_tree", {
         workspacePath,
       });
       fileTree.value = tree;
-      toast.success('File tree refreshed');
+      toast.success("File tree refreshed");
       await debug(`File tree refreshed successfully for ${workspacePath}. Items: ${tree.length}`);
       await startIndexingProgressPoll();
       return tree;
     } catch (err) {
       const errorMessage = `Failed to refresh file tree for ${workspacePath}: ${err}`;
       await logError(errorMessage);
-      toast.error('Failed to refresh file tree', {
+      toast.error("Failed to refresh file tree", {
         description: String(err),
       });
       return fileTree.value; // Return the potentially stale tree
@@ -229,9 +244,8 @@ export const useEditorStore = defineStore('editor', () => {
 
   async function startIndexingProgressPoll() {
     if (!currentWorkspace.value) {
-      await debug('Skipping indexing poll: No workspace open.');
-      return () => {
-      }; // Return a no-op cleanup function
+      await debug("Skipping indexing poll: No workspace open.");
+      return () => {}; // Return a no-op cleanup function
     }
 
     const workspacePath = currentWorkspace.value.path;
@@ -247,7 +261,7 @@ export const useEditorStore = defineStore('editor', () => {
       // await debug(`Polling indexing progress for: ${workspacePath}`);
 
       try {
-        const progress = await invoke<IndexingProgress | null>('get_indexing_progress', {
+        const progress = await invoke<IndexingProgress | null>("get_indexing_progress", {
           workspacePath,
         });
 
@@ -297,14 +311,14 @@ export const useEditorStore = defineStore('editor', () => {
 
   async function loadEditorState() {
     if (!currentWorkspace.value) {
-      await warn('Cannot load editor state: No workspace open.');
+      await warn("Cannot load editor state: No workspace open.");
       return null;
     }
     const workspacePath = currentWorkspace.value.path;
     await debug(`Loading editor state for: ${workspacePath}`);
 
     try {
-      const state = await invoke<EditorState>('load_editor_state', {
+      const state = await invoke<EditorState>("load_editor_state", {
         workspacePath,
       });
       await debug(`Editor state loaded: ${JSON.stringify(state)}`);
@@ -312,20 +326,20 @@ export const useEditorStore = defineStore('editor', () => {
       openTabs.value = state.open_tabs.map((tab) => {
         const parts = tab.path.split(/[\\/]/);
         const fileNameWithExt = parts.pop() || tab.title;
-        const extension = fileNameWithExt.includes('.')
-          ? (fileNameWithExt.split('.').pop() ?? '')
-          : '';
+        const extension = fileNameWithExt.includes(".")
+          ? fileNameWithExt.split(".").pop() ?? ""
+          : "";
         return {
           id: tab.id,
           name: tab.title, // Use title from backend state first
           path: tab.path,
           extension: extension,
-          icon: tab.icon || 'file', // Default icon
+          icon: tab.icon || "file", // Default icon
           hasUnsavedChanges: tab.has_unsaved_changes || false,
         };
       });
 
-      if (state.active_tab && openTabs.value.some(tab => tab.id === state.active_tab)) {
+      if (state.active_tab && openTabs.value.some((tab) => tab.id === state.active_tab)) {
         activeTabId.value = state.active_tab;
       } else if (openTabs.value.length > 0) {
         activeTabId.value = openTabs.value[0].id;
@@ -335,10 +349,16 @@ export const useEditorStore = defineStore('editor', () => {
       showConsole.value = state.panels?.console_visible ?? false;
       showInspector.value = state.panels?.inspector_visible ?? true; // Default to true
 
-      await debug(`Restored state: ${openTabs.value.length} tabs, active: ${activeTabId.value}, console: ${showConsole.value}, inspector: ${showInspector.value}`);
+      await debug(
+        `Restored state: ${openTabs.value.length} tabs, active: ${activeTabId.value}, console: ${showConsole.value}, inspector: ${showInspector.value}`
+      );
 
       // If no tabs were restored, but there are recently opened files, open the most recent one
-      if (openTabs.value.length === 0 && state.recently_opened && state.recently_opened.length > 0) {
+      if (
+        openTabs.value.length === 0 &&
+        state.recently_opened &&
+        state.recently_opened.length > 0
+      ) {
         const lastOpened = state.recently_opened[0];
         await debug(`No tabs restored, opening last recently opened file: ${lastOpened}`);
         // Use try-catch as the file might no longer exist
@@ -370,18 +390,18 @@ export const useEditorStore = defineStore('editor', () => {
 
   async function saveEditorState() {
     if (!currentWorkspace.value) {
-      await warn('Cannot save editor state: No workspace open.');
+      await warn("Cannot save editor state: No workspace open.");
       return; // Silently return if no workspace
     }
     const workspacePath = currentWorkspace.value.path;
     // await debug(`Saving editor state for: ${workspacePath}`);
 
     try {
-      const recentPaths = openTabs.value.map(tab => tab.path);
+      const recentPaths = openTabs.value.map((tab) => tab.path);
 
       const state: EditorState = {
         workspace_path: workspacePath,
-        open_tabs: openTabs.value.map(tab => ({
+        open_tabs: openTabs.value.map((tab) => ({
           id: tab.id,
           path: tab.path,
           title: tab.name, // Save the potentially cleaned name
@@ -401,9 +421,8 @@ export const useEditorStore = defineStore('editor', () => {
         recently_opened: recentPaths,
       };
 
-      await invoke('save_editor_state', {state});
+      await invoke("save_editor_state", { state });
       // await debug(`Editor state saved successfully for ${workspacePath}.`);
-
     } catch (err) {
       // Log error but don't bother the user with a toast for background saves
       await logError(`Failed to save editor state for ${workspacePath}: ${err}`);
@@ -411,10 +430,9 @@ export const useEditorStore = defineStore('editor', () => {
   }
 
   async function openFile(filePath: string): Promise<EditorFile | null> {
-
     if (!currentWorkspace.value) {
-      await logError('Cannot open file: No workspace open.');
-      toast.error('Cannot open file', {description: 'No workspace is currently open.'});
+      await logError("Cannot open file: No workspace open.");
+      toast.error("Cannot open file", { description: "No workspace is currently open." });
       return null;
     }
     const workspacePath = currentWorkspace.value.path;
@@ -422,11 +440,13 @@ export const useEditorStore = defineStore('editor', () => {
     // Use simple string concatenation for now, ensure correct separator if needed,
     // although Tauri backend path handling is usually robust.
     // IMPORTANT: Ensure filePath is *always* relative when passed to this function.
-    const absoluteFilePath = `${workspacePath}/${filePath.replace(/^[\\/]/, '')}`; // Ensure no leading slash on relative part
+    const absoluteFilePath = `${workspacePath}/${filePath.replace(/^[\\/]/, "")}`; // Ensure no leading slash on relative part
 
-    await debug(`Attempting to open file: ${absoluteFilePath} (relative: ${filePath}) in workspace: ${workspacePath}`);
+    await debug(
+      `Attempting to open file: ${absoluteFilePath} (relative: ${filePath}) in workspace: ${workspacePath}`
+    );
 
-    const existingTab = openTabs.value.find(tab => tab.path === filePath);
+    const existingTab = openTabs.value.find((tab) => tab.path === filePath);
     if (existingTab) {
       await debug(`File ${filePath} is already open. Activating tab ${existingTab.id}.`);
       activeTabId.value = existingTab.id;
@@ -435,23 +455,20 @@ export const useEditorStore = defineStore('editor', () => {
     }
 
     try {
-      const tabInfo = await invoke<TabInfo>('open_file_in_editor', {
+      const tabInfo = await invoke<TabInfo>("open_file_in_editor", {
         workspacePath: workspacePath,
-        filePath: absoluteFilePath
+        filePath: absoluteFilePath,
       });
-
 
       await debug(`Backend opened file, received TabInfo: ${JSON.stringify(tabInfo)}`);
 
-      activeFileContent.value = '';
+      activeFileContent.value = "";
       activeFileFrontmatter.value = null;
 
       const parts = tabInfo.path.split(/[\\/]/);
       const fileNameWithExt = parts.pop() || tabInfo.title;
 
-      const extension = fileNameWithExt.includes('.')
-        ? (fileNameWithExt.split('.').pop() ?? '')
-        : '';
+      const extension = fileNameWithExt.includes(".") ? fileNameWithExt.split(".").pop() ?? "" : "";
 
       const name = tabInfo.title;
 
@@ -460,7 +477,7 @@ export const useEditorStore = defineStore('editor', () => {
         name: name,
         path: tabInfo.path, // Store the relative path from backend
         extension: extension,
-        icon: tabInfo.icon || 'file',
+        icon: tabInfo.icon || "file",
         hasUnsavedChanges: tabInfo.has_unsaved_changes || false,
       };
 
@@ -471,20 +488,18 @@ export const useEditorStore = defineStore('editor', () => {
       await saveEditorState();
       updateFileStats(null);
       return newTab;
-
     } catch (err) {
       const errorMessage = `Failed to open file ${absoluteFilePath}: ${err}`;
       await logError(errorMessage);
-      toast.error('Failed to open file', {
+      toast.error("Failed to open file", {
         description: `Path: ${filePath}. Error: ${String(err)}`,
       });
       return null;
     }
   }
 
-
   async function closeTab(tabId: string) {
-    const index = openTabs.value.findIndex(tab => tab.id === tabId);
+    const index = openTabs.value.findIndex((tab) => tab.id === tabId);
     if (index === -1) {
       await warn(`Attempted to close non-existent tab ID: ${tabId}`);
       return;
@@ -507,12 +522,12 @@ export const useEditorStore = defineStore('editor', () => {
     openTabs.value.splice(index, 1);
 
     if (wasActive) {
-      activeFileContent.value = '';
+      activeFileContent.value = "";
       activeFileFrontmatter.value = null;
       updateFileStats(null);
       if (openTabs.value.length === 0) {
         activeTabId.value = null;
-        await debug('Last tab closed. No active tab.');
+        await debug("Last tab closed. No active tab.");
       } else {
         const newActiveIndex = Math.max(0, index - 1);
         activeTabId.value = openTabs.value[newActiveIndex].id;
@@ -525,55 +540,53 @@ export const useEditorStore = defineStore('editor', () => {
 
   async function getFileContent(filePath: string): Promise<FileContent | null> {
     if (!currentWorkspace.value) {
-      await logError('Cannot get file content: No workspace open.');
-      toast.error('Cannot get file content', {description: 'No workspace is open.'});
+      await logError("Cannot get file content: No workspace open.");
+      toast.error("Cannot get file content", { description: "No workspace is open." });
       return null;
     }
     const workspacePath = currentWorkspace.value.path;
     let relativeFilePath = filePath;
     if (relativeFilePath.startsWith(workspacePath)) {
-      relativeFilePath = relativeFilePath
-      .substring(workspacePath.length)
-      .replace(/^[\\/]/, '');
+      relativeFilePath = relativeFilePath.substring(workspacePath.length).replace(/^[\\/]/, "");
     }
     updateFileStats(null);
     await debug(`Getting file content for: ${relativeFilePath}`);
     activeFileType.value = null;
     try {
-      const content = await invoke<FileContent>('get_file_content', {
+      const content = await invoke<FileContent>("get_file_content", {
         workspacePath,
         filePath,
       });
       activeFileType.value = content.type;
       await debug(`Received file content type: ${content.type}`);
-      activeFileContent.value = '';
+      activeFileContent.value = "";
       activeFileFrontmatter.value = null;
       switch (content.type) {
-        case 'Markdown':
-        case 'PlainText':
-          activeFileContent.value = content.data.content || '';
+        case "Markdown":
+        case "PlainText":
+          activeFileContent.value = content.data.content || "";
           break;
-        case 'Character':
-        case 'Location':
-        case 'Lore':
-          activeFileContent.value = content.data.content || '';
+        case "Character":
+        case "Location":
+        case "Lore":
+          activeFileContent.value = content.data.content || "";
           activeFileFrontmatter.value = content.data.frontmatter; // Can be null
           break;
-        case 'Canvas':
-        case 'Dialogue':
-          activeFileContent.value = content.data.data || ''; // Store JSON/Text data
+        case "Canvas":
+        case "Dialogue":
+          activeFileContent.value = content.data.data || ""; // Store JSON/Text data
           break;
-        case 'Image':
+        case "Image":
           break;
       }
       return content;
     } catch (err) {
       activeFileType.value = null;
-      activeFileContent.value = '';
+      activeFileContent.value = "";
       activeFileFrontmatter.value = null;
       const errorMessage = `Failed to get content for file ${relativeFilePath}: ${err}`;
       await logError(errorMessage);
-      toast.error('Failed to load file content', {
+      toast.error("Failed to load file content", {
         description: String(err),
       });
       return null;
@@ -583,7 +596,7 @@ export const useEditorStore = defineStore('editor', () => {
   async function saveFileContent(
     filePath: string,
     content: string,
-    frontmatter: string | null,
+    frontmatter: string | null
   ): Promise<boolean> {
     if (!currentWorkspace.value) {
       await logError("Cannot save file: No workspace open.");
@@ -595,13 +608,9 @@ export const useEditorStore = defineStore('editor', () => {
     const workspacePath = currentWorkspace.value.path;
     let relativeFilePath = filePath;
     if (relativeFilePath.startsWith(workspacePath)) {
-      relativeFilePath = relativeFilePath
-      .substring(workspacePath.length)
-      .replace(/^[\\/]/, "");
+      relativeFilePath = relativeFilePath.substring(workspacePath.length).replace(/^[\\/]/, "");
     }
-    await debug(
-      `Attempting to save file: ${relativeFilePath} (original path: ${filePath})`,
-    );
+    await debug(`Attempting to save file: ${relativeFilePath} (original path: ${filePath})`);
 
     try {
       let request: SaveFileRequest;
@@ -622,16 +631,14 @@ export const useEditorStore = defineStore('editor', () => {
       ) {
         request = {
           type: "MarkdownWithFrontmatter",
-          data: {frontmatter: frontmatter, content: contentToSave},
+          data: { frontmatter: frontmatter, content: contentToSave },
         };
-        await debug(
-          `Saving ${relativeFilePath} as MarkdownWithFrontmatter.`,
-        );
+        await debug(`Saving ${relativeFilePath} as MarkdownWithFrontmatter.`);
       } else if (isJsonFile) {
-        request = {type: "Json", data: {content: contentToSave}};
+        request = { type: "Json", data: { content: contentToSave } };
         await debug(`Saving ${relativeFilePath} as JSON.`);
       } else {
-        request = {type: "Text", data: {content: contentToSave}};
+        request = { type: "Text", data: { content: contentToSave } };
         await debug(`Saving ${relativeFilePath} as Text (Markdown/Plain).`);
       }
 
@@ -641,18 +648,14 @@ export const useEditorStore = defineStore('editor', () => {
         content: request,
       });
 
-      const savedTab = openTabs.value.find(
-        (t) => t.path === relativeFilePath,
-      );
+      const savedTab = openTabs.value.find((t) => t.path === relativeFilePath);
       if (savedTab) {
         savedTab.hasUnsavedChanges = false;
         await debug(`Marked tab ${savedTab.id} as saved.`);
       }
       await saveEditorState();
 
-      toast.success(
-        `"${savedTab?.name || relativeFilePath}" saved successfully`,
-      );
+      toast.success(`"${savedTab?.name || relativeFilePath}" saved successfully`);
       return true;
     } catch (err) {
       const errorMessage = `Failed to save file ${relativeFilePath}: ${err}`;
@@ -664,28 +667,25 @@ export const useEditorStore = defineStore('editor', () => {
     }
   }
 
-
   async function createNewFile(
     parentDir: string,
     fileName: string,
-    initialContent = ''
+    initialContent = ""
   ): Promise<string | null> {
     if (!currentWorkspace.value) {
-      await logError('Cannot create file: No workspace open.');
-      toast.error('Cannot create file', {description: 'No workspace is open.'});
+      await logError("Cannot create file: No workspace open.");
+      toast.error("Cannot create file", { description: "No workspace is open." });
       return null;
     }
     const workspacePath = currentWorkspace.value.path;
     let relativeParentDir = parentDir;
     if (relativeParentDir.startsWith(workspacePath)) {
-      relativeParentDir = relativeParentDir
-      .substring(workspacePath.length)
-      .replace(/^[\\/]/, '');
+      relativeParentDir = relativeParentDir.substring(workspacePath.length).replace(/^[\\/]/, "");
     }
     await debug(`Creating new file "${fileName}" in "${relativeParentDir}"`);
 
     try {
-      const relativePath = await invoke<string>('create_new_file', {
+      const relativePath = await invoke<string>("create_new_file", {
         workspacePath,
         parentDir: relativeParentDir,
         fileName,
@@ -702,7 +702,7 @@ export const useEditorStore = defineStore('editor', () => {
     } catch (err) {
       const errorMessage = `Failed to create file "${fileName}": ${err}`;
       await logError(errorMessage);
-      toast.error('Failed to create file', {
+      toast.error("Failed to create file", {
         description: String(err),
       });
       return null;
@@ -715,31 +715,30 @@ export const useEditorStore = defineStore('editor', () => {
     fileType: string // Use string matching backend FileType enum names
   ): Promise<string | null> {
     if (!currentWorkspace.value) {
-      await logError('Cannot create file from template: No workspace open.');
-      toast.error('Cannot create file', {description: 'No workspace is open.'});
+      await logError("Cannot create file from template: No workspace open.");
+      toast.error("Cannot create file", { description: "No workspace is open." });
       return null;
     }
     const workspacePath = currentWorkspace.value.path;
     let relativeParentDir = parentDir;
     if (relativeParentDir.startsWith(workspacePath)) {
-      relativeParentDir = relativeParentDir
-      .substring(workspacePath.length)
-      .replace(/^[\\/]/, '');
+      relativeParentDir = relativeParentDir.substring(workspacePath.length).replace(/^[\\/]/, "");
     }
-    await debug(`Creating new file "${fileName}" from template "${fileType}" in "${relativeParentDir}"`);
+    await debug(
+      `Creating new file "${fileName}" from template "${fileType}" in "${relativeParentDir}"`
+    );
 
     try {
       let finalFileName = fileName;
       const expectedExtension = `.${fileType.toLowerCase()}.md`;
       if (!finalFileName.toLowerCase().endsWith(expectedExtension)) {
-        if (finalFileName.toLowerCase().endsWith('.md')) {
+        if (finalFileName.toLowerCase().endsWith(".md")) {
           finalFileName = finalFileName.slice(0, -3);
         }
         finalFileName += expectedExtension;
       }
 
-
-      const relativePath = await invoke<string>('create_file_from_template', {
+      const relativePath = await invoke<string>("create_file_from_template", {
         workspacePath,
         parentDir: relativeParentDir,
         fileName: finalFileName,
@@ -755,7 +754,7 @@ export const useEditorStore = defineStore('editor', () => {
     } catch (err) {
       const errorMessage = `Failed to create file "${fileName}" from template: ${err}`;
       await logError(errorMessage);
-      toast.error('Failed to create file from template', {
+      toast.error("Failed to create file from template", {
         description: String(err),
       });
       return null;
@@ -763,44 +762,43 @@ export const useEditorStore = defineStore('editor', () => {
   }
 
   async function toggleConsole() {
-    isConsoleOpen.value = !isConsoleOpen.value
-    showConsole.value = isConsoleOpen.value
-    await saveEditorState()
+    isConsoleOpen.value = !isConsoleOpen.value;
+    showConsole.value = isConsoleOpen.value;
+    await saveEditorState();
   }
 
   async function toggleInspector() {
-    isInspectorOpen.value = !isInspectorOpen.value
-    await saveEditorState()
+    isInspectorOpen.value = !isInspectorOpen.value;
+    await saveEditorState();
   }
 
   async function getWelcomeText(workspaceName: string): Promise<string> {
-    return await invoke<string>('get_welcome_text', {workspaceName})
+    return await invoke<string>("get_welcome_text", { workspaceName });
   }
 
   async function markTabAsChanged(tabId: string | null = activeTabId.value) {
     if (!tabId) return;
-    const tab = openTabs.value.find(t => t.id === tabId);
+    const tab = openTabs.value.find((t) => t.id === tabId);
     if (tab && !tab.hasUnsavedChanges) {
       tab.hasUnsavedChanges = true;
       await debug(`Marked tab ${tabId} as having unsaved changes.`);
     }
   }
-  
-  
+
   const validateWorkspaceImages = async () => {
     if (!currentWorkspace.value?.path) {
       return;
     }
-  
+
     isValidatingImages.value = true;
-  
+
     try {
-      const report = await invoke<ValidationReport>('validate_image_index', {
+      const report = await invoke<ValidationReport>("validate_image_index", {
         workspacePath: currentWorkspace.value.path,
       });
-  
+
       imageValidationReport.value = report;
-  
+
       if (report.missing_images.length > 0) {
         await info(`Found ${report.missing_images.length} missing images`);
       }
@@ -812,13 +810,7 @@ export const useEditorStore = defineStore('editor', () => {
     }
   };
 
-  
-  
-  
-
-  function updateFileStats(
-    stats: { lines: number; words: number; characters: number } | null
-  ) {
+  function updateFileStats(stats: { lines: number; words: number; characters: number } | null) {
     if (stats) {
       activeFileLineCount.value = stats.lines;
       activeFileWordCount.value = stats.words;
@@ -829,8 +821,6 @@ export const useEditorStore = defineStore('editor', () => {
       activeFileCharCount.value = null;
     }
   }
-
-
 
   return {
     // State

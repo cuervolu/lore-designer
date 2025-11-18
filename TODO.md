@@ -12,15 +12,26 @@
 - [Feature] Automatic image reference updates on file watcher events
 - [Feature] Smart image candidate search by hash for relocated images
 - [Feature] Bulk image path update system for moved/renamed images
+- [Feature] File Explorer enhancements (Sprint 4+)
+  - Drag & drop support for moving files
+  - Multi-selection (Ctrl+Click, Shift+Click)
+  - Context menu using Tauri built-in
+  - Real-time search/filter in explorer
+  - Keyboard navigation (arrows, Enter, etc.)
 
 ## To Do (Prioritized)
-- [Feature] Image Registry backend with SHA-256 hashing
-- [Feature] Image references index system (image_references.json)
-- [Feature] Missing image detection and validation on workspace open
-- [Feature] MissingImagePlaceholder component with relocate/remove actions
-- [Feature] Image reference tracking and sync on file save
-- [Feature] Project Health Panel for image issues (missing/orphaned)
-- [Feature] Manual image relocation workflow in character forms
+- [CRITICAL] Refactor File System Watcher 
+  - Fix cross-platform path filtering (Windows duplicates bug)
+- [HIGH] Redesign File Explorer UI 
+  - Custom hierarchical tree component (FileTreeNode.vue)
+  - Optimize index updates (incremental instead of full refresh)
+  - Dual representation: tree + flat list for search
+  - Client-side filtering as safety net
+- [MEDIUM] .loreignore system 
+  - Create .loreignore with sensible defaults
+  - Tauri commands for reading/updating ignore rules
+  - Hot reload of ignore matcher on .loreignore changes
+  - Optional: UI editor for ignore rules in Settings
 - [Feature] Orphaned images cleanup with user confirmation
 - [Feature] Implement markdown image drag-and-drop support
 - [Enhancement] Visual feedback improvements for long operations
@@ -38,6 +49,10 @@
 - [Feature] Dynamic character forms configuration (includes custom fields in `.lore/character_form_config.toml`)
 
 ## Done
+- [CRITICAL] Refactor File System Watcher  - 2025-11-17
+  - Integrate `ignore` crate with .loreignore support
+  - Implement granular file system events (created/modified/deleted/renamed)
+  - Improve debouncing (500ms + event coalescence)
 - [Bug] Cannot scroll in the log console - 2025-11-16
 - [Feature] Add vue-virtual-scroller to the log console - 2025-11-16
 - [Feature] Upload Character Image in form view - 2025-11-16
