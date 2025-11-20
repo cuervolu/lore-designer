@@ -45,7 +45,7 @@
     "clsx": "^2.1.1",
     "dockview-vue": "^4.11.0",
     "lucide-vue-next": "^0.546.0",
-    "marked": "^16.4.2",
+    "marked": "^17.0.0",
     "pinia": "^3.0.4",
     "reka-ui": "^2.6.0",
     "tailwind-merge": "^3.4.0",
