@@ -1,90 +1,90 @@
 {
   "new": {
-    "description": "Configura un nuevo workspace para tu proyecto creativo",
-    "detailsTitle": "Detalles del Workspace",
-    "nameLabel": "Nombre del Workspace",
-    "namePlaceholder": "Mi Proyecto Increíble",
-    "nameDescription": "Este será el nombre de la carpeta de tu workspace",
-    "locationLabel": "Ubicación",
-    "locationPlaceholder": "Selecciona una carpeta...",
-    "browseTitle": "Seleccionar Ubicación del Workspace",
-    "browsing": "Examinando...",
-    "openAfterCreationLabel": "Abrir workspace después de crear",
-    "createButton": "Crear Workspace",
-    "creating": "Creando...",
+    "description": "Set up a new workspace for your creative project",
+    "detailsTitle": "Workspace Details",
+    "nameLabel": "Workspace Name",
+    "namePlaceholder": "My Amazing Project",
+    "nameDescription": "This will be the name of your workspace folder",
+    "locationLabel": "Location",
+    "locationPlaceholder": "Select a folder...",
+    "browseTitle": "Select Workspace Location",
+    "browsing": "Browsing...",
+    "openAfterCreationLabel": "Open workspace after creation",
+    "createButton": "Create Workspace",
+    "creating": "Creating...",
     "steps": {
       "basicInfo": {
-        "title": "Información Básica",
-        "description": "Nombra tu proyecto",
-        "heading": "Nombra tu Workspace",
-        "subheading": "Elige un nombre memorable para tu proyecto",
-        "nameLabel": "Nombre del Workspace",
-        "namePlaceholder": "Mi Mundo de Fantasía Épico",
-        "nameHint": "Este será el nombre de la carpeta de tu workspace"
+        "title": "Basic Info",
+        "description": "Name your project",
+        "heading": "Name Your Workspace",
+        "subheading": "Choose a memorable name for your project",
+        "nameLabel": "Workspace Name",
+        "namePlaceholder": "My Epic Fantasy World",
+        "nameHint": "This will be the name of your workspace folder"
       },
       "template": {
-        "title": "Plantilla",
-        "description": "Elige un punto de partida",
-        "heading": "Elige una Plantilla",
-        "subheading": "Comienza con una estructura predefinida o construye desde cero",
-        "empty": "Vacío",
-        "emptyDesc": "Comienza con un lienzo en blanco",
-        "fantasy": "Fantasía",
-        "scifi": "Ciencia Ficción",
-        "comingSoon": "Próximamente"
+        "title": "Template",
+        "description": "Choose a starting point",
+        "heading": "Choose a Template",
+        "subheading": "Start with a pre-made structure or build from scratch",
+        "empty": "Empty",
+        "emptyDesc": "Start with a blank canvas",
+        "fantasy": "Fantasy",
+        "scifi": "Sci-Fi",
+        "comingSoon": "Coming soon"
       },
       "location": {
-        "title": "Ubicación",
-        "description": "Dónde guardar",
-        "heading": "Elige Ubicación",
-        "subheading": "¿Dónde debemos guardar tu workspace?",
-        "locationLabel": "Ubicación de Guardado",
-        "locationPlaceholder": "Haz clic en Examinar para seleccionar...",
-        "browsing": "Examinando...",
-        "browse": "Examinar",
-        "openAfterCreation": "Abrir workspace después de crear"
+        "title": "Location",
+        "description": "Where to save",
+        "heading": "Choose Location",
+        "subheading": "Where should we save your workspace?",
+        "locationLabel": "Save Location",
+        "locationPlaceholder": "Click Browse to select...",
+        "browsing": "Browsing...",
+        "browse": "Browse",
+        "openAfterCreation": "Open workspace after creation"
       }
     },
     "actions": {
-      "cancel": "Cancelar",
-      "back": "Atrás",
-      "continue": "Continuar",
-      "create": "Crear Workspace",
-      "creating": "Creando..."
+      "cancel": "Cancel",
+      "back": "Back",
+      "continue": "Continue",
+      "create": "Create Workspace",
+      "creating": "Creating..."
     },
     "errors": {
-      "missingFields": "Por favor completa todos los campos requeridos",
-      "createFailed": "Error al crear workspace: {err}",
-      "selectFailed": "Error al seleccionar directorio: {err}"
+      "missingFields": "Please fill in all required fields",
+      "createFailed": "Failed to create workspace: {err}",
+      "selectFailed": "Failed to select directory: {err}"
     }
   },
   "workspaces": {
-    "subtitle": "Gestiona y organiza tus proyectos creativos",
-    "searchPlaceholder": "Buscar workspaces...",
-    "loading": "Cargando workspaces...",
-    "import": "Importar",
-    "open": "Abrir",
-    "openTitle": "Abrir Workspace Existente",
+    "subtitle": "Manage and organize your creative projects",
+    "searchPlaceholder": "Search workspaces...",
+    "loading": "Loading workspaces...",
+    "import": "Import",
+    "open": "Open",
+    "openTitle": "Open Existing Workspace",
     "empty": {
-      "title": "Aún no hay Workspaces",
-      "description": "Crea tu primer workspace para comenzar a construir tu mundo, personajes e historias.",
-      "message": "No se encontraron workspaces",
-      "createButton": "Crear tu Primer Workspace"
+      "title": "No Workspaces Yet",
+      "description": "Create your first workspace to start building your world, characters, and stories.",
+      "message": "No workspaces found",
+      "createButton": "Create Your First Workspace"
     },
     "errors": {
-      "loadFailed": "Error al cargar workspaces",
-      "openFailed": "Error al abrir workspace"
+      "loadFailed": "Failed to load workspaces",
+      "openFailed": "Failed to open workspace"
     },
     "card": {
-      "notFound": "El workspace ya no existe",
-      "notFoundBadge": "No Encontrado",
-      "failedToOpen": "Error al abrir la ubicación",
-      "pathCopied": "Ruta copiada al portapapeles",
-      "openInEditor": "Abrir en el Editor",
-      "showInExplorer": "Mostrar en el Explorador",
-      "copyPath": "Copiar Ruta",
-      "removeFromList": "Quitar de la Lista",
-      "lastOpened": "Abierto recientemente"
+      "notFound": "Workspace no longer exists",
+      "notFoundBadge": "Not Found",
+      "failedToOpen": "Failed to open location",
+      "pathCopied": "Path copied to clipboard",
+      "openInEditor": "Open in Editor",
+      "showInExplorer": "Show in Explorer",
+      "copyPath": "Copy Path",
+      "removeFromList": "Remove from List",
+      "lastOpened": "Last opened recently"
     }
   },
   "sidebar": {
