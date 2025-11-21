@@ -1,90 +1,125 @@
 # Lore Designer
 
+![Status](https://img.shields.io/badge/Status-Pre--Alpha-orange?style=flat-square)
+![License](https://img.shields.io/badge/License-AGPL--3.0-blue?style=flat-square)
+
 <div align="center">
   <img src="app_icon.webp" alt="Lore Designer Logo" width="128" height="128">
   
-  **Design Narratives, Build Legends**
+  <h3>Design Narratives, Build Legends</h3>
   
-  A personal knowledge management tool designed specifically for world building and creative writing.
+  <p>
+    <strong>A personal knowledge management tool designed specifically for worldbuilding and creative writing.</strong>
+  </p>
 </div>
 
-## Early Development - Not Ready for Use
+## Early Development
 
-**Warning:** Lore Designer is currently in very early development and MVP phase. The application is not ready for production use and may contain bugs, incomplete features, or breaking changes. Use at your own risk.
+**Warning:** Lore Designer is currently in a **Pre-Alpha** phase. The application is not ready for production use and may contain bugs. Always back up your data.
 
 ## What is Lore Designer?
 
-Lore Designer is an offline desktop application that helps writers and developers plan and write their stories. It's a personal knowledge management tool designed specifically for worldbuilding and creative writing.
-
-### Who Is This For?
-
-- **Writers** (novels, screenplays)
-- **Indie game developers**
-- **Narrative content creators**
-
-### What Problem Does It Solve?
-
-The difficulty of keeping complex creative project information organized in one place, offline, with complete user control over their data.
+Lore Designer is an **Offline-First** desktop application that helps writers and game developers organize their stories. It bridges the gap between generic note-taking apps (Obsidian, Notion) and rigid writing software (Scrivener).
 
 ### Core Philosophy
 
-- **Offline first** - Your work stays on your machine
-- **User owns their data** - Plain text formats you can access anywhere
-- **Flexible structure** - Adapt to your creative process
-- **Open Source** - Transparent and community-driven
+- **User Owns Their Data:** Everything is stored as plain text files (`.md`, `.toml`, `.json`) on your local drive. No hidden databases.
+- **No Lock-in:** You can open your project folder with any text editor (VS Code, Notepad, Vim) and it will remain perfectly readable.
+- **Performance:** Built to handle thousands of files without lag.
 
-## Why Is Lore Designer Different?
 
-Lore Designer positions itself between two extremes in the market:
+## How a Workspace Works
 
-**"Absolute Freedom" Tools** (like note-taking apps): These are toolboxes that require technical setup, plugin installation, and configuration before you can start creating. High barrier to entry for non-technical writers.
+Lore Designer projects are just standard folders on your computer. However, the application uses three special components to manage your project logic without polluting your content.
 
-**"Rigid Structure" Platforms** (like online worldbuilding services): These provide predefined forms and templates but are inflexible, online-only, subscription-based, and you don't own your data in a simple format.
+```mermaid
+graph TD
+    subgraph Project Folder
+        Manifest["Project.lore<br>(Identity & Metadata)"]
+        Ignore[".loreignore<br>(Exclusion Rules)"]
 
-**Lore Designer bridges this gap** by providing:
+        subgraph System
+            Internal[".lore/<br>(Settings & Cache)"]
+        end
 
-1. **Immediate productivity** - Start creating structured characters and locations right away using default templates
-2. **Intuitive customization** - Modify templates visually without writing code
-3. **True data ownership** - 100% open source, offline, using plain text formats (`.md`, `.toml`) that will be readable in 20 years
+        subgraph Content
+            Files["Characters, Locations, Story...<br>(User Markdown Files)"]
+        end
+    end
 
-## Key Features
+    Manifest -->|Defines| Project_Identity
+    Ignore -->|Filters| Files
+    Files -->|Indexed by| Internal
+```
 
-- **Workspace Management** - Organize your creative projects
-- **Structured Content** - Characters, locations, lore, and dialogue templates
-- **Flexible Organization** - Adapt the structure to your needs
-- **Offline First** - No internet required, your data stays local
-- **Plain Text Storage** - Future-proof file formats
-- **Cross-Platform** - Works on Windows and Linux, with macOS support planned
+1.  **The Manifest (`.lore`):**
+
+    - It is a simple TOML file that gives your project an identity.
+    - It contains the project UUID, version, and basic metadata.
+    - _Example:_ `MyFantasyWorld.lore`
+
+2.  **The Filter (`.loreignore`):**
+
+    - Works exactly like `.gitignore`.
+    - Tells Lore Designer which files to ignore during indexing (e.g., temporary files, build outputs, or system files).
+    - Keeps your workspace clean and performant.
+
+3.  **The Internal Folder (`.lore/`):**
+
+    - This is where the app stores its own data, separate from _your_ creative content.
+    - Contains `settings.toml` (editor preferences), `trash/` (safeguard against accidental deletion), and search indexes.
+    - **Note:** You generally don't need to touch this folder manually.
+
+## File Structure
+
+While Lore Designer is flexible, a typical project structure looks like this:
+
+```text
+MyFantasyWorld/
+├── MyFantasyWorld.lore      # Project Manifest
+├── .loreignore              # Ignore rules
+├── .lore/                   # App configurations (Hidden)
+│   ├── settings.toml
+│   └── trash/
+├── Characters/
+│   ├── Hero.character.md
+│   └── Villain.character.md
+├── Locations/
+│   └── Capital.location.md
+```
+
+### Anatomy of a File
+
+Your content is stored in Markdown with YAML Frontmatter. This makes it machine-processable but human-readable.
+
+```markdown
+---
+type: character
+name: 'Elandra Vosh'
+archetype: 'The Reluctant Hero'
+status: active
+---
+
+# Elandra Vosh
+
+Character biography and notes go here using standard Markdown...
+```
 
 ## Roadmap
 
-### MVP Features
-- [ ] Workspace management (create, open, manage projects)
-- [ ] File browser sidebar
-- [ ] Markdown editor with Inspector panel for Front Matter
-- [ ] File template system (character, location, lore templates)
+I'm are currently working towards the **v1.0 MVP**.
 
-### Post-MVP Features
-- [ ] Infinite canvas / Mind mapping
-- [ ] Visual timelines
-- [ ] Complex dialogue editor
-- [ ] Advanced semantic search
-- [ ] Plugin system
-- [ ] Mobile app (based on desktop success)
+- [x] **Workspace Management:** Create, open, and manage projects.
+- [ ] **File System Watcher:** Robust detection of file changes.
+- [ ] **Markdown Editor:** Rich text editing with specialized "Inspector" panels.
+- [ ] **Templating System:** Custom templates for characters and locations.
 
-## Getting Started
-
-*Note: As this is early development software, detailed installation and usage instructions will be provided when the application reaches a more stable state.*
-
-## Contributing
-
-Lore Designer is open source and welcomes contributions from the community. More details on contributing will be available as the project matures.
+_For a detailed technical roadmap, please refer to [ROADMAP.md](ROADMAP.md)._
 
 ## License
 
-This project is licensed under the GNU Affero General Public License v3.0 - see the LICENSE file for details.
+This project is licensed under the **GNU Affero General Public License v3.0**. See the [LICENSE](https://www.google.com/search?q=LICENSE) file for details.
 
----
 ## Special thanks
 **[@iriata18](https://instagram.com/iriata18):** for the application logo.
 
