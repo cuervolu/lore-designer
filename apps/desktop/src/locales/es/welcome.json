@@ -1,11 +1,11 @@
 {
   "routeTitles": {
-    "welcome": "Bienvenido a Lore Designer",
-    "newWorkspace": "Crear Nuevo Workspace",
+    "welcome": "Welcome to Lore Designer",
+    "newWorkspace": "Create New Workspace",
     "plugins": "Plugins",
-    "settings": "Configuración",
-    "learn": "Aprender"
+    "settings": "Settings",
+    "learn": "Learn"
   },
-  "newWorkspace": "Nuevo Workspace",
-  "openWorkspace": "Abrir Workspace"
+  "newWorkspace": "New Workspace",
+  "openWorkspace": "Open Workspace"
 }
