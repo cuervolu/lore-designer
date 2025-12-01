@@ -1,37 +1,37 @@
 {
-  "title": "Configuración",
-  "subtitle": "Personaliza tu experiencia en Lore Designer",
+  "title": "Settings",
+  "subtitle": "Customize your Lore Designer experience",
   "appearance": {
-    "title": "Apariencia",
-    "description": "Personaliza el aspecto de la aplicación",
-    "theme": "Tema",
+    "title": "Appearance",
+    "description": "Customize the look and feel of the application",
+    "theme": "Theme",
     "themeOptions": {
-      "system": "Predeterminado del Sistema",
-      "light": "Claro",
-      "dark": "Oscuro"
+      "system": "System Default",
+      "light": "Light",
+      "dark": "Dark"
     },
-    "fontSizeLabel": "Tamaño de Fuente",
-    "fontSizeDescription": "Ajusta el tamaño base de fuente en toda la app",
-    "language": "Idioma",
-    "languageDescription": "Selecciona tu idioma preferido",
+    "fontSizeLabel": "Font Size",
+    "fontSizeDescription": "Adjust the base font size throughout the app",
+    "language": "Language",
+    "languageDescription": "Select your preferred language",
     "languageOptions": {
       "en": "English",
       "es": "Español"
     }
   },
   "behavior": {
-    "title": "Comportamiento",
-    "description": "Configura cómo se comporta la aplicación",
-    "autoSave": "Guardado Automático",
-    "autoSaveDescription": "Guarda automáticamente tu trabajo mientras editas",
-    "saveIntervalLabel": "Intervalo de Guardado",
-    "saveIntervalDescription": "Con qué frecuencia guardar automáticamente"
+    "title": "Behavior",
+    "description": "Configure how the application behaves",
+    "autoSave": "Auto Save",
+    "autoSaveDescription": "Automatically save your work while editing",
+    "saveIntervalLabel": "Save Interval",
+    "saveIntervalDescription": "How often to save automatically"
   },
   "notifications": {
-    "themeChanged": "Tema cambiado exitosamente",
-    "languageChanged": "Idioma cambiado exitosamente",
-    "fontSizeChanged": "Tamaño de fuente actualizado",
-    "autoSaveEnabled": "Guardado automático activado",
-    "autoSaveDisabled": "Guardado automático desactivado"
+    "themeChanged": "Theme changed successfully",
+    "languageChanged": "Language changed successfully",
+    "fontSizeChanged": "Font size updated",
+    "autoSaveEnabled": "Auto save enabled",
+    "autoSaveDisabled": "Auto save disabled"
   }
 }
