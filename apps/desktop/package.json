@@ -10,11 +10,12 @@
     "preview": "vite preview",
     "test:unit": "vitest",
     "build-only": "vite build",
-    "type-check": "vue-tsc --build",
-    "lint:oxlint": "oxlint . --fix -D correctness --ignore-path .gitignore",
-    "lint:eslint": "eslint . --fix",
-    "lint": "run-s lint:*",
-    "format": "prettier --write src/",
+    "type-check": "tsgo --build --force",
+    "type-check:watch": "tsgo --build --watch",
+    "lint": "oxlint . --ignore-path ../../.gitignore",
+    "lint:fix": "oxlint . --fix --ignore-path ../../.gitignore",
+    "format": "oxfmt --write src",
+    "format:check": "oxfmt --check src",
     "tauri": "tauri"
   },
   "dependencies": {
