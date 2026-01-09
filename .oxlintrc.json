@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["unicorn", "typescript", "import", "promise", "oxc"],
+  "plugins": ["unicorn", "typescript", "import", "promise", "oxc", "vue"],
   "categories": {},
   "rules": {
     "for-direction": "warn",
@@ -105,7 +105,19 @@
     "unicorn/no-useless-length-check": "warn",
     "unicorn/no-useless-spread": "warn",
     "unicorn/prefer-set-size": "warn",
-    "unicorn/prefer-string-starts-ends-with": "warn"
+    "unicorn/prefer-string-starts-ends-with": "warn",
+    "vue/no-dupe-keys": "warn",
+    "vue/no-duplicate-attributes": "warn",
+    "vue/no-parsing-error": "warn",
+    "vue/no-reserved-keys": "warn",
+    "vue/valid-template-root": "warn",
+    "vue/valid-v-bind": "warn",
+    "vue/valid-v-else": "warn",
+    "vue/valid-v-for": "warn",
+    "vue/valid-v-if": "warn",
+    "vue/valid-v-model": "warn",
+    "vue/valid-v-on": "warn",
+    "vue/valid-v-slot": "warn"
   },
   "settings": {
     "jsx-a11y": {
@@ -148,5 +160,6 @@
     ".idea",
     "crates/**",
     "target/**"
-  ]
+  ],
+  
 }
