@@ -1,6 +1,6 @@
 {
   "workspace": {
-    "manifestNotFound": "No se pudo encontrar el manifiesto del workspace en {path}",
-    "ioError": "Error de E/S: {message}"
+    "manifestNotFound": "Could not find workspace manifest at {path}",
+    "ioError": "I/O Error: {message}"
   }
 }
