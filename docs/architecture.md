@@ -80,7 +80,7 @@ lore-designer/
 ├── crates/
 │   ├── lore-workspaces/  ← File system management
 │   │   ├── src/
-│   │   │   ├── workspace.rs ← Workspace CRUD operations
+│   │   │   ├── lib.rs       ← Workspace CRUD operations
 │   │   │   └── manifest.rs  ← .lore file handling
 │   │   └── Cargo.toml
 │   └── lore-editor/     ← Editor logic & state
