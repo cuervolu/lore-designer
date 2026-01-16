@@ -82,7 +82,7 @@ This starts the Tauri development server with hot-reload enabled.
 | `bun run build:desktop`      | Build the desktop app for production          |
 | `bun run dev:docs`           | Run the documentation site locally            |
 | `bun shadcn add [component]` | Add a shadcn-vue component to the desktop app |
-| `bun run oxlint`             | Run the linter across the codebase            |
+| `bun run lint`               | Run the linter across the codebase            |
 
 ## Code Style and Conventions
 
