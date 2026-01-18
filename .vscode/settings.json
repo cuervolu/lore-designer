@@ -17,7 +17,7 @@
   },
   "typescript.experimental.useTsgo": true,
   "[typescript]": {
-    "editor.defaultFormatter": "vscode.typescript-language-features"
+    "editor.defaultFormatter": "oxc.oxc-vscode"
   },
   "[vue]": {
     "editor.defaultFormatter": "Vue.volar"
@@ -25,5 +25,5 @@
   "[json]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "cSpell.words": ["loreignore"]
+  "cSpell.words": ["loreignore", "Milkdown", "tiptap"]
 }
