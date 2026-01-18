@@ -139,7 +139,7 @@ async function loadFileContent() {
 }
 
 function handleEditorUpdate(newContent: string) {
-  editorStore.activeFileContent = newContent;
+  editorStore.updateActiveFileContent(newContent);
   editorStore.markTabAsChanged();
 }
 
