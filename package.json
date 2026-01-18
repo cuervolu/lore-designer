@@ -6,7 +6,7 @@
     "packages/*",
     "plugins/tauri-plugin-tracing"
   ],
- "scripts": {
+  "scripts": {
     "dev:desktop": "cd apps/desktop && bun run dev",
     "dev:docs": "cd apps/docs && bun run dev",
     "build:desktop": "cd apps/desktop && bun run build",
@@ -31,5 +31,12 @@
   },
   "peerDependencies": {
     "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@tiptap/extension-placeholder": "^3.15.3",
+    "@tiptap/markdown": "^3.15.3",
+    "@tiptap/pm": "^3.15.3",
+    "@tiptap/starter-kit": "^3.15.3",
+    "@tiptap/vue-3": "^3.15.3"
   }
 }
