@@ -32,7 +32,7 @@ tauri-plugin-opener = "2.5.0"
 tauri-plugin-store = {workspace = true}
 tauri-plugin-drpc = "0.1.6"
 chrono = { version = "0.4" }
-sysinfo = "0.37.0"
+sysinfo = "0.38.0"
 thiserror = {workspace = true}
 tracing = {workspace = true}
 tauri-plugin-tracing = { path = "../../../plugins/tauri-plugin-tracing" }
