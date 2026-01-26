@@ -1,17 +1,17 @@
 {
   "tabs": {
-    "console": "Consola",
-    "problems": "Problemas",
-    "output": "Salida"
+    "console": "Console",
+    "problems": "Problems",
+    "output": "Output"
   },
   "actions": {
-    "clear": "Limpiar",
-    "maximize": "Maximizar",
-    "close": "Cerrar"
+    "clear": "Clear",
+    "maximize": "Maximize",
+    "close": "Close"
   },
   "empty": {
-    "console": "No hay mensajes en consola",
-    "problems": "No se detectaron problemas",
-    "output": "No hay mensajes de salida"
+    "console": "No console messages",
+    "problems": "No problems detected",
+    "output": "No output messages"
   }
 }

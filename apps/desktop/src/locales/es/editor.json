@@ -1,34 +1,34 @@
 {
   "messages": {
-    "selectNewFileLocation": "Selecciona la ubicación para el nuevo archivo",
-    "failedToSelectDir": "No se pudo seleccionar el directorio",
-    "fileCreatedSuccess": "Archivo {extension} creado con éxito",
-    "failedToCreateFile": "No se pudo crear el archivo",
-    "openFileTitle": "Abrir Archivo",
-    "failedToOpenFile": "No se pudo abrir el archivo",
-    "noActiveFileToSave": "No hay ningún archivo activo para guardar",
-    "saveTriggered": "Acción de guardar disparada",
-    "saveWillBeImplemented": "La funcionalidad de guardado se implementará en el componente del editor",
-    "fileTreeRefreshed": "Árbol de archivos actualizado"
+    "selectNewFileLocation": "Select location for new file",
+    "failedToSelectDir": "Failed to select directory",
+    "fileCreatedSuccess": "Created {extension} file successfully",
+    "failedToCreateFile": "Failed to create file",
+    "openFileTitle": "Open File",
+    "failedToOpenFile": "Failed to open file",
+    "noActiveFileToSave": "No active file to save",
+    "saveTriggered": "Save action triggered",
+    "saveWillBeImplemented": "Save functionality will be implemented in the editor component",
+    "fileTreeRefreshed": "File tree refreshed"
   },
-  "imageMissing": "Imagen Faltante",
-  "relocateImage": "Reubicar",
-  "removeReference": "Eliminar",
+  "imageMissing": "Image Missing",
+  "relocateImage": "Relocate",
+  "removeReference": "Remove",
   "workspace": {
     "health": {
-        "title": "Salud del Proyecto",
-        "description": "Se detectaron problemas con imágenes en tu proyecto",
-        "missingImages": "{count} imagen(es) faltante(s)",
-        "orphanedImages": "{count} imagen(es) sin usar",
-        "orphanedImagesDescription": "Estas imágenes existen en tu carpeta de assets pero no están referenciadas por ningún archivo.",
-        "usedBy": "Usada por {count} archivo(s)",
-        "affectedFiles": "Archivos afectados",
-        "cleanupOrphans": "Limpiar Imágenes Sin Usar",
-        "noIssues": "No se detectaron problemas con imágenes"
+        "title": "Workspace Health",
+        "description": "Issues detected with images in your workspace",
+        "missingImages": "{count} missing image(s)",
+        "orphanedImages": "{count} unused image(s)",
+        "orphanedImagesDescription": "These images exist in your assets folder but are not referenced by any files.",
+        "usedBy": "Used by {count} file(s)",
+        "affectedFiles": "Affected files",
+        "cleanupOrphans": "Cleanup Unused Images",
+        "noIssues": "No image issues detected"
     }
   },
   "common": {
-    "comingSoon": "Próximamente",
-    "loading": "Cargando"
+    "comingSoon": "Coming Soon",
+    "loading": "Loading"
   }
 }

@@ -1,7 +1,7 @@
 {
   "title": "Lore Designer",
-  "maximize": "Maximizar Ventana",
-  "restore": "Restaurar Ventana",
-  "minimize": "Minimizar Ventana",
-  "close": "Cerrar Ventana"
+  "maximize": "Maximize Window",
+  "restore": "Restore Window",
+  "minimize": "Minimize Window",
+  "close": "Close Window"
 }
