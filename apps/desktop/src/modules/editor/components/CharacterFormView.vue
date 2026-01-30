@@ -57,7 +57,13 @@ function parseFrontmatter() {
     formData.value = parsed;
 
     if (!formData.value.aliases) formData.value.aliases = [];
-    if (!formData.value.customProperties) formData.value.customProperties = [];
+    if (parsed.custom_properties && !formData.value.customProperties) {
+      formData.value.customProperties = Array.isArray(parsed.custom_properties)
+        ? parsed.custom_properties
+        : [];
+    } else if (!formData.value.customProperties) {
+      formData.value.customProperties = [];
+    }
   } catch (error) {
     logError(`Failed to parse character frontmatter: ${error}`);
     toast.error("Failed to parse character frontmatter");
@@ -81,9 +87,14 @@ function serializeToYaml(): string {
   }
 
   if (data.customProperties) {
-    data.custom_properties = data.customProperties.filter(
+    const propsArray = Array.isArray(data.customProperties)
+      ? data.customProperties
+      : [];
+
+    data.custom_properties = propsArray.filter(
       (prop: any) => prop.key && prop.key.trim(),
     );
+
     if (data.custom_properties.length === 0) delete data.custom_properties;
     delete data.customProperties;
   }

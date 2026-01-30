@@ -100,7 +100,7 @@ const commandMenuItems = computed<CommandMenuItem[]>(() => {
     },
   ];
 
-  if (editorStore.activeWorkspace) {
+  if (editorStore.currentWorkspace) {
     const characters = fileIndexStore.getFilesByType("Character");
     const locations = fileIndexStore.getFilesByType("Location");
     const lore = fileIndexStore.getFilesByType("Lore");
@@ -298,7 +298,7 @@ function stripMarkdownSyntax(markdown: string): string {
 function insertEntityLink(type: EntityLinkType, path: string, label: string) {
   if (!editor.value) return;
 
-  const linkText = `[[${type}:${label}]]`;
+  const linkText = `[[${type}:${path}|${label}]]`;
   editor.value.chain().focus().insertContent(linkText).run();
 
   closeSlashMenu();

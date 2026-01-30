@@ -217,8 +217,8 @@ function getIconComponent(iconName: string | undefined): LucideIcon {
     </div>
 
     <div :class="isCharacterForm
-        ? 'flex-1 overflow-hidden'
-        : 'flex-1 overflow-y-auto pt-10 md:pt-12 px-4 pb-6'
+      ? 'flex-1 overflow-hidden'
+      : 'flex-1 overflow-y-auto pt-10 md:pt-12 px-4 pb-6'
       ">
       <div class="h-full">
         <div v-if="isLoading" class="flex items-center justify-center h-48">
@@ -245,7 +245,7 @@ function getIconComponent(iconName: string | undefined): LucideIcon {
         </div>
 
         <div v-else-if="isJsonView" class="h-full">
-          <Textarea :value="contentBody" @input="handleJsonContentChange"
+          <Textarea :value="editorStore.activeFileContent" @input="handleJsonContentChange"
             class="w-full h-full bg-muted/30 border border-input rounded-md p-4 font-mono text-sm focus:outline-none focus:ring-1 focus:ring-ring resize-none"
             placeholder="JSON data..." aria-label="JSON content viewer/editor"></Textarea>
         </div>

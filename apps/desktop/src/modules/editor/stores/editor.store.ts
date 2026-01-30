@@ -431,21 +431,58 @@ export const useEditorStore = defineStore("editor", () => {
   }
 
   const triggerSave = async () => {
-    const file = activeTab.value;
-    if (!file || !file.path) return;
+  const file = activeTab.value;
+  if (!file || !file.path || !currentWorkspace.value) {
+    return;
+  }
 
-    saveStatus.value = "saving";
-    try {
-      await invoke("save_file_content", {
-        path: file.path,
-        content: activeFileContent.value,
-      });
-      saveStatus.value = "saved";
-    } catch (err) {
-      await logError(`Auto-save failed for file ${file.path}: ${err}`);
-      saveStatus.value = "unsaved";
+  saveStatus.value = "saving";
+  try {
+    let request: SaveFileRequest;
+
+    if (activeFileFrontmatter.value &&
+        (activeFileType.value === "Character" ||
+         activeFileType.value === "Location" ||
+         activeFileType.value === "Lore" ||
+         activeFileType.value === "Markdown")) {
+      request = {
+        type: "MarkdownWithFrontmatter",
+        data: {
+          frontmatter: activeFileFrontmatter.value,
+          content: activeFileContent.value
+        },
+      };
+    } else if (activeFileType.value === "Canvas" ||
+               activeFileType.value === "Dialogue") {
+      request = {
+        type: "Json",
+        data: { content: activeFileContent.value }
+      };
+    } else {
+      request = {
+        type: "Text",
+        data: { content: activeFileContent.value }
+      };
     }
-  };
+
+    await invoke("save_file_content", {
+      workspacePath: currentWorkspace.value.path,
+      filePath: file.path,
+      content: request,
+    });
+
+    file.hasUnsavedChanges = false;
+    saveStatus.value = "saved";
+
+  } catch (err) {
+    await logError(`Auto-save failed for file ${file.path}: ${err}`);
+    saveStatus.value = "unsaved";
+
+    toast.error("Auto-save failed", {
+      description: `Could not save ${file.name}. Your changes are still in memory.`,
+    });
+  }
+};
 
   const debouncedSave = useDebounceFn(triggerSave, 1000);
 
