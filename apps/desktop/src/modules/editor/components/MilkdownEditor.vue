@@ -1,36 +1,47 @@
 <script setup lang="ts">
 import { error as logError } from "tauri-plugin-tracing";
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 
-import { defaultValueCtx, Editor, editorViewOptionsCtx, rootCtx } from '@milkdown/kit/core';
-import { commonmark } from '@milkdown/kit/preset/commonmark';
-import { gfm } from '@milkdown/kit/preset/gfm';
-import { history } from '@milkdown/kit/plugin/history';
-import { clipboard } from '@milkdown/kit/plugin/clipboard';
-import { listener, listenerCtx } from '@milkdown/kit/plugin/listener';
-import { slashFactory, SlashProvider } from '@milkdown/kit/plugin/slash';
-import { replaceAll } from '@milkdown/kit/utils';
+import { defaultValueCtx, Editor, editorViewOptionsCtx, rootCtx } from "@milkdown/kit/core";
+import { commonmark } from "@milkdown/kit/preset/commonmark";
+import { gfm } from "@milkdown/kit/preset/gfm";
+import { history } from "@milkdown/kit/plugin/history";
+import { clipboard } from "@milkdown/kit/plugin/clipboard";
+import { listener, listenerCtx } from "@milkdown/kit/plugin/listener";
+import { slashFactory, SlashProvider } from "@milkdown/kit/plugin/slash";
+import { replaceAll } from "@milkdown/kit/utils";
 
-import CommandMenu, { type CommandMenuItem } from './CommandMenu.vue';
-import { useEditorStore } from '@editor/stores/editor.store';
-import { useFileIndexStore } from '@editor/stores/file-index.store';
-import { callCommand } from '@milkdown/kit/utils';
-import { insertEntityLinkCommand, type InsertEntityLinkPayload } from '@editor/lib/commands';
-import {entityLinkSchema} from "@editor/lib/entity-link.ts";
-import {entityLinkRemarkPlugin} from "@editor/lib/entity-link-remark.plugin.ts";
-import type {EntityLinkType} from "@editor/types/editor.types.ts";
+import CommandMenu, { type CommandMenuItem } from "./CommandMenu.vue";
+import { useEditorStore } from "@editor/stores/editor.store";
+import { useFileIndexStore } from "@editor/stores/file-index.store";
+import { callCommand } from "@milkdown/kit/utils";
+import { insertEntityLinkCommand, type InsertEntityLinkPayload } from "@editor/lib/commands";
+import { entityLinkSchema } from "@editor/lib/entity-link.ts";
+import { entityLinkRemarkPlugin } from "@editor/lib/entity-link-remark.plugin.ts";
+import type { EntityLinkType } from "@editor/types/editor.types.ts";
 
-import { Code, Heading1, Heading2, Heading3, List, ListOrdered, MapPin, Quote, User, BookOpen } from 'lucide-vue-next';
+import {
+  Code,
+  Heading1,
+  Heading2,
+  Heading3,
+  List,
+  ListOrdered,
+  MapPin,
+  Quote,
+  User,
+  BookOpen,
+} from "lucide-vue-next";
 
 // Styles
-import '@milkdown/kit/prose/view/style/prosemirror.css';
-import '@/assets/milkdown-custom-theme.css';
+import "@milkdown/kit/prose/view/style/prosemirror.css";
+import "@/assets/milkdown-custom-theme.css";
 
 const props = defineProps<{
   modelValue: string;
   placeholder?: string;
 }>();
-const emit = defineEmits(['update:modelValue', 'change', 'textUpdate']);
+const emit = defineEmits(["update:modelValue", "change", "textUpdate"]);
 
 const editorContainer = ref<HTMLElement | null>(null);
 const slashContainerRef = ref<HTMLElement | null>(null); // For positioning the slash menu
@@ -40,7 +51,7 @@ const isUpdatingContent = ref(false);
 const editorStore = useEditorStore();
 const fileIndexStore = useFileIndexStore();
 
-const slash = slashFactory('lore-commands');
+const slash = slashFactory("lore-commands");
 const slashState = ref<{
   open: boolean;
   trigger: string | null;
@@ -51,54 +62,61 @@ const slashState = ref<{
   query: null,
 });
 
-const defaultCommands: Omit<CommandMenuItem, 'action'>[] = [
-  { id: 'heading1', type: 'command', label: 'Heading 1', icon: Heading1 },
-  { id: 'heading2', type: 'command', label: 'Heading 2', icon: Heading2 },
-  { id: 'heading3', type: 'command', label: 'Heading 3', icon: Heading3 },
-  { id: 'bulletList', type: 'command', label: 'Bullet List', icon: List },
-  { id: 'orderedList', type: 'command', label: 'Ordered List', icon: ListOrdered },
-  { id: 'blockquote', type: 'command', label: 'Blockquote', icon: Quote },
-  { id: 'codeBlock', type: 'command', label: 'Code Block', icon: Code },
+const defaultCommands: Omit<CommandMenuItem, "action">[] = [
+  { id: "heading1", type: "command", label: "Heading 1", icon: Heading1 },
+  { id: "heading2", type: "command", label: "Heading 2", icon: Heading2 },
+  { id: "heading3", type: "command", label: "Heading 3", icon: Heading3 },
+  { id: "bulletList", type: "command", label: "Bullet List", icon: List },
+  { id: "orderedList", type: "command", label: "Ordered List", icon: ListOrdered },
+  { id: "blockquote", type: "command", label: "Blockquote", icon: Quote },
+  { id: "codeBlock", type: "command", label: "Code Block", icon: Code },
 ];
 
 function getIconForFileType(fileType: string) {
   switch (fileType) {
-    case 'Character': return User;
-    case 'Location': return MapPin;
-    case 'Lore': return BookOpen;
-    default: return User;
+    case "Character":
+      return User;
+    case "Location":
+      return MapPin;
+    case "Lore":
+      return BookOpen;
+    default:
+      return User;
   }
 }
 
 function getEntityTypeFromTrigger(trigger: string): EntityLinkType | null {
   switch (trigger) {
-    case '@': return 'character';
-    case '#': return 'location';
-    case '!': return 'lore';
-    default: return null;
+    case "@":
+      return "character";
+    case "#":
+      return "location";
+    case "!":
+      return "lore";
+    default:
+      return null;
   }
 }
 
-
 const commandItems = computed<CommandMenuItem[]>(() => {
   const trigger = slashState.value.trigger;
-  const query = slashState.value.query || '';
+  const query = slashState.value.query || "";
 
-  let source: Omit<CommandMenuItem, 'action'>[] = [];
-  let entityType: InsertEntityLinkPayload['entityType'] = 'unknown';
+  let source: Omit<CommandMenuItem, "action">[] = [];
+  let entityType: InsertEntityLinkPayload["entityType"] = "unknown";
 
-  if (trigger === '/') {
-    entityType = 'command';
+  if (trigger === "/") {
+    entityType = "command";
     source = defaultCommands;
   } else {
-    const entityTypeFromTrigger = getEntityTypeFromTrigger(trigger || '');
+    const entityTypeFromTrigger = getEntityTypeFromTrigger(trigger || "");
 
     if (entityTypeFromTrigger) {
       entityType = entityTypeFromTrigger;
 
       const files = fileIndexStore.filterFiles(query, entityTypeFromTrigger);
 
-      source = files.map(file => ({
+      source = files.map((file) => ({
         id: file.path,
         type: entityTypeFromTrigger,
         label: file.name,
@@ -108,47 +126,48 @@ const commandItems = computed<CommandMenuItem[]>(() => {
   }
 
   return source
-  .filter(item => item.label.toLowerCase().includes(query.toLowerCase()))
-  .slice(0, 10)
-  .map(item => ({
-    ...item,
-    action: () => {
-      if (!editor.value) return;
+    .filter((item) => item.label.toLowerCase().includes(query.toLowerCase()))
+    .slice(0, 10)
+    .map((item) => ({
+      ...item,
+      action: () => {
+        if (!editor.value) return;
 
-      if (item.type === 'command') {
-        // TODO: Implementar comandos reales aquí
-      } else {
-        const payload: InsertEntityLinkPayload = {
-          href: item.id,
-          entityType: item.type as InsertEntityLinkPayload['entityType'],
-          label: item.label,
-        };
-        editor.value.action(callCommand(insertEntityLinkCommand.key, payload));
-      }
+        if (item.type === "command") {
+          // TODO: Implementar comandos reales aquí
+        } else {
+          const payload: InsertEntityLinkPayload = {
+            href: item.id,
+            entityType: item.type as InsertEntityLinkPayload["entityType"],
+            label: item.label,
+          };
+          editor.value.action(callCommand(insertEntityLinkCommand.key, payload));
+        }
 
-      slashState.value.open = false;
-    },
-  }));
+        slashState.value.open = false;
+      },
+    }));
 });
 
 const isLoadingFiles = computed(() => fileIndexStore.isIndexing);
 
-watch(() => slashState.value.query, async (newQuery) => {
-  if (!slashState.value.open || !slashState.value.trigger) return;
+watch(
+  () => slashState.value.query,
+  async (newQuery) => {
+    if (!slashState.value.open || !slashState.value.trigger) return;
 
-  const entityType = getEntityTypeFromTrigger(slashState.value.trigger);
-  if (!entityType) return;
+    const entityType = getEntityTypeFromTrigger(slashState.value.trigger);
+    if (!entityType) return;
 
-  if (newQuery && newQuery.length >= 2) {
-    try {
-      await fileIndexStore.searchFilesByType(entityType, newQuery);
-    } catch (error) {
-      await logError(`Error searching files: ${error}`);
+    if (newQuery && newQuery.length >= 2) {
+      try {
+        await fileIndexStore.searchFilesByType(entityType, newQuery);
+      } catch (error) {
+        await logError(`Error searching files: ${error}`);
+      }
     }
-  }
-});
-
-
+  },
+);
 
 onMounted(async () => {
   if (!editorContainer.value || !slashContainerRef.value) return;
@@ -166,7 +185,7 @@ onMounted(async () => {
         slashState.value.open = false;
         return false;
       }
-      const match = /(?:^|\s)([\/@#!])(\w*)$/.exec(textBefore);
+      const match = /(?:^|\s)([/@#!])(\w*)$/.exec(textBefore);
       if (match) {
         const [, trigger, query] = match;
         slashState.value = { open: true, trigger, query };
@@ -178,61 +197,62 @@ onMounted(async () => {
   });
 
   editor.value = await Editor.make()
-  .config((ctx) => {
-    ctx.set(rootCtx, editorContainer.value);
-    ctx.set(defaultValueCtx, props.modelValue);
-    ctx.update(editorViewOptionsCtx, (prev) => ({
-      ...prev,
-      attributes: {
-        ...(prev?.attributes || {}),
-        placeholder: props.placeholder || 'Start writing...',
-      },
-    }));
-    const listenerManager = ctx.get(listenerCtx);
-    listenerManager.markdownUpdated((_, markdown) => {
-      if (isUpdatingContent.value) return;
-      if (markdown !== internalValue.value) {
-        internalValue.value = markdown;
-        emit('update:modelValue', markdown);
-        const plainText = stripMarkdownSyntax(markdown);
-        emit('textUpdate', plainText);
-        emit('change');
-      }
-    });
-    ctx.set(slash.key, {
-      view: () => ({
-        update: (view, prevState) => slashProvider.update(view, prevState),
-        destroy: () => slashProvider.destroy(),
-      }),
-    });
-  })
-  .use(commonmark)
-  .use(gfm)
-  .use(entityLinkRemarkPlugin)
-  .use(history)
-  .use(clipboard)
-  .use(listener)
-  .use(slash)
-  .use(entityLinkSchema)
-  .use(insertEntityLinkCommand)
-  .create();
+    .config((ctx) => {
+      ctx.set(rootCtx, editorContainer.value);
+      ctx.set(defaultValueCtx, props.modelValue);
+      ctx.update(editorViewOptionsCtx, (prev) => ({
+        ...prev,
+        attributes: {
+          ...prev?.attributes,
+          placeholder: props.placeholder || "Start writing...",
+        },
+      }));
+      const listenerManager = ctx.get(listenerCtx);
+      listenerManager.markdownUpdated((_, markdown) => {
+        if (isUpdatingContent.value) return;
+        if (markdown !== internalValue.value) {
+          internalValue.value = markdown;
+          emit("update:modelValue", markdown);
+          const plainText = stripMarkdownSyntax(markdown);
+          emit("textUpdate", plainText);
+          emit("change");
+        }
+      });
+      ctx.set(slash.key, {
+        view: () => ({
+          update: (view, prevState) => slashProvider.update(view, prevState),
+          destroy: () => slashProvider.destroy(),
+        }),
+      });
+    })
+    .use(commonmark)
+    .use(gfm)
+    .use(entityLinkRemarkPlugin)
+    .use(history)
+    .use(clipboard)
+    .use(listener)
+    .use(slash)
+    .use(entityLinkSchema)
+    .use(insertEntityLinkCommand)
+    .create();
 });
 
-watch(() => props.modelValue, async (newValue) => {
-  if (!editor.value || newValue === internalValue.value) return;
-  try {
-    isUpdatingContent.value = true;
-    internalValue.value = newValue;
-    editor.value.action(replaceAll(newValue));
-    const plainText = stripMarkdownSyntax(newValue);
-    emit('textUpdate', plainText);
-  } catch (error) {
-    await logError(`Error updating Milkdown content: ${error as string}`);
-  } finally {
-    await nextTick();
-    isUpdatingContent.value = false;
-  }
-});
+watch(
+  () => props.modelValue,
+  async (newValue) => {
+    if (!editor.value || newValue === internalValue.value) return;
+    try {
+      isUpdatingContent.value = true;
+      internalValue.value = newValue;
+      editor.value.action(replaceAll(newValue));
+    } catch (error) {
+      await logError(`Error updating Milkdown content: ${error as string}`);
+    } finally {
+      await nextTick();
+      isUpdatingContent.value = false;
+    }
+  },
+);
 
 onBeforeUnmount(() => {
   editor.value?.destroy();
@@ -240,20 +260,20 @@ onBeforeUnmount(() => {
 
 function stripMarkdownSyntax(markdown: string): string {
   return markdown
-  .replace(/^#+\s+/gm, '')
-  .replace(/^[*-]\s+/gm, '')
-  .replace(/^>\s+/gm, '')
-  .replace(/^\d+\.\s+/gm, '')
-  .replace(/`{3}[\s\S]*?`{3}/g, '')
-  .replace(/`([^`]+)`/g, '$1')
-  .replace(/\*\*([^*]+)\*\*/g, '$1')
-  .replace(/\*([^*]+)\*/g, '$1')
-  .replace(/\[([^\]]+)]\([^)]+\)/g, '$1')
-  .replace(/!\[([^\]]+)]\([^)]+\)/g, '')
-  .replace(/\[([^\]]+)]/g, '$1')
-  .replace(/~~([^~]+)~~/g, '$1')
-  .replace(/^-{3,}/gm, '')
-  .trim();
+    .replace(/^#+\s+/gm, "")
+    .replace(/^[*-]\s+/gm, "")
+    .replace(/^>\s+/gm, "")
+    .replace(/^\d+\.\s+/gm, "")
+    .replace(/`{3}[\s\S]*?`{3}/g, "")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/\*([^*]+)\*/g, "$1")
+    .replace(/\[([^\]]+)]\([^)]+\)/g, "$1")
+    .replace(/!\[([^\]]+)]\([^)]+\)/g, "")
+    .replace(/\[([^\]]+)]/g, "$1")
+    .replace(/~~([^~]+)~~/g, "$1")
+    .replace(/^-{3,}/gm, "")
+    .trim();
 }
 </script>
 
@@ -271,11 +291,7 @@ function stripMarkdownSyntax(markdown: string): string {
       It will also toggle the `data-show` attribute.
     -->
     <div ref="slashContainerRef" class="absolute" data-show="false">
-      <CommandMenu
-        v-if="slashState.open"
-        :items="commandItems"
-        :loading="isLoadingFiles"
-      />
+      <CommandMenu v-if="slashState.open" :items="commandItems" :loading="isLoadingFiles" />
     </div>
   </div>
 </template>
@@ -285,7 +301,7 @@ function stripMarkdownSyntax(markdown: string): string {
   This CSS hides the slash container when the provider determines
   it should not be visible, using the `data-show` attribute.
 */
-.slash-provider-container[data-show='false'] {
+.slash-provider-container[data-show="false"] {
   display: none;
 }
 </style>

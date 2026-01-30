@@ -211,13 +211,12 @@ impl ImageRegistry {
 
         // Add file_path to images that now reference it
         for img_path in image_paths.iter() {
-            if let Some(image_ref) = index.images.get_mut(img_path) {
-                if !image_ref.used_by.contains(&file_path) {
+            if let Some(image_ref) = index.images.get_mut(img_path)
+                && !image_ref.used_by.contains(&file_path) {
                     image_ref.used_by.push(file_path.clone());
                     image_ref.last_verified = now.clone();
                     debug!("Added '{}' to image '{}' references", file_path, img_path);
                 }
-            }
         }
 
         drop(index);
@@ -290,15 +289,14 @@ impl ImageRegistry {
             let entry = entry.context("Failed to read directory entry")?;
             let path = entry.path();
 
-            if path.is_file() {
-                if let Ok(relative) = path.strip_prefix(&self.workspace_path) {
+            if path.is_file()
+                && let Ok(relative) = path.strip_prefix(&self.workspace_path) {
                     let relative_str = relative.to_string_lossy().replace('\\', "/");
                     
                     if !index.images.contains_key(&relative_str) {
                         orphaned.push(relative_str);
                     }
                 }
-            }
         }
 
         Ok(orphaned)
@@ -328,12 +326,11 @@ impl ImageRegistry {
             if path.is_file() {
                 let hash = Self::calculate_file_hash(&path).await?;
                 
-                if hash == missing_hash {
-                    if let Ok(relative) = path.strip_prefix(&self.workspace_path) {
+                if hash == missing_hash
+                    && let Ok(relative) = path.strip_prefix(&self.workspace_path) {
                         let relative_str = relative.to_string_lossy().replace('\\', "/");
                         candidates.push(relative_str);
                     }
-                }
             }
         }
 

@@ -17,6 +17,7 @@ import type {
   SaveFileRequest,
 } from "@editor/types/editor.types";
 import type { ValidationReport } from "@editor/types/image.types";
+import { useDebounceFn } from "@vueuse/core";
 
 export const useEditorStore = defineStore("editor", () => {
   const preferencesStore = usePreferencesStore();
@@ -44,7 +45,7 @@ export const useEditorStore = defineStore("editor", () => {
   const activeFileLineCount = ref<number | null>(null);
   const activeFileWordCount = ref<number | null>(null);
   const activeFileCharCount = ref<number | null>(null);
-
+  const saveStatus = ref<"saved" | "saving" | "unsaved">("saved");
   const activeTab = computed(() => {
     return openTabs.value.find((tab) => tab.id === activeTabId.value) || null;
   });
@@ -77,7 +78,7 @@ export const useEditorStore = defineStore("editor", () => {
       }>("indexing-complete", async (event) => {
         if (event.payload.workspace_path === workspace.path) {
           await debug(
-            `Indexing completed: ${event.payload.file_count} files, ${event.payload.directory_count} directories`
+            `Indexing completed: ${event.payload.file_count} files, ${event.payload.directory_count} directories`,
           );
           // Reload file tree after indexing completes
           await loadFileTree();
@@ -128,7 +129,7 @@ export const useEditorStore = defineStore("editor", () => {
 
         if (currentWorkspace.value && eventData.workspace_path === currentWorkspace.value.path) {
           await debug(
-            `Refreshing file tree for ${currentWorkspace.value.path} due to filesystem change.`
+            `Refreshing file tree for ${currentWorkspace.value.path} due to filesystem change.`,
           );
           await loadFileTree(); // Refresh the file tree in the UI
 
@@ -136,7 +137,7 @@ export const useEditorStore = defineStore("editor", () => {
           await fileIndexStore.handleFileSystemChange();
         } else {
           await warn(
-            `Ignoring file system event for different workspace: ${eventData.workspace_path}`
+            `Ignoring file system event for different workspace: ${eventData.workspace_path}`,
           );
         }
       });
@@ -327,7 +328,7 @@ export const useEditorStore = defineStore("editor", () => {
         const parts = tab.path.split(/[\\/]/);
         const fileNameWithExt = parts.pop() || tab.title;
         const extension = fileNameWithExt.includes(".")
-          ? fileNameWithExt.split(".").pop() ?? ""
+          ? (fileNameWithExt.split(".").pop() ?? "")
           : "";
         return {
           id: tab.id,
@@ -350,7 +351,7 @@ export const useEditorStore = defineStore("editor", () => {
       showInspector.value = state.panels?.inspector_visible ?? true; // Default to true
 
       await debug(
-        `Restored state: ${openTabs.value.length} tabs, active: ${activeTabId.value}, console: ${showConsole.value}, inspector: ${showInspector.value}`
+        `Restored state: ${openTabs.value.length} tabs, active: ${activeTabId.value}, console: ${showConsole.value}, inspector: ${showInspector.value}`,
       );
 
       // If no tabs were restored, but there are recently opened files, open the most recent one
@@ -429,6 +430,68 @@ export const useEditorStore = defineStore("editor", () => {
     }
   }
 
+  const triggerSave = async () => {
+  const file = activeTab.value;
+  if (!file || !file.path || !currentWorkspace.value) {
+    return;
+  }
+
+  saveStatus.value = "saving";
+  try {
+    let request: SaveFileRequest;
+
+    if (activeFileFrontmatter.value &&
+        (activeFileType.value === "Character" ||
+         activeFileType.value === "Location" ||
+         activeFileType.value === "Lore" ||
+         activeFileType.value === "Markdown")) {
+      request = {
+        type: "MarkdownWithFrontmatter",
+        data: {
+          frontmatter: activeFileFrontmatter.value,
+          content: activeFileContent.value
+        },
+      };
+    } else if (activeFileType.value === "Canvas" ||
+               activeFileType.value === "Dialogue") {
+      request = {
+        type: "Json",
+        data: { content: activeFileContent.value }
+      };
+    } else {
+      request = {
+        type: "Text",
+        data: { content: activeFileContent.value }
+      };
+    }
+
+    await invoke("save_file_content", {
+      workspacePath: currentWorkspace.value.path,
+      filePath: file.path,
+      content: request,
+    });
+
+    file.hasUnsavedChanges = false;
+    saveStatus.value = "saved";
+
+  } catch (err) {
+    await logError(`Auto-save failed for file ${file.path}: ${err}`);
+    saveStatus.value = "unsaved";
+
+    toast.error("Auto-save failed", {
+      description: `Could not save ${file.name}. Your changes are still in memory.`,
+    });
+  }
+};
+
+  const debouncedSave = useDebounceFn(triggerSave, 1000);
+
+  function updateActiveFileContent(newContent: string) {
+    activeFileContent.value = newContent;
+    saveStatus.value = "unsaved";
+    debouncedSave();
+  }
+
   async function openFile(filePath: string): Promise<EditorFile | null> {
     if (!currentWorkspace.value) {
       await logError("Cannot open file: No workspace open.");
@@ -443,7 +506,7 @@ export const useEditorStore = defineStore("editor", () => {
     const absoluteFilePath = `${workspacePath}/${filePath.replace(/^[\\/]/, "")}`; // Ensure no leading slash on relative part
 
     await debug(
-      `Attempting to open file: ${absoluteFilePath} (relative: ${filePath}) in workspace: ${workspacePath}`
+      `Attempting to open file: ${absoluteFilePath} (relative: ${filePath}) in workspace: ${workspacePath}`,
     );
 
     const existingTab = openTabs.value.find((tab) => tab.path === filePath);
@@ -468,7 +531,9 @@ export const useEditorStore = defineStore("editor", () => {
       const parts = tabInfo.path.split(/[\\/]/);
       const fileNameWithExt = parts.pop() || tabInfo.title;
 
-      const extension = fileNameWithExt.includes(".") ? fileNameWithExt.split(".").pop() ?? "" : "";
+      const extension = fileNameWithExt.includes(".")
+        ? (fileNameWithExt.split(".").pop() ?? "")
+        : "";
 
       const name = tabInfo.title;
 
@@ -596,7 +661,7 @@ export const useEditorStore = defineStore("editor", () => {
   async function saveFileContent(
     filePath: string,
     content: string,
-    frontmatter: string | null
+    frontmatter: string | null,
   ): Promise<boolean> {
     if (!currentWorkspace.value) {
       await logError("Cannot save file: No workspace open.");
@@ -670,7 +735,7 @@ export const useEditorStore = defineStore("editor", () => {
   async function createNewFile(
     parentDir: string,
     fileName: string,
-    initialContent = ""
+    initialContent = "",
   ): Promise<string | null> {
     if (!currentWorkspace.value) {
       await logError("Cannot create file: No workspace open.");
@@ -712,7 +777,7 @@ export const useEditorStore = defineStore("editor", () => {
   async function createFromTemplate(
     parentDir: string,
     fileName: string,
-    fileType: string // Use string matching backend FileType enum names
+    fileType: string, // Use string matching backend FileType enum names
   ): Promise<string | null> {
     if (!currentWorkspace.value) {
       await logError("Cannot create file from template: No workspace open.");
@@ -725,7 +790,7 @@ export const useEditorStore = defineStore("editor", () => {
       relativeParentDir = relativeParentDir.substring(workspacePath.length).replace(/^[\\/]/, "");
     }
     await debug(
-      `Creating new file "${fileName}" from template "${fileType}" in "${relativeParentDir}"`
+      `Creating new file "${fileName}" from template "${fileType}" in "${relativeParentDir}"`,
     );
 
     try {
@@ -856,6 +921,9 @@ export const useEditorStore = defineStore("editor", () => {
     closeTab,
     getFileContent,
     saveFileContent,
+    saveStatus,
+    updateActiveFileContent,
+
     createNewFile,
     createFromTemplate,
     toggleConsole,
