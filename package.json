@@ -6,7 +6,7 @@
     "@typescript/native-preview": "^7.0.0-dev.20260109.1",
     "oxfmt": "^0.23.0",
     "oxlint": "^1.38.0",
-    "oxlint-tsgolint": "^0.4.0"
+    "oxlint-tsgolint": "^0.11.0"
   },
   "peerDependencies": {
     "typescript": "^5.9.3"
