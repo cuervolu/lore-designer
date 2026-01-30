@@ -1,0 +1,133 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Lore Designer",
+  "version": "0.1.0",
+  "identifier": "dev.cuervolu.lore-designer",
+  "build": {
+    "beforeDevCommand": "pnpm vite:dev",
+    "devUrl": "http://localhost:5173",
+    "beforeBuildCommand": "pnpm vite:build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "title": "Lore Designer",
+        "minWidth": 800,
+        "minHeight": 600,
+        "width": 1024,
+        "height": 768,
+        "decorations": true,
+        "center": true,
+        "resizable": true
+      }
+    ],
+    "security": {
+      "csp": {
+        "default-src": "'self' blob: data: filesystem: ws: wss: http: https: tauri: 'unsafe-inline' asset: https://asset.localhost; media-src",
+        "script-src": "'self' 'unsafe-eval'",
+        "connect-src": "'self' ipc: http://ipc.localhost tauri: asset: https://asset.localhost",
+        "img-src": [
+          "'self'",
+          "asset:",
+          "http://asset.localhost",
+          "blob:",
+          "data:"
+        ],
+        "style-src": "'unsafe-inline' 'unsafe-eval' 'self' https://unpkg.com"
+      },
+      "capabilities": [],
+      "assetProtocol": {
+        "enable": true,
+        "scope": [
+              "**/*",
+              "**/.*",
+              "**/.*/**"
+            ]
+      }
+    }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDE3QTdERkIxOThCODg5NDEKUldSQmliaVlzZCtuRnhzYzRnd0lSNWNyMlQzbDNQVDRuOFJSYlVMUHhoRExlQVUrcVFBV21NWUoK",
+      "endpoints": [
+        "https://github.com/cuervolu/lore-designer/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      }
+    },
+    "cli": {
+      "description": "Lore Designer Binary CLI",
+      "args": [
+        {
+          "name": "workspace",
+          "index": 1,
+          "takesValue": true
+        }
+      ]
+    },
+    "fs": {
+        "requireLiteralLeadingDot": false
+    },
+    "tracing": {
+      "level": "debug",
+      "targets": [
+        "stdout",
+        "webview",
+        {
+          "logDir": {
+            "fileName": null
+          }
+        }
+      ],
+      "rotation": {
+        "strategy": "daily",
+        "maxFiles": 5
+      }
+    }
+  },
+  "bundle": {
+    "fileAssociations": [
+      {
+        "ext": [
+          "lore"
+        ],
+        "name": "Lore Designer File",
+        "description": "Lore Designer file format",
+        "role": "Editor",
+        "mimeType": "'text/plain'"
+      }
+    ],
+    "publisher": "Cuervolu",
+    "homepage": "loredesigner.app",
+    "copyright": "Copyright © 2025",
+    "license": "AGPL-3.0",
+    "licenseFile": "../../LICENSE",
+    "category": "DeveloperTool",
+    "shortDescription": "Design Narratives, Build Legends",
+    "longDescription": "Create and manage your stories, characters, and worlds in one unified workspace. A streamlined tool for writers and game developers to organize their creative narratives with clarity",
+    "active": true,
+    "createUpdaterArtifacts": true,
+    "targets": [
+      "appimage",
+      "nsis",
+      "msi",
+      "deb",
+      "rpm",
+      "app",
+      "dmg"
+    ],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "resources": [
+      "../../../icon.webp"
+    ]
+  }
+}

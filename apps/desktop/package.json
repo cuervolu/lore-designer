@@ -1,0 +1,53 @@
+{
+  "name": "@lore/desktop",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "cross-env RUST_BACKTRACE=1 RUST_LOG=warn,lore_designer_lib=trace tauri dev",
+    "vite:dev": "vite",
+    "vite:build": "run-p type-check \"build-only {@}\" --",
+    "preview": "vite preview",
+    "test:unit": "vitest",
+    "build-only": "vite build",
+    "type-check": "vue-tsc --build",
+    "format": "oxfmt src/",
+     "tauri": "tauri"
+  },
+  "dependencies": {
+    "@tauri-apps/plugin-cli": "~2.4.1",
+    "@tauri-apps/plugin-clipboard-manager": "~2.3.2",
+    "@tauri-apps/plugin-dialog": "~2.6.0",
+    "@tauri-apps/plugin-fs": "~2.4.5",
+    "@tauri-apps/plugin-opener": "~2.5.3",
+    "@tauri-apps/plugin-os": "~2.3.2",
+    "@tauri-apps/plugin-process": "~2.3.1",
+    "@tauri-apps/plugin-store": "~2.4.2",
+    "@tauri-apps/plugin-updater": "~2.9.0",
+    "@tauri-apps/plugin-window-state": "~2.4.1",
+    "pinia": "^3.0.4",
+    "vue": "^3.5.27",
+    "vue-router": "^4.6.4"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.9.6",
+    "@tsconfig/node24": "^24.0.4",
+    "@types/jsdom": "^27.0.0",
+    "@types/node": "^24.10.9",
+    "@vitejs/plugin-vue": "^6.0.3",
+    "@vue/test-utils": "^2.4.6",
+    "@vue/tsconfig": "^0.8.1",
+    "cross-env": "^10.1.0",
+    "jsdom": "^27.4.0",
+    "npm-run-all2": "^8.0.4",
+    "oxfmt": "^0.27.0",
+    "typescript": "~5.9.3",
+    "vite": "^7.3.1",
+    "vite-plugin-vue-devtools": "^8.0.5",
+    "vitest": "^4.0.18",
+    "vue-tsc": "^3.2.4"
+  },
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  }
+}
