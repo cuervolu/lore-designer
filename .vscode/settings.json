@@ -7,5 +7,11 @@
   },
   "typescript.experimental.useTsgo": false,
   "editor.formatOnSave": true,
-  "editor.defaultFormatter": "oxc.oxc-vscode"
+  "launch": {
+    "configurations": [],
+    "compounds": []
+  },
+  "debug.onTaskErrors": "showErrors",
+  "rust-analyzer.cargo.target": null,
+  "rust-analyzer.check.command": "clippy"
 }

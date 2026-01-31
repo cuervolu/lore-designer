@@ -3,6 +3,10 @@
     "Vue.volar",
     "vitest.explorer",
     "oxc.oxc-vscode",
-    "mvoof.tarus-vscode-extension"
+    "mvoof.tarus-vscode-extension",
+    "vadimcn.vscode-lldb",
+    "ms-vscode.cpptools",
+    "rust-lang.rust-analyzer",
+    "cordx56.rustowl-vscode"
   ]
 }
