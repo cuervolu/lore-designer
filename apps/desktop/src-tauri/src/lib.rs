@@ -1,19 +1,12 @@
 mod core;
 mod system_info;
-
 use core::config::{commands, preferences};
-use core::console::ConsoleLayer;
-use tauri_plugin_tracing::{
-    tracing::{error, info},
-    tracing_subscriber::layer::Layer,
-    Builder, Rotation, RotationStrategy,
-};
+use tauri_plugin_tracing::{Builder, Rotation, RotationStrategy};
+use tracing::{error, info};
+
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let console_layer = ConsoleLayer::new();
-    let console_layer_plugin = console_layer.clone();
-
     tauri::Builder::default()
         .plugin(tauri_plugin_cli::init())
         .plugin(tauri_plugin_window_state::Builder::new().build())
@@ -27,22 +20,28 @@ pub fn run() {
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(
             Builder::new()
-                .with_default_subscriber()
+                .with_max_level(tauri_plugin_tracing::LevelFilter::DEBUG)
+                .with_colors()
                 .with_file_logging()
                 .with_rotation(Rotation::Daily)
                 .with_rotation_strategy(RotationStrategy::KeepSome(7))
-                .with_layer(console_layer_plugin.boxed())
+                .with_default_subscriber()
                 .build(),
         )
-        .setup(move |app| {
-            console_layer.set_app_handle(app.handle().clone());
-
-            info!("==================== Starting Lore Designer ====================");
-
-            if let Err(e) = system_info::log_system_info(app.handle()) {
-                error!("Failed to log system info: {}", e);
-            }
+       .setup(move |app| {
+        
             preferences::init_preferences(app.handle())?;
+
+            let handle = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
+                
+                info!("==================== Starting Lore Designer ====================");
+                
+                if let Err(e) = system_info::log_system_info(&handle) {
+                    error!("Failed to log system info: {}", e);
+                }
+            });
 
             Ok(())
         })

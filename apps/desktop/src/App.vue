@@ -4,26 +4,61 @@ import { listen } from '@tauri-apps/api/event';
 import { info } from '@fltsci/tauri-plugin-tracing';
 
 interface LogEntry {
-  timestamp: string;
-  level: string;
-  target: string;
   message: string;
+  level: number;
 }
 
 const logs = ref<LogEntry[]>([]);
+const debugInfo = ref<string[]>([]); 
 let unlisten: (() => void) | null = null;
+let testUnlisten: (() => void) | null = null;
+
+const levelNames: Record<number, string> = {
+  1: 'trace',
+  2: 'debug',
+  3: 'info',
+  4: 'warn',
+  5: 'error',
+};
+
+function getLevelName(level: number): string {
+  return levelNames[level] || 'unknown';
+}
 
 onMounted(async () => {
-  info('Listening for log events from backend...');
-  unlisten = await listen<LogEntry>('lore://console/log', (event) => {
-    info('New log received:', event.payload);
+  debugInfo.value.push(`[${new Date().toISOString()}] Mounting component...`);
+
+  testUnlisten = await listen<string>('test-event', (event) => {
+    debugInfo.value.push(
+      `[${new Date().toISOString()}] Test event received: ${event.payload}`,
+    );
+  });
+
+  debugInfo.value.push(
+    `[${new Date().toISOString()}] Calling info() from frontend...`,
+  );
+  info('Console UI mounted, listening for log events...');
+
+  debugInfo.value.push(
+    `[${new Date().toISOString()}] Setting up tracing://log listener...`,
+  );
+  unlisten = await listen<LogEntry>('tracing://log', (event) => {
+    debugInfo.value.push(
+      `[${new Date().toISOString()}] LOG RECEIVED: ${JSON.stringify(event.payload)}`,
+    );
     logs.value.unshift(event.payload);
   });
+
+  debugInfo.value.push(`[${new Date().toISOString()}] Listener setup complete`);
 });
 
 onUnmounted(() => {
   if (unlisten) {
+    info('Console UI unmounting, cleaning up listener...');
     unlisten();
+  }
+  if (testUnlisten) {
+    testUnlisten();
   }
 });
 </script>
@@ -34,20 +69,25 @@ onUnmounted(() => {
       <h1>Lore Console</h1>
     </header>
 
+    <div class="debug-panel">
+      <h3>Debug Info:</h3>
+      <div v-for="(msg, i) in debugInfo" :key="i" class="debug-line">
+        {{ msg }}
+      </div>
+    </div>
+
     <div class="console-window">
       <div v-if="logs.length === 0" class="empty-state">
-       Waiting for logs....
+        Waiting for logs... ({{ logs.length }} logs received)
       </div>
 
-      <div 
-        v-for="(log, index) in logs" 
-        :key="index" 
+      <div
+        v-for="(log, index) in logs"
+        :key="index"
         class="log-line"
-        :class="log.level.toLowerCase()"
+        :class="getLevelName(log.level)"
       >
-        <span class="timestamp">{{ log.timestamp }}</span>
-        <span class="level">[{{ log.level }}]</span>
-        <span class="target">{{ log.target }}</span>
+        <span class="level">[{{ getLevelName(log.level).toUpperCase() }}]</span>
         <span class="message">{{ log.message }}</span>
       </div>
     </div>
@@ -64,6 +104,29 @@ onUnmounted(() => {
 
 header {
   margin-bottom: 1rem;
+}
+
+.debug-panel {
+  background-color: #2d2d2d;
+  border: 1px solid #444;
+  border-radius: 4px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.debug-panel h3 {
+  margin: 0 0 0.5rem 0;
+  color: #4fc1ff;
+  font-size: 0.9rem;
+}
+
+.debug-line {
+  font-family: 'Fira Code', monospace;
+  font-size: 0.8rem;
+  color: #aaa;
+  padding: 2px 0;
 }
 
 .console-window {
@@ -92,22 +155,9 @@ header {
   align-items: flex-start;
 }
 
-.timestamp {
-  color: #888;
-  min-width: 80px;
-}
-
 .level {
   font-weight: bold;
-  min-width: 60px;
-}
-
-.target {
-  color: #569cd6; 
-  min-width: 150px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  min-width: 80px;
 }
 
 .message {
@@ -116,9 +166,19 @@ header {
   word-break: break-all;
 }
 
-.info .level { color: #4fc1ff; }  
-.warn .level { color: #cca700; }   
-.error .level { color: #f44747; }  
-.debug .level { color: #b5cea8; }  
-.trace .level { color: #888888; }  
+.trace .level {
+  color: #888888;
+}
+.debug .level {
+  color: #b5cea8;
+}
+.info .level {
+  color: #4fc1ff;
+}
+.warn .level {
+  color: #cca700;
+}
+.error .level {
+  color: #f44747;
+}
 </style>

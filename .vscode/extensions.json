@@ -2,6 +2,7 @@
   "recommendations": [
     "Vue.volar",
     "vitest.explorer",
-    "oxc.oxc-vscode"
+    "oxc.oxc-vscode",
+    "mvoof.tarus-vscode-extension"
   ]
 }
