@@ -1,0 +1,19 @@
+[package]
+name = "lore-editor"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+ignore = "0.4.23"
+gray_matter = "0.3"
+tauri = {workspace = true}
+anyhow = {workspace = true}
+thiserror = {workspace = true}
+serde = {workspace = true}
+serde_json = {workspace = true}
+tracing = {workspace = true}
+uuid = {workspace = true}
+notify = "8.1.0"
+lore-workspaces = { path = "../lore-workspaces" }
+crossbeam-channel = "0.5.15"
+chrono = {workspace = true}

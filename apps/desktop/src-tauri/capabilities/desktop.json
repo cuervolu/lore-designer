@@ -11,6 +11,40 @@
   "permissions": [
     "updater:default",
     "window-state:default",
-    "cli:default"
+    "core:window:allow-close",
+    "core:window:allow-center",
+    "core:window:allow-minimize",
+    "core:window:allow-maximize",
+    "core:window:allow-set-size",
+    "core:window:allow-set-focus",
+    "core:window:allow-is-maximized",
+    "core:window:allow-start-dragging",
+    "core:window:allow-toggle-maximize",
+    "core:window:allow-set-title",
+    "opener:allow-open-path",
+    "opener:allow-reveal-item-in-dir",
+    "opener:allow-default-urls",
+    "fs:allow-app-read-recursive",
+    "fs:allow-app-read",
+    "fs:allow-app-write-recursive",
+    "fs:allow-app-write",
+    "fs:allow-app-meta-recursive",
+    "fs:allow-app-meta",
+    "fs:scope-app-recursive",
+    "fs:scope-app",
+    "fs:scope-app-index",
+    "fs:allow-appcache-read-recursive",
+    "fs:allow-appcache-write-recursive",
+    "fs:allow-exists",
+    {
+      "identifier": "fs:scope",
+      "allow": [
+              "**/*",    
+              "**/.*",    
+              "**/.*/**" 
+      ]
+    },
+    "cli:default",
+    "cli:allow-cli-matches"
   ]
 }

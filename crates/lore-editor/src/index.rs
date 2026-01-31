@@ -1,0 +1,555 @@
+use crate::FileSystemWatcher;
+
+use super::{EditorError, FileSearchResult, FileTreeItem, FileType, IndexedDirectory, IndexedFile};
+use ignore::WalkBuilder;
+use std::collections::HashMap;
+use std::path::Path;
+use std::sync::{Arc, LazyLock, Mutex};
+use std::time::SystemTime;
+use tauri::Emitter;
+use tracing::{debug, error, info, warn};
+
+/// Special folder names that get custom icons
+pub const SPECIAL_FOLDERS: [&str; 5] = ["characters", "lore", "locations", "story", "notes"];
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct IndexingProgress {
+    /// Total files to process
+    pub total: usize,
+
+    /// Files processed so far
+    pub processed: usize,
+
+    /// Current file being processed
+    pub current_file: Option<String>,
+
+    /// Whether indexing is complete
+    pub completed: bool,
+}
+
+pub struct IndexManager;
+
+static INDEXING_STATE: LazyLock<Mutex<HashMap<String, Arc<Mutex<IndexingProgress>>>>> =
+    LazyLock::new(|| Mutex::new(HashMap::new()));
+
+impl IndexManager {
+    pub fn start_indexing(workspace_path: &Path) -> Result<(), EditorError> {
+        let path_str = workspace_path.display().to_string();
+
+        let progress = Arc::new(Mutex::new(IndexingProgress {
+            total: 0,
+            processed: 0,
+            current_file: None,
+            completed: false,
+        }));
+
+        {
+            let mut state = INDEXING_STATE.lock().unwrap();
+            state.insert(path_str.clone(), progress.clone());
+        }
+
+        let workspace_path = workspace_path.to_path_buf();
+        std::thread::spawn(
+            move || match Self::perform_indexing(&workspace_path, progress) {
+                Ok(_) => info!("Indexing completed for: {path_str}"),
+                Err(e) => error!("Indexing failed for {path_str}: {e}"),
+            },
+        );
+
+        Ok(())
+    }
+
+    pub fn trigger_incremental_update(
+        workspace_path: &Path,
+        changed_path: &Path,
+    ) -> Result<(), EditorError> {
+        // Early return if path is in .lore
+        if let Ok(rel_path) = changed_path.strip_prefix(workspace_path)
+            && rel_path.starts_with(".lore")
+        {
+            return Ok(());
+        }
+
+        debug!(
+            "Performing incremental update for: {}",
+            changed_path.display()
+        );
+
+        let (mut files, mut directories) = Self::load_index(workspace_path)?;
+
+        let rel_path = changed_path
+            .strip_prefix(workspace_path)
+            .map_err(|_| EditorError::InvalidPath(changed_path.display().to_string()))?;
+
+        let rel_path_str = rel_path.display().to_string();
+
+        // If the file exists, it was created or modified?
+        if changed_path.exists() {
+            if changed_path.is_file() {
+                files.retain(|f| f.path != rel_path_str);
+
+                match Self::index_file(workspace_path, changed_path) {
+                    Ok(indexed_file) => {
+                        debug!("Incrementally indexed file: {rel_path_str}");
+                        files.push(indexed_file);
+                    }
+                    Err(e) => {
+                        error!("Failed to index file {rel_path_str}: {e}");
+                    }
+                }
+            } else if changed_path.is_dir() {
+                directories.retain(|d| d.path != rel_path_str);
+
+                match Self::index_directory(workspace_path, changed_path) {
+                    Ok(indexed_dir) => {
+                        debug!("Incrementally indexed directory: {rel_path_str}");
+                        directories.push(indexed_dir);
+                    }
+                    Err(e) => {
+                        error!("Failed to index directory {rel_path_str}: {e}");
+                    }
+                }
+            }
+        } else {
+            files.retain(|f| !f.path.starts_with(&rel_path_str));
+            directories.retain(|d| !d.path.starts_with(&rel_path_str));
+            debug!("Removed deleted path from index: {rel_path_str}");
+        }
+
+        Self::save_index(workspace_path, &files, &directories)?;
+        debug!("Incremental index update completed");
+
+        Ok(())
+    }
+
+    pub fn get_indexing_progress(workspace_path: &Path) -> Option<IndexingProgress> {
+        let path_str = workspace_path.display().to_string();
+        let state = INDEXING_STATE.lock().unwrap();
+
+        state.get(&path_str).map(|progress| {
+            let guard = progress.lock().unwrap();
+            guard.clone()
+        })
+    }
+
+    fn perform_indexing(
+        workspace_path: &Path,
+        progress: Arc<Mutex<IndexingProgress>>,
+    ) -> Result<(), EditorError> {
+        let walker = WalkBuilder::new(workspace_path)
+            .hidden(false)
+            .ignore(true)
+            .git_ignore(false)
+            .require_git(false)
+            .follow_links(false)
+            .add_custom_ignore_filename(".loreignore")
+            .build();
+
+        let entries: Vec<_> = walker.filter_map(|e| e.ok()).collect();
+
+        let total_files = entries.len();
+
+        {
+            let mut guard = progress.lock().unwrap();
+            guard.total = total_files;
+        }
+
+        let mut files = Vec::new();
+        let mut directories = Vec::new();
+
+        for entry in entries {
+            let path = entry.path();
+
+            {
+                let mut guard = progress.lock().unwrap();
+                guard.processed += 1;
+                guard.current_file = path
+                    .strip_prefix(workspace_path)
+                    .ok()
+                    .and_then(|p| p.to_str())
+                    .map(|s| s.to_string());
+            }
+
+            let file_type = entry.file_type();
+
+            if file_type.is_some_and(|ft| ft.is_file()) {
+                if let Ok(indexed_file) = Self::index_file(workspace_path, path) {
+                    files.push(indexed_file);
+                }
+            } else if file_type.is_some_and(|ft| ft.is_dir()) && path != workspace_path {
+                // Index directories explicitly, even if empty
+                if let Ok(indexed_dir) = Self::index_directory(workspace_path, path) {
+                    directories.push(indexed_dir);
+                }
+            }
+
+            std::thread::sleep(std::time::Duration::from_millis(5));
+        }
+
+        {
+            let mut guard = progress.lock().unwrap();
+            guard.completed = true;
+            guard.current_file = None;
+        }
+
+        Self::save_index(workspace_path, &files, &directories)?;
+
+        if let Some(watcher) = FileSystemWatcher::get(workspace_path)
+            && let Some(app) = &watcher.app
+        {
+            let _ = app.emit(
+                "indexing-complete",
+                serde_json::json!({
+                    "workspace_path": workspace_path.display().to_string(),
+                    "file_count": files.len(),
+                    "directory_count": directories.len(),
+                }),
+            );
+        }
+
+        Ok(())
+    }
+
+    fn index_file(workspace_path: &Path, file_path: &Path) -> Result<IndexedFile, EditorError> {
+        let rel_path = file_path
+            .strip_prefix(workspace_path)
+            .map_err(|_| EditorError::InvalidPath(file_path.display().to_string()))?;
+
+        let metadata = std::fs::metadata(file_path)?;
+        let last_modified = metadata
+            .modified()
+            .map(|time| {
+                time.duration_since(SystemTime::UNIX_EPOCH)
+                    .unwrap_or_default()
+                    .as_secs()
+            })
+            .unwrap_or(0);
+
+        let name = file_path
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or("unnamed")
+            .to_string();
+
+        let extension = file_path
+            .extension()
+            .and_then(|e| e.to_str())
+            .map(|s| s.to_string());
+
+        let file_type = FileType::from_path(file_path)?;
+
+        Ok(IndexedFile {
+            path: rel_path.display().to_string(),
+            name,
+            extension,
+            file_type,
+            last_modified,
+            size: metadata.len(),
+        })
+    }
+
+    fn index_directory(
+        workspace_path: &Path,
+        dir_path: &Path,
+    ) -> Result<IndexedDirectory, EditorError> {
+        let rel_path = dir_path
+            .strip_prefix(workspace_path)
+            .map_err(|_| EditorError::InvalidPath(dir_path.display().to_string()))?;
+
+        let name = dir_path
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or("unnamed")
+            .to_string();
+
+        let icon = SPECIAL_FOLDERS
+            .iter()
+            .find(|&&folder| name.to_lowercase() == folder)
+            .map(|&folder| folder.to_string());
+
+        Ok(IndexedDirectory {
+            path: rel_path.display().to_string(),
+            name,
+            icon,
+        })
+    }
+
+    fn save_index(
+        workspace_path: &Path,
+        files: &[IndexedFile],
+        directories: &[IndexedDirectory],
+    ) -> Result<(), EditorError> {
+        let index_dir = workspace_path.join(".lore");
+        std::fs::create_dir_all(&index_dir)?;
+
+        let index_file = index_dir.join("index.json");
+        let index_data = serde_json::json!({
+            "files": files,
+            "directories": directories,
+            "timestamp": SystemTime::now()
+                .duration_since(SystemTime::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_secs()
+        });
+
+        let index_json = serde_json::to_string_pretty(&index_data)?;
+        std::fs::write(index_file, index_json)?;
+
+        Ok(())
+    }
+
+    fn load_index(
+        workspace_path: &Path,
+    ) -> Result<(Vec<IndexedFile>, Vec<IndexedDirectory>), EditorError> {
+        let index_path = workspace_path.join(".lore").join("index.json");
+
+        if !index_path.exists() {
+            debug!("Index file doesn't exist yet, returning empty index");
+            return Ok((Vec::new(), Vec::new()));
+        }
+
+        let index_json = std::fs::read_to_string(&index_path)?;
+        let index_data: serde_json::Value = serde_json::from_str(&index_json)?;
+
+        let files: Vec<IndexedFile> = serde_json::from_value(index_data["files"].clone())?;
+        let directories: Vec<IndexedDirectory> =
+            serde_json::from_value(index_data["directories"].clone())?;
+
+        Ok((files, directories))
+    }
+
+    pub fn build_file_tree(workspace_path: &Path) -> Result<Vec<FileTreeItem>, EditorError> {
+        debug!(
+            "Building file tree for workspace: {}",
+            workspace_path.display()
+        );
+
+        let (files, directories) = Self::load_index(workspace_path)?;
+        debug!(
+            "Loaded index: {} files, {} directories",
+            files.len(),
+            directories.len()
+        );
+
+        let mut tree_map: HashMap<String, FileTreeItem> = HashMap::new();
+
+        for dir in &directories {
+            debug!(
+                "Creating directory node: {} at path: {}",
+                dir.name, dir.path
+            );
+            let dir_item = FileTreeItem {
+                name: dir.name.clone(),
+                path: dir.path.clone(),
+                is_directory: true,
+                icon: dir.icon.clone(),
+                children: Vec::new(), // Initially empty, will be filled later
+            };
+            tree_map.insert(dir.path.clone(), dir_item);
+        }
+
+        for file in &files {
+            debug!("Creating file node: {} at path: {}", file.name, file.path);
+            let icon = match file.file_type {
+                FileType::Markdown => Some("markdown".to_string()),
+                FileType::Canvas => Some("canvas".to_string()),
+                FileType::Character => Some("character".to_string()),
+                FileType::Location => Some("location".to_string()),
+                FileType::Lore => Some("book".to_string()),
+                FileType::Dialogue => Some("message-square".to_string()),
+                FileType::Image => Some("image".to_string()),
+                _ => None,
+            };
+            let file_item = FileTreeItem {
+                name: file.name.clone(),
+                path: file.path.clone(),
+                is_directory: false,
+                icon,
+                children: Vec::new(), // Files don't have children
+            };
+            tree_map.insert(file.path.clone(), file_item);
+        }
+
+        let paths: Vec<String> = tree_map.keys().cloned().collect();
+        let mut root_children_paths: Vec<String> = Vec::new();
+
+        for path in paths {
+            let parts: Vec<&str> = path.split('/').collect();
+
+            let parent_path = if parts.len() <= 1 {
+                root_children_paths.push(path.clone());
+                continue;
+            } else {
+                parts[..parts.len() - 1].join("/")
+            };
+
+            if let Some(child_item) = tree_map.remove(&path) {
+                debug!(
+                    "Linking item: {} to parent: {}",
+                    child_item.path, parent_path
+                );
+                if let Some(parent) = tree_map.get_mut(&parent_path) {
+                    parent.children.push(child_item);
+                    debug!(
+                        "Added item {path} to parent {parent_path}, parent now has {} children",
+                        parent.children.len()
+                    );
+                } else {
+                    warn!(
+                        "Parent directory not found in tree_map for item: {path} (parent: {parent_path}) - Re-inserting item."
+                    );
+                    tree_map.insert(path, child_item);
+                    if !parent_path.is_empty() {
+                        warn!("Parent path not found in tree_map: {parent_path}");
+                    }
+                }
+            } else {
+                warn!("Item path not found during linking phase: {path}");
+            }
+        }
+
+        let mut result: Vec<FileTreeItem> = Vec::new();
+        for root_child_path in root_children_paths {
+            if let Some(item) = tree_map.remove(&root_child_path) {
+                result.push(item);
+            } else {
+                warn!("Root child path not found in final map: {root_child_path}");
+            }
+        }
+        result.sort_by(|a, b| match (a.is_directory, b.is_directory) {
+            (true, false) => std::cmp::Ordering::Less,
+            (false, true) => std::cmp::Ordering::Greater,
+            _ => a.name.cmp(&b.name),
+        });
+
+        debug!(
+            "Returning final tree structure with {} root items.",
+            result.len()
+        );
+        Ok(result)
+    }
+
+    pub fn search_files_by_type(
+        workspace_path: &Path,
+        file_type_str: &str,
+        query: Option<&str>,
+    ) -> Result<Vec<FileSearchResult>, EditorError> {
+        let target_file_type = match file_type_str {
+            "character" => FileType::Character,
+            "location" => FileType::Location,
+            "lore" => FileType::Lore,
+            "markdown" => FileType::Markdown,
+            "canvas" => FileType::Canvas,
+            _ => return Ok(vec![]), // Empty result for unknown types
+        };
+
+        let (files, _) = Self::load_index(workspace_path)?;
+        let query_lower = query.map(|q| q.to_lowercase());
+
+        let mut results: Vec<FileSearchResult> = files
+            .into_iter()
+            .filter(|file| file.file_type == target_file_type)
+            .filter_map(|file| {
+                let display_name = Self::extract_display_name(workspace_path, &file);
+
+                // Apply query filter if provided
+                if let Some(ref q) = query_lower {
+                    if !display_name.to_lowercase().contains(q)
+                        && !file.path.to_lowercase().contains(q)
+                    {
+                        return None;
+                    }
+                }
+
+                Some(FileSearchResult {
+                    path: file.path,
+                    name: display_name,
+                    file_type: file.file_type,
+                    extension: file.extension,
+                    last_modified: file.last_modified,
+                })
+            })
+            .collect();
+
+        results.sort_by(|a, b| {
+            b.last_modified
+                .cmp(&a.last_modified)
+                .then_with(|| a.name.cmp(&b.name))
+        });
+
+        Ok(results)
+    }
+
+    pub fn get_all_workspace_files(
+        workspace_path: &Path,
+    ) -> Result<Vec<FileSearchResult>, EditorError> {
+        let (files, _) = Self::load_index(workspace_path)?;
+
+        let mut results: Vec<FileSearchResult> = files
+            .into_iter()
+            .map(|file| {
+                let display_name = Self::extract_display_name(workspace_path, &file);
+                FileSearchResult {
+                    path: file.path,
+                    name: display_name,
+                    file_type: file.file_type,
+                    extension: file.extension,
+                    last_modified: file.last_modified,
+                }
+            })
+            .collect();
+
+        // Sort by file type, then by name
+        results.sort_by(|a, b| {
+            format!("{:?}", a.file_type)
+                .cmp(&format!("{:?}", b.file_type))
+                .then_with(|| a.name.cmp(&b.name))
+        });
+
+        Ok(results)
+    }
+
+    fn extract_display_name(workspace_path: &Path, indexed_file: &IndexedFile) -> String {
+        // For files with potential frontmatter, try to extract 'name' or 'title' field
+        match indexed_file.file_type {
+            FileType::Character | FileType::Location | FileType::Lore => {
+                let full_path = workspace_path.join(&indexed_file.path);
+                if let Ok(content) = std::fs::read_to_string(&full_path) {
+                    let matter = gray_matter::Matter::<gray_matter::engine::YAML>::new();
+
+                    // Maneja el Result antes de acceder a los campos
+                    if let Ok(parsed) = matter.parse(&content) {
+                        if let Some(data) = parsed.data {
+                            // Try 'name' field first, then 'title'
+                            if let Some(name) = Self::get_pod_string(&data, "name") {
+                                return name;
+                            }
+                            if let Some(title) = Self::get_pod_string(&data, "title") {
+                                return title;
+                            }
+                        }
+                    }
+                }
+            }
+            _ => {}
+        }
+
+        // Fallback to filename without extension
+        indexed_file.name.clone()
+    }
+
+    fn get_pod_string(pod: &gray_matter::Pod, key: &str) -> Option<String> {
+        let value = &pod[key];
+        if *value != gray_matter::Pod::Null {
+            value.as_string().ok()
+        } else {
+            None
+        }
+    }
+
+    pub fn clear_indexing_state(workspace_path: &str) {
+        let mut state = INDEXING_STATE.lock().unwrap();
+        state.remove(workspace_path);
+        debug!("Cleared indexing state for: {}", workspace_path);
+    }
+}
