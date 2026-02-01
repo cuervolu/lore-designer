@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/hover-card';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { RecentWorkspace, WorkspacePreview } from '@lore/shared';
-import { formatTimestamp } from '@/lib/date';
+import { formatTimestamp } from '@lore/shared';
 
 interface Props {
   workspace: RecentWorkspace;
