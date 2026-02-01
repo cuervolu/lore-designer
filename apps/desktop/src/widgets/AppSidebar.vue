@@ -24,7 +24,7 @@ const menuItems = [
   {
     title: 'Workspaces',
     icon: Home,
-    path: '/',
+    path: '/wizard',
   },
   {
     title: 'Settings',

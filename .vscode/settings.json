@@ -13,5 +13,11 @@
   },
   "debug.onTaskErrors": "showErrors",
   "rust-analyzer.cargo.target": null,
-  "rust-analyzer.check.command": "clippy"
+  "rust-analyzer.check.command": "clippy",
+  "files.exclude": {
+    "**/*.rpyc": true,
+    "**/*.rpa": true,
+    "**/*.rpymc": true,
+    "**/cache/": true
+  }
 }
