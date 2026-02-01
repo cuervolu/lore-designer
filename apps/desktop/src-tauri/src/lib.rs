@@ -54,6 +54,7 @@ pub fn run() {
             lore_workspaces::create_workspace,
             lore_workspaces::get_workspace_icon,
             lore_workspaces::get_recent_workspaces_command,
+            lore_workspaces::get_workspace_preview,
             lore_workspaces::add_recent_workspace_command,
             lore_workspaces::remove_recent_workspace_command,
             lore_workspaces::check_workspace_exists_command,

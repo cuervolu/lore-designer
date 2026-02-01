@@ -86,6 +86,9 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
+      dayjs:
+        specifier: ^1.11.19
+        version: 1.11.19
       dockview-vue:
         specifier: ^4.13.1
         version: 4.13.1(vue@3.5.27(typescript@5.9.3))
@@ -1655,6 +1658,9 @@ packages:
   data-urls@6.0.1:
     resolution: {integrity: sha512-euIQENZg6x8mj3fO6o9+fOW8MimUI4PpD/fZBhJfeioZVy9TUpM4UY7KjQNVZFlqwJ0UdzRDzkycB997HEq1BQ==}
     engines: {node: '>=20'}
+
+  dayjs@1.11.19:
+    resolution: {integrity: sha512-t5EcLVS6QPBNqM2z8fakk/NKel+Xzshgt8FFKAn+qwlD1pzZWxh0nVCrvFK7ZDb6XucZeF9z8C7CBWTRIVApAw==}
 
   debug@4.4.3:
     resolution: {integrity: sha512-RGwwWnwQvkVfavKVt22FGLw+xYSdzARwm0ru6DhTVA3umU5hZc28V3kO4stgYryrTlLpuvgI9GiijltAjNbcqA==}
@@ -3270,13 +3276,14 @@ snapshots:
       picocolors: 1.1.1
       sisteransi: 1.0.5
 
-  '@covector/apply@0.10.0':
+  '@covector/apply@0.10.0(mocha@10.8.2)':
     dependencies:
       '@covector/files': 0.8.0
       effection: 2.0.8(mocha@10.8.2)
       semver: 7.7.3
     transitivePeerDependencies:
       - encoding
+      - mocha
 
   '@covector/assemble@0.12.0':
     dependencies:
@@ -3293,7 +3300,7 @@ snapshots:
       - encoding
       - supports-color
 
-  '@covector/changelog@0.12.0(mocha@10.8.2)':
+  '@covector/changelog@0.12.0':
     dependencies:
       '@covector/files': 0.8.0
       effection: 2.0.8(mocha@10.8.2)
@@ -3303,7 +3310,6 @@ snapshots:
       unified: 9.2.2
     transitivePeerDependencies:
       - encoding
-      - mocha
       - supports-color
 
   '@covector/command@0.8.0':
@@ -4463,9 +4469,9 @@ snapshots:
   covector@0.12.4(mocha@10.8.2):
     dependencies:
       '@clack/prompts': 0.7.0
-      '@covector/apply': 0.10.0
+      '@covector/apply': 0.10.0(mocha@10.8.2)
       '@covector/assemble': 0.12.0
-      '@covector/changelog': 0.12.0(mocha@10.8.2)
+      '@covector/changelog': 0.12.0
       '@covector/command': 0.8.0
       '@covector/files': 0.8.0
       effection: 2.0.8(mocha@10.8.2)
@@ -4522,6 +4528,8 @@ snapshots:
     dependencies:
       whatwg-mimetype: 5.0.0
       whatwg-url: 15.1.0
+
+  dayjs@1.11.19: {}
 
   debug@4.4.3(supports-color@8.1.1):
     dependencies:

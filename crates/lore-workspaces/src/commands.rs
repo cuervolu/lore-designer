@@ -1,12 +1,17 @@
-use super::{WorkspaceError, WorkspaceManager, WorkspaceResponse, create_default_settings, INTERNAL_DIR, form_config};
+use super::{
+    INTERNAL_DIR, WorkspaceError, WorkspaceManager, WorkspaceResponse, create_default_settings,
+    form_config,
+};
 use crate::icons::get_workspace_icon_path;
 use crate::recent::{
     RecentWorkspace, add_recent_workspace, check_workspace_exists, get_recent_workspaces,
     remove_recent_workspace,
 };
-use tracing::{error, info};
+use crate::{FolderInfo, WorkspacePreview, recent};
+use std::fs;
 use std::path::{Path, PathBuf};
 use tauri::AppHandle;
+use tracing::{error, info};
 
 #[tauri::command]
 pub async fn create_workspace(
@@ -73,7 +78,6 @@ pub fn check_workspace_exists_command(path: String) -> bool {
     check_workspace_exists(&path)
 }
 
-
 #[tauri::command]
 pub async fn open_existing_workspace(
     app: AppHandle,
@@ -82,44 +86,51 @@ pub async fn open_existing_workspace(
     info!("Opening existing workspace at path: '{}'", workspace_path);
 
     let path = Path::new(&workspace_path);
-    
+
     if !path.exists() {
         return Err(WorkspaceError::InvalidPath(format!(
-            "Directory does not exist: {}", workspace_path
+            "Directory does not exist: {}",
+            workspace_path
         )));
     }
 
     if !path.is_dir() {
         return Err(WorkspaceError::InvalidPath(format!(
-            "Selected path is not a directory: {}", workspace_path
+            "Selected path is not a directory: {}",
+            workspace_path
         )));
     }
-    
-    let dir_name = path.file_name()
-        .and_then(|n| n.to_str())
-        .ok_or_else(|| WorkspaceError::InvalidPath(format!(
-            "Cannot determine directory name: {}", workspace_path
-        )))?;
+
+    let dir_name = path.file_name().and_then(|n| n.to_str()).ok_or_else(|| {
+        WorkspaceError::InvalidPath(format!(
+            "Cannot determine directory name: {}",
+            workspace_path
+        ))
+    })?;
 
     let manifest_path = path.join(format!("{}.lore", dir_name));
 
     if !manifest_path.exists() {
         return Err(WorkspaceError::InvalidPath(format!(
-            "Not a valid Lore Designer workspace: Missing manifest file {}.lore", dir_name
+            "Not a valid Lore Designer workspace: Missing manifest file {}.lore",
+            dir_name
         )));
     }
 
     // Verify .lore directory exists (internal data directory)
     let lore_dir = path.join(INTERNAL_DIR);
     if !lore_dir.exists() || !lore_dir.is_dir() {
-        return Err(WorkspaceError::InvalidPath("Not a valid Lore Designer workspace: Missing .lore directory".to_string()));
+        return Err(WorkspaceError::InvalidPath(
+            "Not a valid Lore Designer workspace: Missing .lore directory".to_string(),
+        ));
     }
 
     // If we've made it here, it's a valid workspace
     // Add to recent workspaces
     if let Err(err) = add_recent_workspace(&app, dir_name.to_string(), workspace_path.clone()) {
         return Err(WorkspaceError::InvalidPath(format!(
-            "Failed to add workspace to recent list: {}", err
+            "Failed to add workspace to recent list: {}",
+            err
         )));
     }
 
@@ -130,7 +141,9 @@ pub async fn open_existing_workspace(
 }
 
 #[tauri::command]
-pub async fn get_character_form_config(workspace_path: PathBuf) -> Result<form_config::FormConfig, String> {
+pub async fn get_character_form_config(
+    workspace_path: PathBuf,
+) -> Result<form_config::FormConfig, String> {
     form_config::get_config(&workspace_path).await
 }
 
@@ -140,4 +153,51 @@ pub async fn save_character_form_config(
     config: form_config::FormConfig,
 ) -> Result<(), String> {
     form_config::save_config(&workspace_path, &config).await
+}
+
+#[tauri::command]
+pub async fn get_workspace_preview(
+    workspace_path: String,
+) -> Result<WorkspacePreview, WorkspaceError> {
+    use tracing::{debug, warn};
+
+    debug!("Getting preview for workspace: {}", workspace_path);
+
+    let path = Path::new(&workspace_path);
+
+    if !path.exists() {
+        warn!("Workspace path does not exist: {}", workspace_path);
+        return Err(WorkspaceError::InvalidPath(workspace_path));
+    }
+
+    let mut folders = Vec::new();
+
+    for entry in fs::read_dir(path)? {
+        let entry = entry?;
+        let entry_path = entry.path();
+        if let Some(name) = entry_path.file_name().and_then(|n| n.to_str())
+            && name.starts_with('.')
+        {
+            continue;
+        }
+
+        if entry_path.is_dir() {
+            let name = entry_path
+                .file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or("Unknown")
+                .to_string();
+
+            let file_count = recent::count_files_in_dir(&entry_path).unwrap_or(0);
+
+            folders.push(FolderInfo { name, file_count });
+        }
+    }
+
+    // Ordenar alfabéticamente
+    folders.sort_by(|a, b| a.name.cmp(&b.name));
+
+    debug!("Found {} folders in workspace", folders.len());
+
+    Ok(WorkspacePreview { folders })
 }

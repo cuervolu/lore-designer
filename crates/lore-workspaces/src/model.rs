@@ -40,3 +40,14 @@ pub struct WorkspaceResponse {
     /// Status message
     pub message: String,
 }
+
+#[derive(Debug, Serialize)]
+pub struct WorkspacePreview {
+    pub folders: Vec<FolderInfo>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct FolderInfo {
+    pub name: String,
+    pub file_count: usize,
+}

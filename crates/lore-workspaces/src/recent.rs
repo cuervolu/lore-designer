@@ -1,7 +1,9 @@
 use serde::{Deserialize, Serialize};
-use std::path::Path;
+use std::{fs, path::Path};
 use tauri::AppHandle;
 use tauri_plugin_store::StoreExt;
+
+use crate::WorkspaceError;
 
 const RECENT_WORKSPACES_KEY: &str = "recent_workspaces";
 const RECENT_WORKSPACES_FILE: &str = "recent_workspaces.dat";
@@ -102,4 +104,17 @@ pub fn remove_recent_workspace(app: &AppHandle, path: String) -> Result<(), Stri
 
 pub fn check_workspace_exists(path: &str) -> bool {
     Path::new(path).exists()
+}
+
+pub fn count_files_in_dir(path: &Path) -> Result<usize, WorkspaceError> {
+    let mut count = 0;
+    
+    for entry in fs::read_dir(path)? {
+        let entry = entry?;
+        if entry.path().is_file() {
+            count += 1;
+        }
+    }
+    
+    Ok(count)
 }
