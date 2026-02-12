@@ -85,11 +85,5 @@ const isActive = (path: string) => route.path === path
         </SidebarGroupContent>
       </SidebarGroup>
     </SidebarContent>
-
-    <SidebarFooter>
-      <p class="text-xs text-muted-foreground text-center px-2">
-       &copy; {{ new Date().getFullYear() }} Lore Designer
-      </p>
-    </SidebarFooter>
   </Sidebar>
 </template>

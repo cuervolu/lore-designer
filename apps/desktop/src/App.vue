@@ -46,7 +46,7 @@ async function updateNativeMenu(routeName: string | symbol | null | undefined) {
       await buildWizardMenu(ctx)
     }
   } catch (err) {
-    await logError(`Failed to build native menu: ${err}`)
+    logError(`Failed to build native menu: ${err}`)
   }
 }
 
