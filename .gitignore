@@ -96,3 +96,6 @@ __screenshots__/
 *.timestamp-*-*.mjs
 .nuxt/
 .output/
+
+# Don't include personal Claude Code settings
+.claude/settings.local.json
