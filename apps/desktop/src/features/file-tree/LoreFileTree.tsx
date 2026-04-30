@@ -2,8 +2,8 @@ import { Button, cn } from "@lore/ui";
 import { FileTree, useFileTree } from "@pierre/trees/react";
 import { Plus, Search } from "lucide-react";
 import { useDeferredValue, useEffect, useRef } from "react";
-import { getTypeTone, isDocumentPath } from "@core/editor-shell/helpers";
-import { useEditorShellStore } from "@core/editor-shell/store";
+import { getTypeTone, isDocumentPath } from "@/store/editor-shell-helpers";
+import { useEditorShellStore } from "@/store/editor-shell";
 
 const treeUnsafeCss = `
   :host {

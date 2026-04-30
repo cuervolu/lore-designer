@@ -1,5 +1,5 @@
 import { cn } from "@lore/ui";
-import { useEditorShellStore } from "@core/editor-shell/store";
+import { useEditorShellStore } from "@/store/editor-shell";
 
 export function EditorTabs() {
   const { activePath, documents, openDocument, tabs } = useEditorShellStore();

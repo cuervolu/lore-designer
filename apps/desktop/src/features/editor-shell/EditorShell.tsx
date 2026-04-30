@@ -1,4 +1,4 @@
-import { useEditorShellStore } from "@core/editor-shell/store";
+import { useEditorShellStore } from "@/store/editor-shell";
 import { DocumentEditor } from "@features/document-editor/DocumentEditor";
 import { EditorTabs } from "@features/editor-tabs/EditorTabs";
 import { LoreFileTree } from "@features/file-tree/LoreFileTree";

@@ -2,89 +2,16 @@
 
 # Using Vite+, the Unified Toolchain for the Web
 
-This project is using Vite+, a unified toolchain built on top of Vite, Rolldown, Vitest, tsdown, Oxlint, Oxfmt, and Vite Task. Vite+ wraps runtime management, package management, and frontend tooling in a single global CLI called `vp`. Vite+ is distinct from Vite, but it invokes Vite through `vp dev` and `vp build`.
+This project is using Vite+, a unified toolchain built on top of Vite, Rolldown, Vitest, tsdown, Oxlint, Oxfmt, and Vite Task. Vite+ wraps runtime management, package management, and frontend tooling in a single global CLI called `vp`. Vite+ is distinct from Vite, and it invokes Vite through `vp dev` and `vp build`. Run `vp help` to print a list of commands and `vp <command> --help` for information about a specific command.
 
-## Vite+ Workflow
+Docs are local at `node_modules/vite-plus/docs` or online at https://viteplus.dev/guide/.
 
-`vp` is a global binary that handles the full development lifecycle. Run `vp help` to print a list of commands and `vp <command> --help` for information about a specific command.
-
-### Start
-
-- create - Create a new project from a template
-- migrate - Migrate an existing project to Vite+
-- config - Configure hooks and agent integration
-- staged - Run linters on staged files
-- install (`i`) - Install dependencies
-- env - Manage Node.js versions
-
-### Develop
-
-- dev - Run the development server
-- check - Run format, lint, and TypeScript type checks
-- lint - Lint code
-- fmt - Format code
-- test - Run tests
-
-### Execute
-
-- run - Run monorepo tasks
-- exec - Execute a command from local `node_modules/.bin`
-- dlx - Execute a package binary without installing it as a dependency
-- cache - Manage the task cache
-
-### Build
-
-- build - Build for production
-- pack - Build libraries
-- preview - Preview production build
-
-### Manage Dependencies
-
-Vite+ automatically detects and wraps the underlying package manager such as pnpm, npm, or Yarn through the `packageManager` field in `package.json` or package manager-specific lockfiles.
-
-- add - Add packages to dependencies
-- remove (`rm`, `un`, `uninstall`) - Remove packages from dependencies
-- update (`up`) - Update packages to latest versions
-- dedupe - Deduplicate dependencies
-- outdated - Check for outdated packages
-- list (`ls`) - List installed packages
-- why (`explain`) - Show why a package is installed
-- info (`view`, `show`) - View package information from the registry
-- link (`ln`) / unlink - Manage local package links
-- pm - Forward a command to the package manager
-
-### Maintain
-
-- upgrade - Update `vp` itself to the latest version
-
-These commands map to their corresponding tools. For example, `vp dev --port 3000` runs Vite's dev server and works the same as Vite. `vp test` runs JavaScript tests through the bundled Vitest. The version of all tools can be checked using `vp --version`. This is useful when researching documentation, features, and bugs.
-
-## Common Pitfalls
-
-- **Using the package manager directly:** Do not use pnpm, npm, or Yarn directly. Vite+ can handle all package manager operations.
-- **Always use Vite commands to run tools:** Don't attempt to run `vp vitest` or `vp oxlint`. They do not exist. Use `vp test` and `vp lint` instead.
-- **Running scripts:** Vite+ built-in commands (`vp dev`, `vp build`, `vp test`, etc.) always run the Vite+ built-in tool, not any `package.json` script of the same name. To run a custom script that shares a name with a built-in command, use `vp run <script>`. For example, if you have a custom `dev` script that runs multiple services concurrently, run it with `vp run dev`, not `vp dev` (which always starts Vite's dev server).
-- **Do not install Vitest, Oxlint, Oxfmt, or tsdown directly:** Vite+ wraps these tools. They must not be installed directly. You cannot upgrade these tools by installing their latest versions. Always use Vite+ commands.
-- **Use Vite+ wrappers for one-off binaries:** Use `vp dlx` instead of package-manager-specific `dlx`/`npx` commands.
-- **Import JavaScript modules from `vite-plus`:** Instead of importing from `vite` or `vitest`, all modules should be imported from the project's `vite-plus` dependency. For example, `import { defineConfig } from 'vite-plus';` or `import { expect, test, vi } from 'vite-plus/test';`. You must not install `vitest` to import test utilities.
-- **Type-Aware Linting:** There is no need to install `oxlint-tsgolint`, `vp lint --type-aware` works out of the box.
-
-## CI Integration
-
-For GitHub Actions, consider using [`voidzero-dev/setup-vp`](https://github.com/voidzero-dev/setup-vp) to replace separate `actions/setup-node`, package-manager setup, cache, and install steps with a single action.
-
-```yaml
-- uses: voidzero-dev/setup-vp@v1
-  with:
-    cache: true
-- run: vp check
-- run: vp test
-```
-
-## Review Checklist for Agents
+## Review Checklist
 
 - [ ] Run `vp install` after pulling remote changes and before getting started.
-- [ ] Run `vp check` and `vp test` to validate changes.
+- [ ] Run `vp check` and `vp test` to format, lint, type check and test changes.
+- [ ] Check if there are `vite.config.ts` tasks or `package.json` scripts necessary for validation, run via `vp run <script>`.
+
 <!--VITE PLUS END-->
 
 ---
@@ -101,19 +28,19 @@ Full Tauri v2 docs index for LLMs: **<https://v2.tauri.app/llms.txt>**
 
 Key sections most relevant to this project:
 
-| Topic | URL |
-|---|---|
-| Architecture overview | <https://v2.tauri.app/concept/architecture> |
-| Inter-Process Communication | <https://v2.tauri.app/concept/inter-process-communication> |
-| Calling Rust from the frontend | <https://v2.tauri.app/develop/calling-rust> |
-| Calling the frontend from Rust | <https://v2.tauri.app/develop/calling-frontend> |
-| State management (Rust side) | <https://v2.tauri.app/develop/state-management> |
-| Configuration files | <https://v2.tauri.app/develop/configuration-files> |
-| Plugin development | <https://v2.tauri.app/develop/plugins> |
-| Mocking Tauri APIs in tests | <https://v2.tauri.app/develop/tests/mocking> |
-| Debug in VS Code | <https://v2.tauri.app/develop/debug/vscode> |
-| Permissions & Capabilities | <https://v2.tauri.app/security/capabilities> |
-| Embedding extra files (resources) | <https://v2.tauri.app/develop/resources> |
+| Topic                             | URL                                                        |
+| --------------------------------- | ---------------------------------------------------------- |
+| Architecture overview             | <https://v2.tauri.app/concept/architecture>                |
+| Inter-Process Communication       | <https://v2.tauri.app/concept/inter-process-communication> |
+| Calling Rust from the frontend    | <https://v2.tauri.app/develop/calling-rust>                |
+| Calling the frontend from Rust    | <https://v2.tauri.app/develop/calling-frontend>            |
+| State management (Rust side)      | <https://v2.tauri.app/develop/state-management>            |
+| Configuration files               | <https://v2.tauri.app/develop/configuration-files>         |
+| Plugin development                | <https://v2.tauri.app/develop/plugins>                     |
+| Mocking Tauri APIs in tests       | <https://v2.tauri.app/develop/tests/mocking>               |
+| Debug in VS Code                  | <https://v2.tauri.app/develop/debug/vscode>                |
+| Permissions & Capabilities        | <https://v2.tauri.app/security/capabilities>               |
+| Embedding extra files (resources) | <https://v2.tauri.app/develop/resources>                   |
 
 ## Running the App
 
@@ -128,6 +55,7 @@ vp run tauri build
 ```
 
 Internally `tauri dev` does:
+
 1. Starts the Vite dev server (`vp dev`) on the configured port.
 2. Compiles the Rust crate in debug mode (`cargo build`).
 3. Spawns the native window pointing at `http://localhost:<port>`.
@@ -195,6 +123,7 @@ pub async fn open_workspace(
 ```
 
 Register in `lib.rs`:
+
 ```rust
 tauri::Builder::default()
     .invoke_handler(tauri::generate_handler![
@@ -203,10 +132,11 @@ tauri::Builder::default()
 ```
 
 **Frontend side:**
-```typescript
-import { invoke } from '@tauri-apps/api/core';
 
-const manifest = await invoke<WorkspaceManifest>('open_workspace', { path });
+```typescript
+import { invoke } from "@tauri-apps/api/core";
+
+const manifest = await invoke<WorkspaceManifest>("open_workspace", { path });
 ```
 
 Return types must implement `serde::Serialize` (Rust → TS). Arguments must implement `serde::Deserialize`. Mirror the shape in `@lore/shared` as TypeScript types.
@@ -216,17 +146,19 @@ Return types must implement `serde::Serialize` (Rust → TS). Arguments must imp
 Use events for **Rust-initiated push** (e.g., file watcher notifying the frontend of external changes).
 
 **Rust → Frontend:**
+
 ```rust
 // Emit from anywhere that has an AppHandle
 app_handle.emit("file:changed", FileChangedPayload { path, kind })?;
 ```
 
 **Frontend listener:**
-```typescript
-import { listen } from '@tauri-apps/api/event';
 
-const unlisten = await listen<FileChangedPayload>('file:changed', (event) => {
-    store.handleExternalChange(event.payload);
+```typescript
+import { listen } from "@tauri-apps/api/event";
+
+const unlisten = await listen<FileChangedPayload>("file:changed", (event) => {
+  store.handleExternalChange(event.payload);
 });
 // Call unlisten() on component unmount
 ```
@@ -244,6 +176,7 @@ pub struct AppState {
 ```
 
 Register in `lib.rs`:
+
 ```rust
 .manage(AppState {
     db: Arc::new(Mutex::new(open_db()?)),
@@ -259,12 +192,7 @@ Tauri v2 requires explicit capability declarations for any filesystem, shell, or
 {
   "identifier": "workspace-access",
   "description": "Read/write workspace directories",
-  "permissions": [
-    "fs:read-all",
-    "fs:write-all",
-    "dialog:open",
-    "dialog:save"
-  ]
+  "permissions": ["fs:read-all", "fs:write-all", "dialog:open", "dialog:save"]
 }
 ```
 
@@ -276,21 +204,21 @@ Tauri APIs (`invoke`, `listen`, etc.) are not available in the Vitest environmen
 
 ```typescript
 // src/__mocks__/@tauri-apps/api/core.ts
-import { vi } from 'vite-plus/test';
+import { vi } from "vite-plus/test";
 
 export const invoke = vi.fn();
 ```
 
 ```typescript
 // In a test file
-import { invoke } from '@tauri-apps/api/core';
-import { vi, expect, test } from 'vite-plus/test';
+import { invoke } from "@tauri-apps/api/core";
+import { vi, expect, test } from "vite-plus/test";
 
-vi.mock('@tauri-apps/api/core');
+vi.mock("@tauri-apps/api/core");
 
-test('open_workspace returns manifest', async () => {
-    vi.mocked(invoke).mockResolvedValueOnce({ name: 'Test', version: 1 });
-    // ... test component or composable
+test("open_workspace returns manifest", async () => {
+  vi.mocked(invoke).mockResolvedValueOnce({ name: "Test", version: 1 });
+  // ... test component or composable
 });
 ```
 
@@ -350,16 +278,16 @@ Platforms: **Linux and Windows** (initial targets).
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Frontend | React 19 + TypeScript |
-| Styling | TailwindCSS + shadcn/ui |
-| State | Zustand (or TanStack Query for async) |
-| Backend | Rust via Tauri v2 |
+| Layer           | Technology                                  |
+| --------------- | ------------------------------------------- |
+| Frontend        | React 19 + TypeScript                       |
+| Styling         | TailwindCSS + shadcn/ui                     |
+| State           | Zustand (or TanStack Query for async)       |
+| Backend         | Rust via Tauri v2                           |
 | Content parsing | `lore-editor` crate (gray-matter, rusqlite) |
-| Workspace ops | `lore-workspaces` crate |
-| Shared types | `@lore/shared` (pure TS, no framework deps) |
-| Build | Vite+ (pnpm monorepo) |
+| Workspace ops   | `lore-workspaces` crate                     |
+| Shared types    | `@lore/shared` (pure TS, no framework deps) |
+| Build           | Vite+ (pnpm monorepo)                       |
 
 ## Workspace File Structure
 

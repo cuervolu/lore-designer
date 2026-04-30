@@ -1,8 +1,8 @@
 import { Button } from "@lore/ui";
 import { BookMarked, Image as ImageIcon, PenSquare } from "lucide-react";
-import { getTypeTone } from "@core/editor-shell/helpers";
-import { useEditorShellStore } from "@core/editor-shell/store";
-import type { InlineSegment } from "@core/editor-shell/types";
+import { getTypeTone } from "@/store/editor-shell-helpers";
+import { useEditorShellStore } from "@/store/editor-shell";
+import type { InlineSegment } from "@/types/editor";
 import { InlineEntityTag } from "@features/file-tree/LoreFileTree";
 
 function RichSegments({ segments }: { segments: InlineSegment[] }) {

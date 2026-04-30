@@ -1,8 +1,8 @@
 import { cn } from "@lore/ui";
 import { ChevronRight } from "lucide-react";
-import { getTypeTone } from "@core/editor-shell/helpers";
-import { useEditorShellStore } from "@core/editor-shell/store";
-import type { FrontmatterField } from "@core/editor-shell/types";
+import { getTypeTone } from "@/store/editor-shell-helpers";
+import { useEditorShellStore } from "@/store/editor-shell";
+import type { FrontmatterField } from "@/types/editor";
 
 function InspectorField({
   field,

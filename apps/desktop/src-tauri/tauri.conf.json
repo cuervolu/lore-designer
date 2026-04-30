@@ -27,32 +27,31 @@
         "default-src": "'self' blob: data: filesystem: ws: wss: http: https: tauri: 'unsafe-inline' asset: https://asset.localhost; media-src",
         "script-src": "'self' 'unsafe-eval'",
         "connect-src": "'self' ipc: http://ipc.localhost tauri: asset: https://asset.localhost",
-        "img-src": [
-          "'self'",
-          "asset:",
-          "http://asset.localhost",
-          "blob:",
-          "data:"
-        ],
+        "img-src": ["'self'", "asset:", "http://asset.localhost", "blob:", "data:"],
         "style-src": "'unsafe-inline' 'unsafe-eval' 'self' https://unpkg.com"
       },
       "capabilities": [],
       "assetProtocol": {
         "enable": true,
-        "scope": [
-              "**/*",
-              "**/.*",
-              "**/.*/**"
-            ]
+        "scope": ["**/*", "**/.*", "**/.*/**"]
       }
     }
   },
- "bundle": {
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDE3QTdERkIxOThCODg5NDEKUldSQmliaVlzZCtuRnhzYzRnd0lSNWNyMlQzbDNQVDRuOFJSYlVMUHhoRExlQVUrcVFBV21NWUoK",
+      "endpoints": [
+        "https://github.com/cuervolu/lore-designer/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      }
+    }
+  },
+  "bundle": {
     "fileAssociations": [
       {
-        "ext": [
-          "lore"
-        ],
+        "ext": ["lore"],
         "name": "Lore Designer File",
         "description": "Lore Designer file format",
         "role": "Editor",
@@ -69,15 +68,7 @@
     "longDescription": "Create and manage your stories, characters, and worlds in one unified workspace. A streamlined tool for writers and game developers to organize their creative narratives with clarity",
     "active": true,
     "createUpdaterArtifacts": true,
-    "targets": [
-      "appimage",
-      "nsis",
-      "msi",
-      "deb",
-      "rpm",
-      "app",
-      "dmg"
-    ],
+    "targets": ["appimage", "nsis", "msi", "deb", "rpm", "app", "dmg"],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -85,8 +76,6 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "resources": [
-      "../../../icon.webp"
-    ]
+    "resources": ["../../../icon.webp"]
   }
 }

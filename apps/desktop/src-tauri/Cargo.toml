@@ -1,9 +1,11 @@
 [package]
-name = "lore-designer"
+name = "lore_designer"
 version = "0.1.0"
-description = "A calm desktop workspace for writers and worldbuilders."
-authors = ["cuervolu"]
-edition = "2021"
+description = "A streamlined game narrative and worldbuilding tool for indie developers"
+authors = ["Ángel Cuervo"]
+license = "AGPL-3.0"
+repository = "https://github.com/cuervolu/lore-designer"
+edition = "2024"
 
 [lib]
 name = "lore_designer_lib"
@@ -13,7 +15,23 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
+serde_json = { workspace = true }
+serde = { workspace = true }
 tauri = { version = "2", features = ["protocol-asset"] }
+tauri-plugin-clipboard-manager = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-notification = "2"
 tauri-plugin-opener = "2"
+tauri-plugin-process = "2"
+tauri-plugin-store = "2.4.2"
+chrono = { version = "0.4" }
+sysinfo = "0.38.0"
+thiserror = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+tauri-plugin-tracing = { workspace = true, features = ["colored"] }
+tokio = { version = "1", features = ["time", "rt"] }
+
+[target.'cfg(any(target_os = "macos", windows, target_os = "linux"))'.dependencies]
+tauri-plugin-updater = "2.10.1"
+tauri-plugin-window-state = "2.4.1"

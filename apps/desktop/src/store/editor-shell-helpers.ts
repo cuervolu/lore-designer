@@ -1,4 +1,4 @@
-import type { DocumentRecord, LoreTypeTag, WorkspaceNode } from "./types";
+import type { DocumentRecord, LoreTypeTag, WorkspaceNode } from "@/types/editor";
 
 function flattenWorkspaceNode(node: WorkspaceNode, paths: string[]) {
   if (node.kind === "directory") {

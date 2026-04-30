@@ -1,4 +1,4 @@
-import type { DocumentRecord, EditorShellState, WorkspaceNode } from "./types";
+import type { DocumentRecord, EditorShellState, WorkspaceNode } from "@/types/editor";
 
 const workspaceNodes: WorkspaceNode[] = [
   {

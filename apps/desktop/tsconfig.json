@@ -5,9 +5,9 @@
     "paths": {
       "@/*": ["src/*"],
       "@assets/*": ["src/assets/*"],
-      "@core/*": ["src/core/*"],
+      "@api/*": ["src/api/*"],
       "@features/*": ["src/features/*"],
-      "@widgets/*": ["src/widgets/*"]
+      "@store/*": ["src/store/*"]
     }
   },
   "include": ["src"],
