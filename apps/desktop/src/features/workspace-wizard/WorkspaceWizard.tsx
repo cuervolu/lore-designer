@@ -1,119 +1,131 @@
 import { useState } from "react";
-import { NewWorkspaceForm } from "./components/NewWorkspaceForm";
-import { WorkspaceList } from "./components/WorkspaceList";
-import type { Workspace } from "./types";
+import { Star } from "lucide-react";
+import logo from "@assets/logo.webp";
+import { useAppVersion } from "@/api/app";
+import { RecentPane } from "./components/RecentPane";
+import { NewProjectPane } from "./components/NewProjectPane";
+import { OpenExistingPane } from "./components/OpenExistingPane";
 
-const INITIAL_WORKSPACES: Workspace[] = [
+const RECENTS = [
   {
-    id: "ashen",
-    name: "The Ashen Coast",
-    path: "~/Worlds/the-ashen-coast",
-    lastOpened: "2 hours ago",
-    cover: { from: "oklch(0.42 0.15 35)", to: "oklch(0.30 0.10 280)", glyph: "AC" },
-    exists: true,
-    counts: { characters: 24, locations: 11, lore: 47 },
+    name: "Saltreach Cycle",
+    path: "~/Documents/Lore/Saltreach Cycle",
+    opened: "Today, 9:14",
+    words: 38400,
+    items: { characters: 5, locations: 5, factions: 3, lore: 4, drafts: 4 },
+    threads: 3,
   },
   {
-    id: "verdant",
-    name: "Verdant Hollow",
-    path: "~/Documents/Worlds/verdant-hollow",
-    lastOpened: "Yesterday",
-    cover: { from: "oklch(0.38 0.10 150)", to: "oklch(0.55 0.12 195)", glyph: "VH" },
-    exists: true,
-    counts: { characters: 18, locations: 22, lore: 19 },
+    name: "The Quiet Atlas",
+    path: "~/Writing/The Quiet Atlas",
+    opened: "Yesterday",
+    words: 112680,
+    items: { characters: 22, locations: 41, factions: 7, lore: 18, drafts: 36 },
+    threads: 11,
   },
   {
-    id: "third-tide",
-    name: "Third Tide Chronicles",
-    path: "/Users/wren/Projects/third-tide",
-    lastOpened: "3 days ago",
-    cover: { from: "oklch(0.32 0.09 245)", to: "oklch(0.45 0.13 200)", glyph: "TT" },
-    exists: true,
-    counts: { characters: 9, locations: 6, lore: 14 },
+    name: "Glassbound (game bible)",
+    path: "~/Projects/Glassbound/lore",
+    opened: "Apr 24",
+    words: 21500,
+    items: { characters: 14, locations: 9, factions: 5, lore: 22, drafts: 8 },
+    threads: 6,
   },
   {
-    id: "iron",
-    name: "Iron & Vow",
-    path: "~/Worlds/iron-and-vow",
-    lastOpened: "Last week",
-    cover: { from: "oklch(0.30 0.04 30)", to: "oklch(0.42 0.10 60)", glyph: "I&V" },
-    exists: true,
-    counts: { characters: 31, locations: 14, lore: 28 },
+    name: "Ironvigil — short story",
+    path: "~/Documents/Drafts/Ironvigil",
+    opened: "Apr 12",
+    words: 8200,
+    items: { characters: 4, locations: 2, factions: 0, lore: 1, drafts: 3 },
+    threads: 1,
   },
   {
-    id: "wisteria",
-    name: "Wisteria Court",
-    path: "~/old-drafts/wisteria",
-    lastOpened: "3 weeks ago",
-    cover: { from: "oklch(0.40 0.12 320)", to: "oklch(0.30 0.08 280)", glyph: "WC" },
-    exists: false,
-    counts: { characters: 7, locations: 4, lore: 9 },
-  },
-  {
-    id: "sandbox",
-    name: "Sandbox",
-    path: "~/Worlds/sandbox",
-    lastOpened: "A month ago",
-    cover: { from: "oklch(0.40 0.05 260)", to: "oklch(0.30 0.04 220)", glyph: "SB" },
-    exists: true,
-    counts: { characters: 3, locations: 2, lore: 5 },
+    name: "Notes — Northern Cycle",
+    path: "~/Documents/Lore/Northern",
+    opened: "Mar 30",
+    words: 4900,
+    items: { characters: 2, locations: 6, factions: 2, lore: 7, drafts: 1 },
+    threads: 0,
   },
 ];
 
-type WizardView = "list" | "new";
+export type RecentProject = (typeof RECENTS)[number];
+
+const PINNED = [
+  { name: "Saltreach Cycle", meta: "Wren · Ch.01 — Smoke" },
+  { name: "The Quiet Atlas", meta: "Atlas — Article 'Erath'" },
+];
+
+type WizardTab = "recent" | "new" | "open";
 
 interface WorkspaceWizardProps {
   onOpenWorkspace: () => void;
 }
 
 export function WorkspaceWizard({ onOpenWorkspace }: WorkspaceWizardProps) {
-  const [view, setView] = useState<WizardView>("list");
-  const [workspaces, setWorkspaces] = useState<Workspace[]>(INITIAL_WORKSPACES);
-
-  const handleCreate = ({
-    name,
-    openAfter,
-    path,
-  }: {
-    name: string;
-    openAfter: boolean;
-    path: string;
-  }) => {
-    const glyph =
-      name
-        .split(/\s+/)
-        .map((w) => w[0])
-        .slice(0, 2)
-        .join("")
-        .toUpperCase() || "·";
-
-    const newWs: Workspace = {
-      id: `ws-${Date.now()}`,
-      name,
-      path,
-      lastOpened: "Just now",
-      cover: { from: "oklch(0.40 0.10 150)", to: "oklch(0.30 0.08 195)", glyph },
-      exists: true,
-      counts: { characters: 0, locations: 0, lore: 0 },
-    };
-    setWorkspaces((ws) => [newWs, ...ws]);
-    if (openAfter) onOpenWorkspace();
-    else setView("list");
-  };
+  const [tab, setTab] = useState<WizardTab>("recent");
+  const appVersion = useAppVersion();
 
   return (
-    <div className="wiz">
-      {view === "list" ? (
-        <WorkspaceList
-          onNew={() => setView("new")}
-          onOpen={onOpenWorkspace}
-          onOpenFolder={onOpenWorkspace}
-          onRemove={(ws) => setWorkspaces((list) => list.filter((w) => w.id !== ws.id))}
-          workspaces={workspaces}
-        />
-      ) : (
-        <NewWorkspaceForm onBack={() => setView("list")} onCreate={handleCreate} />
-      )}
+    <div className="wiz-root ld-fade">
+      {/* Left rail */}
+      <aside className="wiz-rail">
+        <div className="wiz-rail__header">
+          <img alt="Lore Designer" className="wiz-rail__logo" src={logo} />
+          <div>
+            <div className="wiz-rail__name">Lore Designer</div>
+            <div className="wiz-rail__version">{appVersion ?? "…"}</div>
+          </div>
+        </div>
+
+        <div className="wiz-rail__section-label">Start</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 1, marginBottom: 14 }}>
+          <button
+            className={`wiz-rail-tab${tab === "recent" ? " active" : ""}`}
+            onClick={() => setTab("recent")}
+            type="button"
+          >
+            <span>Recent projects</span>
+            <span className="wiz-rail-tab__count">{RECENTS.length}</span>
+          </button>
+          <button
+            className={`wiz-rail-tab${tab === "new" ? " active" : ""}`}
+            onClick={() => setTab("new")}
+            type="button"
+          >
+            New project
+          </button>
+          <button
+            className={`wiz-rail-tab${tab === "open" ? " active" : ""}`}
+            onClick={() => setTab("open")}
+            type="button"
+          >
+            Open from disk…
+          </button>
+        </div>
+
+        <div className="wiz-rail__section-label">Pinned</div>
+        {PINNED.map((p) => (
+          <button className="wiz-pinned-item" key={p.name} onClick={onOpenWorkspace} type="button">
+            <Star size={11} color="var(--ink-4)" strokeWidth={1.4} />
+            <div>
+              <div className="wiz-pinned-item__name">{p.name}</div>
+              <div className="wiz-pinned-item__meta">{p.meta}</div>
+            </div>
+          </button>
+        ))}
+
+        <div style={{ flex: 1 }} />
+      </aside>
+
+      {/* Main content */}
+      <main className="wiz-main">
+        {tab === "recent" && (
+          <RecentPane onNew={() => setTab("new")} onOpen={onOpenWorkspace} recents={RECENTS} />
+        )}
+        {tab === "new" && <NewProjectPane onOpen={onOpenWorkspace} />}
+        {tab === "open" && <OpenExistingPane onOpen={onOpenWorkspace} />}
+      </main>
     </div>
   );
 }

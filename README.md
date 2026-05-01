@@ -27,7 +27,6 @@ Lore Designer is an **Offline-First** desktop application that helps writers and
 - **No Lock-in:** You can open your project folder with any text editor (VS Code, Notepad, Vim) and it will remain perfectly readable.
 - **Performance:** Built to handle thousands of files without lag.
 
-
 ## How a Workspace Works
 
 Lore Designer projects are just standard folders on your computer. However, the application uses three special components to manage your project logic without polluting your content.
@@ -53,19 +52,16 @@ graph TD
 ```
 
 1.  **The Manifest (`.lore`):**
-
     - It is a simple TOML file that gives your project an identity.
     - It contains the project UUID, version, and basic metadata.
     - _Example:_ `MyFantasyWorld.lore`
 
 2.  **The Filter (`.loreignore`):**
-
     - Works exactly like `.gitignore`.
     - Tells Lore Designer which files to ignore during indexing (e.g., temporary files, build outputs, or system files).
     - Keeps your workspace clean and performant.
 
 3.  **The Internal Folder (`.lore/`):**
-
     - This is where the app stores its own data, separate from _your_ creative content.
     - Contains `settings.toml` (editor preferences), `trash/` (safeguard against accidental deletion), and search indexes.
     - **Note:** You generally don't need to touch this folder manually.
@@ -95,8 +91,8 @@ Your content is stored in Markdown with YAML Frontmatter. This makes it machine-
 ```markdown
 ---
 type: character
-name: 'Elandra Vosh'
-archetype: 'The Reluctant Hero'
+name: "Elandra Vosh"
+archetype: "The Reluctant Hero"
 status: active
 ---
 
@@ -121,6 +117,7 @@ _For a detailed technical roadmap, please refer to [ROADMAP.md](ROADMAP.md)._
 This project is licensed under the **GNU Affero General Public License v3.0**. See the [LICENSE](https://www.google.com/search?q=LICENSE) file for details.
 
 ## Special thanks
+
 **[@iriata18](https://instagram.com/iriata18):** for the application logo.
 
 **[Tauri Team](https://tauri.app):** for the Tauri framework that powers Lore Designer.

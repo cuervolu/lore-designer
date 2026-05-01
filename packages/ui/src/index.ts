@@ -1,10 +1,11 @@
-export { Button, buttonVariants } from "./components/ui/button";
+export { Button, buttonVariants } from "./components/button";
 export {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
-} from "./components/ui/card";
+} from "./components/card";
 export { cn } from "./lib/utils";

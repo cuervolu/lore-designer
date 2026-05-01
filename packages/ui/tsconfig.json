@@ -1,4 +1,17 @@
 {
   "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@lore/ui": ["./src/index.ts"],
+      "@lore/ui/components": ["./src/components"],
+      "@lore/ui/components/*": ["./src/components/*"],
+      "@lore/ui/hooks": ["./src/hooks"],
+      "@lore/ui/hooks/*": ["./src/hooks/*"],
+      "@lore/ui/lib": ["./src/lib"],
+      "@lore/ui/lib/utils": ["./src/lib/utils.ts"],
+      "@lore/ui/lib/*": ["./src/lib/*"]
+    }
+  },
   "include": ["src"]
 }

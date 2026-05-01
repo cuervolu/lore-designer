@@ -1,20 +1,21 @@
 {
   "name": "lore-designer-workspace",
-  "private": true,
   "version": "0.1.0",
+  "private": true,
   "type": "module",
   "scripts": {
     "dev": "vp run @lore/desktop#dev",
     "build": "vp run -r build",
     "check": "vp run -r check",
     "test": "vp run -r test",
+    "shadcn": "sh -c 'pnpm dlx shadcn@latest \"$@\" -c apps/desktop' --",
     "tauri:dev": "vp run @lore/desktop#tauri:dev",
     "tauri:build": "vp run @lore/desktop#tauri:build",
     "tauri": "vp run @lore/desktop#tauri",
     "prepare": "vp config"
   },
   "devDependencies": {
-    "vite": "npm:@voidzero-dev/vite-plus-core@latest",
+    "vite": "npm:@voidzero-dev/vite-plus-core@^0.1.20",
     "vite-plus": "latest"
   },
   "packageManager": "pnpm@10.33.2",
@@ -22,6 +23,9 @@
     "overrides": {
       "vite": "npm:@voidzero-dev/vite-plus-core@latest",
       "vitest": "npm:@voidzero-dev/vite-plus-test@latest"
-    }
+    },
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
   }
 }

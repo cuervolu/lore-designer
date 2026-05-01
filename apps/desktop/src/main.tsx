@@ -1,8 +1,10 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { createMemoryHistory, createRouter, RouterProvider } from "@tanstack/react-router";
-import "@fontsource-variable/inter/wght.css";
-import "@fontsource-variable/fira-code/wght.css";
+import "@fontsource-variable/ibm-plex-sans/wght.css";
+import "@fontsource/ibm-plex-mono/400.css";
+import "@fontsource/ibm-plex-mono/500.css";
+import "@fontsource-variable/source-serif-4/wght.css";
 import "@lore/ui/globals.css";
 import { routeTree } from "./routeTree.gen";
 

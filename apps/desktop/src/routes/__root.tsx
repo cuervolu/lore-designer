@@ -9,7 +9,7 @@ function RootLayout() {
   return (
     <div className="lore-designer-app">
       <Outlet />
-      <TanStackRouterDevtools />
+      <TanStackRouterDevtools initialIsOpen={false} />
     </div>
   );
 }
