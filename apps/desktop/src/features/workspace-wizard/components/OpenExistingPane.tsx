@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState } from 'react';
 import {
   BookOpen,
   Check,
@@ -8,13 +8,13 @@ import {
   Folder,
   FolderOpen,
   Home,
-} from "lucide-react";
+} from 'lucide-react';
 
 interface OpenExistingPaneProps {
   onOpen: () => void;
 }
 
-type NodeKind = "folder" | "project" | "file";
+type NodeKind = 'folder' | 'project' | 'file';
 interface FolderNode {
   name: string;
   kind: NodeKind;
@@ -26,49 +26,49 @@ interface FolderNode {
 
 const FOLDER_TREE: FolderNode[] = [
   {
-    name: "Documents",
-    kind: "folder",
+    name: 'Documents',
+    kind: 'folder',
     children: [
       {
-        name: "Lore",
-        kind: "folder",
+        name: 'Lore',
+        kind: 'folder',
         expanded: true,
         children: [
-          { name: "Saltreach Cycle", kind: "project", valid: true, meta: "project · 38.4k words" },
-          { name: "Northern", kind: "project", valid: true, meta: "project · 4.9k words" },
-          { name: "archive", kind: "folder" },
+          { name: 'Saltreach Cycle', kind: 'project', valid: true, meta: 'project · 38.4k words' },
+          { name: 'Northern', kind: 'project', valid: true, meta: 'project · 4.9k words' },
+          { name: 'archive', kind: 'folder' },
         ],
       },
       {
-        name: "Drafts",
-        kind: "folder",
+        name: 'Drafts',
+        kind: 'folder',
         expanded: true,
         children: [
-          { name: "Ironvigil", kind: "project", valid: true, meta: "project · 8.2k words" },
-          { name: "short pieces.md", kind: "file" },
+          { name: 'Ironvigil', kind: 'project', valid: true, meta: 'project · 8.2k words' },
+          { name: 'short pieces.md', kind: 'file' },
         ],
       },
     ],
   },
   {
-    name: "Writing",
-    kind: "folder",
+    name: 'Writing',
+    kind: 'folder',
     expanded: true,
     children: [
-      { name: "The Quiet Atlas", kind: "project", valid: true, meta: "project · 112.7k words" },
-      { name: "sketches", kind: "folder" },
+      { name: 'The Quiet Atlas', kind: 'project', valid: true, meta: 'project · 112.7k words' },
+      { name: 'sketches', kind: 'folder' },
     ],
   },
   {
-    name: "Projects",
-    kind: "folder",
+    name: 'Projects',
+    kind: 'folder',
     children: [
       {
-        name: "Glassbound",
-        kind: "folder",
+        name: 'Glassbound',
+        kind: 'folder',
         children: [
-          { name: "lore", kind: "project", valid: true, meta: "project · 21.5k words" },
-          { name: "src", kind: "folder" },
+          { name: 'lore', kind: 'project', valid: true, meta: 'project · 21.5k words' },
+          { name: 'src', kind: 'folder' },
         ],
       },
     ],
@@ -76,12 +76,12 @@ const FOLDER_TREE: FolderNode[] = [
 ];
 
 const RECENT_FOLDERS = [
-  { name: "Lore", path: "~/Documents/Lore" },
-  { name: "Drafts", path: "~/Documents/Drafts" },
-  { name: "Writing", path: "~/Writing" },
-  { name: "Glassbound", path: "~/Projects/Glassbound" },
-  { name: "Northern", path: "~/Documents/Lore/Northern" },
-  { name: "Desktop", path: "~/Desktop" },
+  { name: 'Lore', path: '~/Documents/Lore' },
+  { name: 'Drafts', path: '~/Documents/Drafts' },
+  { name: 'Writing', path: '~/Writing' },
+  { name: 'Glassbound', path: '~/Projects/Glassbound' },
+  { name: 'Northern', path: '~/Documents/Lore/Northern' },
+  { name: 'Desktop', path: '~/Desktop' },
 ];
 
 interface PickedNode {
@@ -92,8 +92,8 @@ interface PickedNode {
 
 export function OpenExistingPane({ onOpen }: OpenExistingPaneProps) {
   const [picked, setPicked] = useState<PickedNode>({
-    name: "Saltreach Cycle",
-    kind: "project",
+    name: 'Saltreach Cycle',
+    kind: 'project',
     valid: true,
   });
 
@@ -129,13 +129,13 @@ export function OpenExistingPane({ onOpen }: OpenExistingPaneProps) {
               <span style={{ flex: 1 }} />
               <kbd
                 style={{
-                  fontFamily: "var(--font-mono)",
+                  fontFamily: 'var(--font-mono)',
                   fontSize: 10,
-                  color: "var(--ink-4)",
-                  background: "var(--kbd-bg)",
-                  padding: "1px 4px",
+                  color: 'var(--ink-4)',
+                  background: 'var(--kbd-bg)',
+                  padding: '1px 4px',
                   borderRadius: 3,
-                  border: "1px solid var(--divider)",
+                  border: '1px solid var(--divider)',
                 }}
               >
                 ⌘O
@@ -150,14 +150,14 @@ export function OpenExistingPane({ onOpen }: OpenExistingPaneProps) {
 
           <div className="wiz-what-is">
             <div className="wiz-what-is__title">What is a Lore Designer project</div>
-            A folder that contains a{" "}
-            <code style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--ink)" }}>
+            A folder that contains a{' '}
+            <code style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--ink)' }}>
               project.lore
-            </code>{" "}
-            manifest at its root, alongside an{" "}
-            <code style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--ink)" }}>
+            </code>{' '}
+            manifest at its root, alongside an{' '}
+            <code style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--ink)' }}>
               entries/
-            </code>{" "}
+            </code>{' '}
             directory. Plain Markdown files inside an entries folder are treated as drafts and
             notes.
           </div>
@@ -181,14 +181,14 @@ function BrowserNode({
   onPick: (n: PickedNode) => void;
 }) {
   const [open, setOpen] = useState(!!node.expanded);
-  const isProject = node.kind === "project";
-  const isFolder = node.kind === "folder";
+  const isProject = node.kind === 'project';
+  const isFolder = node.kind === 'folder';
   const isPicked = picked?.name === node.name;
 
   return (
     <>
       <button
-        className={`wiz-browser-row${isPicked ? " picked" : ""}`}
+        className={`wiz-browser-row${isPicked ? ' picked' : ''}`}
         onClick={() => {
           if (isFolder) setOpen((o) => !o);
           if (isProject) onPick(node);
@@ -196,7 +196,7 @@ function BrowserNode({
         style={{ padding: `3px 10px 3px ${10 + depth * 16}px` }}
         type="button"
       >
-        <span style={{ color: "var(--ink-4)" }}>
+        <span style={{ color: 'var(--ink-4)' }}>
           {isFolder ? (
             open ? (
               <ChevronDown size={9} strokeWidth={1.4} />
@@ -217,17 +217,17 @@ function BrowserNode({
         <span
           style={{
             fontWeight: isProject ? 500 : 400,
-            color: node.kind === "file" ? "var(--ink-3)" : "var(--ink)",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
+            color: node.kind === 'file' ? 'var(--ink-3)' : 'var(--ink)',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
           }}
         >
           {node.name}
         </span>
         {isProject && (
-          <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--ink-4)" }}>
-            {node.meta?.replace("project · ", "")}
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10.5, color: 'var(--ink-4)' }}>
+            {node.meta?.replace('project · ', '')}
           </span>
         )}
       </button>
@@ -245,7 +245,7 @@ function PickedPanel({ picked, onOpen }: { picked: PickedNode | null; onOpen: ()
     return (
       <aside className="wiz-picked">
         <p
-          style={{ fontSize: 12, color: "var(--ink-3)", fontFamily: "var(--font-sans)", margin: 0 }}
+          style={{ fontSize: 12, color: 'var(--ink-3)', fontFamily: 'var(--font-sans)', margin: 0 }}
         >
           Select a folder to inspect it.
         </p>
@@ -259,22 +259,22 @@ function PickedPanel({ picked, onOpen }: { picked: PickedNode | null; onOpen: ()
       <div className="wiz-picked__path">~/Documents/Lore/{picked.name}</div>
 
       <div className="wiz-picked__manifest">
-        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
           <Check size={11} color="var(--good)" strokeWidth={1.4} />
-          <span style={{ color: "var(--ink-2)", fontSize: 11.5, fontFamily: "var(--font-sans)" }}>
-            Valid{" "}
-            <code style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--ink)" }}>
+          <span style={{ color: 'var(--ink-2)', fontSize: 11.5, fontFamily: 'var(--font-sans)' }}>
+            Valid{' '}
+            <code style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--ink)' }}>
               project.lore
-            </code>{" "}
+            </code>{' '}
             manifest
           </span>
         </div>
         <div
           style={{
-            color: "var(--ink-3)",
+            color: 'var(--ink-3)',
             lineHeight: 1.5,
             fontSize: 11.5,
-            fontFamily: "var(--font-sans)",
+            fontFamily: 'var(--font-sans)',
           }}
         >
           5 characters · 5 locations · 4 drafts
@@ -283,7 +283,7 @@ function PickedPanel({ picked, onOpen }: { picked: PickedNode | null; onOpen: ()
         </div>
       </div>
 
-      <div style={{ display: "flex", gap: 6, marginTop: 12 }}>
+      <div style={{ display: 'flex', gap: 6, marginTop: 12 }}>
         <button className="ld-btn primary" onClick={onOpen} type="button">
           Open
         </button>

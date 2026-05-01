@@ -1,5 +1,5 @@
-import { BookOpen, Compass, FileText, Flag, Plus, User, X } from "lucide-react";
-import { useEditorShellStore } from "@/store/editor-shell";
+import { BookOpen, Compass, FileText, Flag, Plus, User, X } from 'lucide-react';
+import { useEditorShellStore } from '@/store/editor-shell';
 
 const KIND_ICON: Record<string, JSX.Element> = {
   character: <User size={11} strokeWidth={1.4} />,
@@ -26,13 +26,13 @@ export function EditorTabs() {
         return (
           <button
             aria-selected={isActive}
-            className={`editor-tab${isActive ? " active" : ""}`}
+            className={`editor-tab${isActive ? ' active' : ''}`}
             key={tab.path}
             onClick={() => openDocument(tab.path)}
             role="tab"
             type="button"
           >
-            <span style={{ color: isActive ? "var(--sel-ink)" : "var(--ink-4)", flexShrink: 0 }}>
+            <span style={{ color: isActive ? 'var(--sel-ink)' : 'var(--ink-4)', flexShrink: 0 }}>
               {icon}
             </span>
             <span className="editor-tab__title">{tab.title}</span>

@@ -145,9 +145,6 @@ importers:
       lucide-react:
         specifier: ^0.542.0
         version: 0.542.0(react@19.2.5)
-      next-themes:
-        specifier: ^0.4.6
-        version: 0.4.6(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       sonner:
         specifier: ^2.0.7
         version: 2.0.7(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
@@ -2099,12 +2096,6 @@ packages:
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
 
-  next-themes@0.4.6:
-    resolution: {integrity: sha512-pZvgD5L0IEvX5/9GWyHMf3m8BKiVQwsCMHfoFosXtXBMnaS0ZnIJ9ST4b4NqLVKDEm8QBxoNNGNaBv2JNF6XNA==}
-    peerDependencies:
-      react: ^16.8 || ^17 || ^18 || ^19 || ^19.0.0-rc
-      react-dom: ^16.8 || ^17 || ^18 || ^19 || ^19.0.0-rc
-
   node-fetch@2.6.7:
     resolution: {integrity: sha512-ZjMPFEfVx5j+y2yF35Kzx5sF7kDzxuDj6ziH4FFbOp87zKDZNx8yExJIb05OGF4Nlt9IHFIMBkRl41VdvcNdbQ==}
     engines: {node: 4.x || >=6.0.0}
@@ -2804,17 +2795,18 @@ snapshots:
       picocolors: 1.1.1
       sisteransi: 1.0.5
 
-  '@covector/apply@0.10.0':
+  '@covector/apply@0.10.0(mocha@10.8.2)':
     dependencies:
       '@covector/files': 0.8.0
       effection: 2.0.8(mocha@10.8.2)
       semver: 7.7.4
     transitivePeerDependencies:
       - encoding
+      - mocha
 
-  '@covector/assemble@0.12.0':
+  '@covector/assemble@0.12.0(mocha@10.8.2)':
     dependencies:
-      '@covector/command': 0.8.0
+      '@covector/command': 0.8.0(mocha@10.8.2)
       '@covector/files': 0.8.0
       effection: 2.0.8(mocha@10.8.2)
       js-yaml: 4.1.1
@@ -2825,6 +2817,7 @@ snapshots:
       unified: 9.2.2
     transitivePeerDependencies:
       - encoding
+      - mocha
       - supports-color
 
   '@covector/changelog@0.12.0(mocha@10.8.2)':
@@ -2840,12 +2833,13 @@ snapshots:
       - mocha
       - supports-color
 
-  '@covector/command@0.8.0':
+  '@covector/command@0.8.0(mocha@10.8.2)':
     dependencies:
-      '@effection/process': 2.1.4
+      '@effection/process': 2.1.4(mocha@10.8.2)
       effection: 2.0.8(mocha@10.8.2)
     transitivePeerDependencies:
       - encoding
+      - mocha
 
   '@covector/files@0.8.0':
     dependencies:
@@ -2892,10 +2886,8 @@ snapshots:
     dependencies:
       effection: 2.0.8(mocha@10.8.2)
       mocha: 10.8.2
-    transitivePeerDependencies:
-      - encoding
 
-  '@effection/process@2.1.4':
+  '@effection/process@2.1.4(mocha@10.8.2)':
     dependencies:
       cross-spawn: 7.0.6
       ctrlc-windows: 2.2.0
@@ -2903,6 +2895,7 @@ snapshots:
       shellwords: 0.1.1
     transitivePeerDependencies:
       - encoding
+      - mocha
 
   '@effection/stream@2.0.6':
     dependencies:
@@ -3893,10 +3886,10 @@ snapshots:
   covector@0.12.4(mocha@10.8.2):
     dependencies:
       '@clack/prompts': 0.7.0
-      '@covector/apply': 0.10.0
-      '@covector/assemble': 0.12.0
+      '@covector/apply': 0.10.0(mocha@10.8.2)
+      '@covector/assemble': 0.12.0(mocha@10.8.2)
       '@covector/changelog': 0.12.0(mocha@10.8.2)
-      '@covector/command': 0.8.0
+      '@covector/command': 0.8.0(mocha@10.8.2)
       '@covector/files': 0.8.0
       effection: 2.0.8(mocha@10.8.2)
       globby: 11.1.0
@@ -4295,11 +4288,6 @@ snapshots:
   ms@2.1.3: {}
 
   nanoid@3.3.12: {}
-
-  next-themes@0.4.6(react-dom@19.2.5(react@19.2.5))(react@19.2.5):
-    dependencies:
-      react: 19.2.5
-      react-dom: 19.2.5(react@19.2.5)
 
   node-fetch@2.6.7:
     dependencies:

@@ -1,19 +1,33 @@
-import { defineConfig } from "vite-plus";
-import { tanstackRouter } from "@tanstack/router-plugin/vite";
-import react from "@vitejs/plugin-react";
-import tailwindcss from "@tailwindcss/vite";
-import { resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { defineConfig } from 'vite-plus';
+import { tanstackRouter } from '@tanstack/router-plugin/vite';
+import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
+import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const host = process.env.TAURI_DEV_HOST;
 
-const __dirname = fileURLToPath(new URL(".", import.meta.url));
-const src = (p: string) => resolve(__dirname, "src", p);
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
+const src = (p: string) => resolve(__dirname, 'src', p);
 
 export default defineConfig({
+  fmt: {
+    ignorePatterns: ['dist/**', 'src/routeTree.gen.ts'],
+    singleQuote: true,
+    semi: true,
+    sortPackageJson: true,
+  },
+  lint: {
+    ignorePatterns: ['dist/**', 'src/routeTree.gen.ts'],
+    options: {
+      typeAware: true,
+      typeCheck: true,
+    },
+  },
+
   plugins: [
     tanstackRouter({
-      target: "react",
+      target: 'react',
       autoCodeSplitting: true,
     }),
     react(),
@@ -21,11 +35,11 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      "@": src(""),
-      "@assets": src("assets"),
-      "@api": src("api"),
-      "@features": src("features"),
-      "@store": src("store"),
+      '@': src(''),
+      '@assets': src('assets'),
+      '@api': src('api'),
+      '@features': src('features'),
+      '@store': src('store'),
     },
   },
   clearScreen: false,
@@ -35,13 +49,13 @@ export default defineConfig({
     host: host || false,
     hmr: host
       ? {
-          protocol: "ws",
+          protocol: 'ws',
           host,
           port: 1421,
         }
       : undefined,
     watch: {
-      ignored: ["**/src-tauri/**", "**/target/**"],
+      ignored: ['**/src-tauri/**', '**/target/**'],
     },
   },
 });

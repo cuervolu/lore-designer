@@ -1,10 +1,13 @@
-import { cn } from "@lore/ui";
-import { FileTree, useFileTree, useFileTreeSearch } from "@pierre/trees/react";
-import { useEffect, useRef, type CSSProperties } from "react";
-import { AlertCircle, ChevronDown, Clock, Search, StickyNote, Tag, Trash2 } from "lucide-react";
-import { useAppVersion } from "@/api/app";
-import { getTypeTone, isDocumentPath } from "@/store/editor-shell-helpers";
-import { useEditorShellStore } from "@/store/editor-shell";
+import { cn } from '@lore/ui';
+import { Badge } from '@lore/ui/components/badge';
+import { InputGroup, InputGroupAddon, InputGroupInput } from '@lore/ui/components/input-group';
+import { Kbd } from '@lore/ui/components/kbd';
+import { FileTree, useFileTree, useFileTreeSearch } from '@pierre/trees/react';
+import { useEffect, useRef, type CSSProperties } from 'react';
+import { AlertCircle, ChevronDown, Clock, Search, StickyNote, Tag, Trash2 } from 'lucide-react';
+import { useAppVersion } from '@/api/app';
+import { getTypeTone, isDocumentPath } from '@/store/editor-shell-helpers';
+import { useEditorShellStore } from '@/store/editor-shell';
 
 const TREE_UNSAFE_CSS = `
   :host {
@@ -81,35 +84,35 @@ type MiscItem = {
 };
 
 const MISC_ITEMS: readonly MiscItem[] = [
-  { Icon: Tag, label: "Types & templates" },
-  { Icon: Clock, label: "Timeline" },
-  { Icon: AlertCircle, label: "Open threads", badge: "3" },
-  { Icon: Trash2, label: "Trash" },
+  { Icon: Tag, label: 'Types & templates' },
+  { Icon: Clock, label: 'Timeline' },
+  { Icon: AlertCircle, label: 'Open threads', badge: '3' },
+  { Icon: Trash2, label: 'Trash' },
 ] as const;
 
 const TREE_STYLE = {
-  height: "100%",
-  width: "100%",
-  "--trees-accent-override": "var(--sel-ink)",
-  "--trees-bg-override": "transparent",
-  "--trees-bg-muted-override": "rgba(125, 118, 102, 0.06)",
-  "--trees-border-color-override": "transparent",
-  "--trees-fg-override": "var(--ink)",
-  "--trees-fg-muted-override": "var(--ink-3)",
-  "--trees-font-family-override": "var(--font-sans)",
-  "--trees-font-size-override": "12.5px",
-  "--trees-font-weight-regular-override": "400",
-  "--trees-font-weight-semibold-override": "550",
-  "--trees-focus-ring-color-override": "rgba(61, 86, 124, 0.24)",
-  "--trees-focus-ring-offset-override": "-1px",
-  "--trees-gap-override": "7px",
-  "--trees-item-margin-x-override": "0px",
-  "--trees-item-padding-x-override": "10px",
-  "--trees-level-gap-override": "18px",
-  "--trees-padding-inline-override": "0px",
-  "--trees-selected-bg-override": "var(--sel-bg)",
-  "--trees-selected-fg-override": "var(--sel-ink)",
-  "--trees-selected-focused-border-color-override": "rgba(61, 86, 124, 0.3)",
+  height: '100%',
+  width: '100%',
+  '--trees-accent-override': 'var(--sel-ink)',
+  '--trees-bg-override': 'transparent',
+  '--trees-bg-muted-override': 'rgba(125, 118, 102, 0.06)',
+  '--trees-border-color-override': 'transparent',
+  '--trees-fg-override': 'var(--ink)',
+  '--trees-fg-muted-override': 'var(--ink-3)',
+  '--trees-font-family-override': 'var(--font-sans)',
+  '--trees-font-size-override': '12.5px',
+  '--trees-font-weight-regular-override': '400',
+  '--trees-font-weight-semibold-override': '550',
+  '--trees-focus-ring-color-override': 'rgba(61, 86, 124, 0.24)',
+  '--trees-focus-ring-offset-override': '-1px',
+  '--trees-gap-override': '7px',
+  '--trees-item-margin-x-override': '0px',
+  '--trees-item-padding-x-override': '10px',
+  '--trees-level-gap-override': '18px',
+  '--trees-padding-inline-override': '0px',
+  '--trees-selected-bg-override': 'var(--sel-bg)',
+  '--trees-selected-fg-override': 'var(--sel-ink)',
+  '--trees-selected-focused-border-color-override': 'rgba(61, 86, 124, 0.3)',
 } as CSSProperties;
 
 function countWords(text: string) {
@@ -125,10 +128,10 @@ function formatCompactWords(words: number) {
 }
 
 function normalizeDirectoryPath(path: string) {
-  return path.endsWith("/") ? path : `${path}/`;
+  return path.endsWith('/') ? path : `${path}/`;
 }
 
-export function LoreNavigator() {
+export function LoreFileTree() {
   const {
     activePath,
     documents,
@@ -147,11 +150,11 @@ export function LoreNavigator() {
   }, [activePath, documents, openDocument]);
 
   const { model } = useFileTree({
-    density: "compact",
-    fileTreeSearchMode: "hide-non-matches",
-    icons: "minimal",
+    density: 'compact',
+    fileTreeSearchMode: 'hide-non-matches',
+    icons: 'minimal',
     initialExpandedPaths: expandedPaths.map(normalizeDirectoryPath),
-    initialSearchQuery: searchQuery.trim() === "" ? null : searchQuery,
+    initialSearchQuery: searchQuery.trim() === '' ? null : searchQuery,
     initialSelectedPaths: [activePath],
     onSelectionChange(selectedPaths) {
       const {
@@ -171,22 +174,22 @@ export function LoreNavigator() {
     },
     paths: treePaths,
     renderRowDecoration({ item, row }) {
-      if (row.kind === "directory" && row.level === 0) {
-        const section = workspaceNodes.find((node) => node.path === item.path.replace(/\/$/, ""));
+      if (row.kind === 'directory' && row.level === 0) {
+        const section = workspaceNodes.find((node) => node.path === item.path.replace(/\/$/, ''));
         if (section?.children?.length != null) {
           return { text: String(section.children.length) };
         }
       }
 
-      if (row.kind === "file" && isDocumentPath(item.path, documents)) {
+      if (row.kind === 'file' && isDocumentPath(item.path, documents)) {
         const document = documents[item.path];
-        if (document.kind === "draft") {
+        if (document.kind === 'draft') {
           const words = document.content.reduce((total, block) => {
-            if (block.type === "heading") {
+            if (block.type === 'heading') {
               return total + countWords(block.text);
             }
 
-            if (block.type === "paragraph" || block.type === "callout") {
+            if (block.type === 'paragraph' || block.type === 'callout') {
               return (
                 total +
                 block.segments.reduce((segmentTotal, segment) => {
@@ -228,8 +231,9 @@ export function LoreNavigator() {
   }, [expandedPaths, model, treePaths]);
 
   useEffect(() => {
-    if (treeSearch.value !== searchQuery) {
-      treeSearch.setValue(searchQuery.trim() === "" ? null : searchQuery);
+    const normalizedValue = treeSearch.value ?? '';
+    if (normalizedValue !== searchQuery) {
+      treeSearch.setValue(searchQuery.trim() === '' ? null : searchQuery);
     }
   }, [searchQuery, treeSearch]);
 
@@ -247,30 +251,36 @@ export function LoreNavigator() {
   }, [activePath, model]);
 
   return (
-    <nav className="navigator">
-      <div className="navigator__header">
-        <div className="navigator__project-icon">{projectInitial}</div>
-        <div style={{ minWidth: 0, flex: 1 }}>
-          <div className="navigator__project-name">{workspaceName}</div>
-          <div className="navigator__project-path">~/Documents/Lore/{workspaceName}</div>
+    <div className="navigator">
+      <div className="navigator__header-shell">
+        <div className="navigator__header">
+          <div className="navigator__project-icon">{projectInitial}</div>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div className="navigator__project-name">{workspaceName}</div>
+            <div className="navigator__project-path">~/Documents/Lore/{workspaceName}</div>
+          </div>
+          <button className="ld-icon-btn" title="Project menu" type="button">
+            <ChevronDown size={11} strokeWidth={1.4} />
+          </button>
         </div>
-        <button className="ld-icon-btn" title="Project menu" type="button">
-          <ChevronDown size={11} strokeWidth={1.4} />
-        </button>
-      </div>
-
-      <div className="navigator__search">
-        <div className="navigator__search-box">
-          <Search size={12} color="var(--ink-4)" strokeWidth={1.4} />
-          <input
-            onChange={(e) => {
-              treeSearch.setValue(e.target.value);
-              setSearchQuery(e.target.value);
-            }}
-            placeholder="Search project"
-            value={treeSearch.value}
-          />
-          <span className="navigator__search-kbd">⌘K</span>
+        <div className="navigator__search">
+          <InputGroup className="navigator__search-group">
+            <InputGroupAddon align="inline-start">
+              <Search color="var(--ink-4)" size={12} strokeWidth={1.4} />
+            </InputGroupAddon>
+            <InputGroupInput
+              aria-label="Search project"
+              onChange={(e) => {
+                treeSearch.setValue(e.target.value);
+                setSearchQuery(e.target.value);
+              }}
+              placeholder="Search project"
+              value={treeSearch.value ?? ''}
+            />
+            <InputGroupAddon align="inline-end">
+              <Kbd className="navigator__search-kbd">⌘K</Kbd>
+            </InputGroupAddon>
+          </InputGroup>
         </div>
       </div>
 
@@ -280,24 +290,32 @@ export function LoreNavigator() {
         </div>
       </div>
 
-      <div className="navigator__extras">
-        <div className="navigator__divider" />
-        {MISC_ITEMS.map(({ Icon, label, badge }) => (
-          <button className="navigator__misc-item" key={label} type="button">
-            <Icon size={12} color="var(--ink-3)" strokeWidth={1.4} />
-            <span>{label}</span>
-            {badge && <span className="navigator__badge">{badge}</span>}
-          </button>
-        ))}
-      </div>
+      <div className="navigator__footer-shell">
+        <div className="navigator__extras">
+          <div className="navigator__divider" />
+          {MISC_ITEMS.map(({ Icon, label, badge }) => (
+            <button className="navigator__misc-item" key={label} type="button">
+              <Icon size={12} color="var(--ink-3)" strokeWidth={1.4} />
+              <span>{label}</span>
+              {badge && (
+                <Badge className="navigator__badge" variant="secondary">
+                  {badge}
+                </Badge>
+              )}
+            </button>
+          ))}
+        </div>
 
-      <div className="navigator__footer">
-        <span>Saved 14:02</span>
-        <span className="navigator__footer-version">{appVersion ? `v${appVersion}` : "v…"}</span>
+        <div className="navigator__footer">
+          <span>Saved 14:02</span>
+          <span className="navigator__footer-version">{appVersion ? `v${appVersion}` : 'v…'}</span>
+        </div>
       </div>
-    </nav>
+    </div>
   );
 }
+
+export const LoreNavigator = LoreFileTree;
 
 export function InlineEntityTag({
   className,
@@ -306,13 +324,13 @@ export function InlineEntityTag({
 }: {
   className?: string;
   label: string;
-  tone: "character" | "draft" | "faction" | "location" | "lore" | "muted" | "system";
+  tone: 'character' | 'draft' | 'faction' | 'location' | 'lore' | 'muted' | 'system';
 }) {
   return (
     <span
       className={cn(
-        "entity-link",
-        tone === "muted" ? "entity-link--muted" : getTypeTone(tone),
+        'entity-link',
+        tone === 'muted' ? 'entity-link--muted' : getTypeTone(tone),
         className,
       )}
     >

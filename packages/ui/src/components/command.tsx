@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { Command as CommandPrimitive } from "cmdk";
+import { CheckIcon, SearchIcon } from "lucide-react";
 
 import { cn } from "@lore/ui/lib/utils";
 import {
@@ -12,7 +13,6 @@ import {
   DialogTitle,
 } from "@lore/ui/components/dialog";
 import { InputGroup, InputGroupAddon } from "@lore/ui/components/input-group";
-import { SearchIcon, CheckIcon } from "lucide-react";
 
 function Command({ className, ...props }: React.ComponentProps<typeof CommandPrimitive>) {
   return (

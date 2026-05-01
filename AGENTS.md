@@ -323,6 +323,7 @@ Post-MVP (do not implement now): Timelines, Canvas/connection board, plugin syst
 ### The Shared Boundary
 
 - Types, validation schemas, and frontmatter parsing rules → `packages/shared` (`@lore/shared`).
+- shadcn source files, generated components, and generated hooks live in `packages/ui`; `apps/desktop` consumes `@lore/ui` and should not keep its own generated shadcn components or hooks.
 - `apps/desktop` imports from `@lore/shared`.
 - `@lore/shared` never imports from `apps/desktop` or any Tauri/browser API.
 

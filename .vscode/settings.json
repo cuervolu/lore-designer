@@ -13,5 +13,8 @@
   },
   "search.exclude": {
     "**/routeTree.gen.ts": true
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
   }
 }

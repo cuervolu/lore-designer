@@ -1,7 +1,7 @@
-import type { DocumentRecord, LoreTypeTag, WorkspaceNode } from "@/types/editor";
+import type { DocumentRecord, LoreTypeTag, WorkspaceNode } from '@/types/editor';
 
 function flattenWorkspaceNode(node: WorkspaceNode, paths: string[]) {
-  if (node.kind === "directory") {
+  if (node.kind === 'directory') {
     paths.push(`${node.path}/`);
   } else {
     paths.push(node.path);
@@ -29,7 +29,7 @@ export function isDocumentPath(
 
 export function formatFieldValue(value: number | string | string[]) {
   if (Array.isArray(value)) {
-    return value.join(", ");
+    return value.join(', ');
   }
 
   return String(value);

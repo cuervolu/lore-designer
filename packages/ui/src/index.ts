@@ -8,4 +8,5 @@ export {
   CardHeader,
   CardTitle,
 } from "./components/card";
+export { ThemeProvider, useTheme } from "./components/theme-provider";
 export { cn } from "./lib/utils";

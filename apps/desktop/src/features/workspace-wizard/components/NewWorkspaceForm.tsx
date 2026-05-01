@@ -1,5 +1,5 @@
-import { AlertTriangle, Check, ChevronLeft, Feather, Folder } from "lucide-react";
-import { useState } from "react";
+import { AlertTriangle, Check, ChevronLeft, Feather, Folder } from 'lucide-react';
+import { useState } from 'react';
 
 interface NewWorkspaceFormProps {
   onBack: () => void;
@@ -7,8 +7,8 @@ interface NewWorkspaceFormProps {
 }
 
 export function NewWorkspaceForm({ onBack, onCreate }: NewWorkspaceFormProps) {
-  const [name, setName] = useState("");
-  const [parent, setParent] = useState("~/Worlds");
+  const [name, setName] = useState('');
+  const [parent, setParent] = useState('~/Worlds');
   const [openAfter, setOpenAfter] = useState(true);
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -16,16 +16,16 @@ export function NewWorkspaceForm({ onBack, onCreate }: NewWorkspaceFormProps) {
   const slug = name
     .trim()
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
-  const fullPath = slug ? `${parent.replace(/\/$/, "")}/${slug}` : `${parent.replace(/\/$/, "")}/…`;
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+  const fullPath = slug ? `${parent.replace(/\/$/, '')}/${slug}` : `${parent.replace(/\/$/, '')}/…`;
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     const errs: Record<string, string> = {};
-    if (!name.trim()) errs.name = "Give your world a name.";
-    else if (name.trim().length < 2) errs.name = "Names must be at least 2 characters.";
-    if (!parent.trim()) errs.parent = "Choose a folder.";
+    if (!name.trim()) errs.name = 'Give your world a name.';
+    else if (name.trim().length < 2) errs.name = 'Names must be at least 2 characters.';
+    if (!parent.trim()) errs.parent = 'Choose a folder.';
     setErrors(errs);
     if (Object.keys(errs).length) return;
     setSubmitting(true);
@@ -36,12 +36,12 @@ export function NewWorkspaceForm({ onBack, onCreate }: NewWorkspaceFormProps) {
 
   return (
     <div className="wiz-inner wiz-fade">
-      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
         <button
           aria-label="Back"
           className="btn ghost"
           onClick={onBack}
-          style={{ width: "2rem", padding: 0, flexShrink: 0 }}
+          style={{ width: '2rem', padding: 0, flexShrink: 0 }}
           type="button"
         >
           <ChevronLeft size={16} />
@@ -49,20 +49,20 @@ export function NewWorkspaceForm({ onBack, onCreate }: NewWorkspaceFormProps) {
         <div>
           <div
             style={{
-              fontSize: "0.6875rem",
+              fontSize: '0.6875rem',
               fontWeight: 600,
-              color: "var(--muted-foreground)",
-              textTransform: "uppercase",
-              letterSpacing: "0.08em",
+              color: 'var(--muted-foreground)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.08em',
             }}
           >
             Step 1 of 1
           </div>
           <div
             style={{
-              fontSize: "1.125rem",
+              fontSize: '1.125rem',
               fontWeight: 700,
-              letterSpacing: "-0.01em",
+              letterSpacing: '-0.01em',
               marginTop: 2,
             }}
           >
@@ -105,7 +105,7 @@ export function NewWorkspaceForm({ onBack, onCreate }: NewWorkspaceFormProps) {
               placeholder="~/Worlds"
               value={parent}
             />
-            <button className="btn" onClick={() => setParent("~/Documents/Worlds")} type="button">
+            <button className="btn" onClick={() => setParent('~/Documents/Worlds')} type="button">
               <Folder size={14} /> Browse…
             </button>
           </div>
@@ -125,7 +125,7 @@ export function NewWorkspaceForm({ onBack, onCreate }: NewWorkspaceFormProps) {
             onChange={(e) => setOpenAfter(e.target.checked)}
             type="checkbox"
           />
-          <span className={`wiz-cb${openAfter ? " wiz-cb--checked" : ""}`}>
+          <span className={`wiz-cb${openAfter ? ' wiz-cb--checked' : ''}`}>
             <Check size={10} strokeWidth={2.5} style={{ opacity: openAfter ? 1 : 0 }} />
           </span>
           Open after creation

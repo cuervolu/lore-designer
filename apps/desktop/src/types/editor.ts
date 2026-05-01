@@ -1,6 +1,6 @@
-export type LoreTypeTag = "character" | "location" | "lore" | "draft" | "faction" | "system";
+export type LoreTypeTag = 'character' | 'location' | 'lore' | 'draft' | 'faction' | 'system';
 
-export type WorkspaceNodeKind = "directory" | "file";
+export type WorkspaceNodeKind = 'directory' | 'file';
 
 export interface WorkspaceNode {
   children?: WorkspaceNode[];
@@ -12,7 +12,7 @@ export interface WorkspaceNode {
   typeTag?: LoreTypeTag;
 }
 
-export type FrontmatterFieldType = "text" | "select" | "number" | "tags" | "relations";
+export type FrontmatterFieldType = 'text' | 'select' | 'number' | 'tags' | 'relations';
 
 export interface FrontmatterField {
   key: string;
@@ -24,30 +24,30 @@ export interface FrontmatterField {
 
 export interface InlineSegment {
   text: string;
-  tone?: LoreTypeTag | "muted";
+  tone?: LoreTypeTag | 'muted';
 }
 
 export type DocumentContentBlock =
   | {
       id: string;
       segments: InlineSegment[];
-      type: "paragraph";
+      type: 'paragraph';
     }
   | {
       id: string;
       text: string;
-      type: "heading";
+      type: 'heading';
     }
   | {
       icon?: string;
       id: string;
       segments: InlineSegment[];
-      type: "callout";
+      type: 'callout';
     }
   | {
       id: string;
       items: InlineSegment[][];
-      type: "bullets";
+      type: 'bullets';
     };
 
 export interface DocumentRecord {
@@ -61,7 +61,7 @@ export interface DocumentRecord {
   icon?: string;
   kind: LoreTypeTag;
   path: string;
-  status?: "draft" | "saved" | "unsaved";
+  status?: 'draft' | 'saved' | 'unsaved';
   title: string;
 }
 

@@ -1,8 +1,8 @@
-import { AlertTriangle, Copy, ExternalLink, Monitor, MoreHorizontal, Trash2 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-import type { Workspace } from "../types";
+import { AlertTriangle, Copy, ExternalLink, Monitor, MoreHorizontal, Trash2 } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import type { Workspace } from '../types';
 
-type CardAction = "copy" | "open" | "remove" | "reveal";
+type CardAction = 'copy' | 'open' | 'remove' | 'reveal';
 
 interface WorkspaceCardProps {
   onAction: (action: CardAction, workspace: Workspace) => void;
@@ -21,13 +21,13 @@ export function WorkspaceCard({ onAction, onOpen, workspace }: WorkspaceCardProp
         setMenuOpen(false);
       }
     };
-    document.addEventListener("mousedown", onDoc);
-    return () => document.removeEventListener("mousedown", onDoc);
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
   }, [menuOpen]);
 
   return (
     <div
-      className={`ws-card${!workspace.exists ? " ws-card--missing" : ""}`}
+      className={`ws-card${!workspace.exists ? ' ws-card--missing' : ''}`}
       onClick={() => workspace.exists && onOpen(workspace)}
     >
       <div
@@ -59,7 +59,7 @@ export function WorkspaceCard({ onAction, onOpen, workspace }: WorkspaceCardProp
             <button
               className="ws-popover__item"
               onClick={() => {
-                onAction("open", workspace);
+                onAction('open', workspace);
                 setMenuOpen(false);
               }}
               type="button"
@@ -69,7 +69,7 @@ export function WorkspaceCard({ onAction, onOpen, workspace }: WorkspaceCardProp
             <button
               className="ws-popover__item"
               onClick={() => {
-                onAction("reveal", workspace);
+                onAction('reveal', workspace);
                 setMenuOpen(false);
               }}
               type="button"
@@ -79,7 +79,7 @@ export function WorkspaceCard({ onAction, onOpen, workspace }: WorkspaceCardProp
             <button
               className="ws-popover__item"
               onClick={() => {
-                onAction("copy", workspace);
+                onAction('copy', workspace);
                 setMenuOpen(false);
               }}
               type="button"
@@ -90,7 +90,7 @@ export function WorkspaceCard({ onAction, onOpen, workspace }: WorkspaceCardProp
             <button
               className="ws-popover__item ws-popover__item--danger"
               onClick={() => {
-                onAction("remove", workspace);
+                onAction('remove', workspace);
                 setMenuOpen(false);
               }}
               type="button"
@@ -120,7 +120,7 @@ export function WorkspaceCard({ onAction, onOpen, workspace }: WorkspaceCardProp
               <span className="ws-badge">
                 <AlertTriangle size={10} /> Not Found
               </span>
-              <span style={{ marginLeft: "auto" }}>Last opened {workspace.lastOpened}</span>
+              <span style={{ marginLeft: 'auto' }}>Last opened {workspace.lastOpened}</span>
             </>
           )}
         </div>

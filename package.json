@@ -8,7 +8,7 @@
     "build": "vp run -r build",
     "check": "vp run -r check",
     "test": "vp run -r test",
-    "shadcn": "sh -c 'pnpm dlx shadcn@latest \"$@\" -c apps/desktop' --",
+    "shadcn": "sh -c 'pnpm dlx shadcn@latest \"$@\" -c packages/ui' --",
     "tauri:dev": "vp run @lore/desktop#tauri:dev",
     "tauri:build": "vp run @lore/desktop#tauri:build",
     "tauri": "vp run @lore/desktop#tauri",

@@ -1,8 +1,8 @@
-import { Folder, Plus, Search } from "lucide-react";
-import { useMemo, useState } from "react";
-import logo from "@assets/logo.webp";
-import type { Workspace } from "../types";
-import { WorkspaceCard } from "./WorkspaceCard";
+import { Folder, Plus, Search } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import logo from '@assets/logo.webp';
+import type { Workspace } from '../types';
+import { WorkspaceCard } from './WorkspaceCard';
 
 interface WorkspaceListProps {
   onNew: () => void;
@@ -19,7 +19,7 @@ export function WorkspaceList({
   onRemove,
   workspaces,
 }: WorkspaceListProps) {
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState('');
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -29,10 +29,10 @@ export function WorkspaceList({
     );
   }, [workspaces, query]);
 
-  const handleAction = (kind: "copy" | "open" | "remove" | "reveal", ws: Workspace) => {
-    if (kind === "open") onOpen(ws);
-    else if (kind === "remove") onRemove(ws);
-    else if (kind === "copy") {
+  const handleAction = (kind: 'copy' | 'open' | 'remove' | 'reveal', ws: Workspace) => {
+    if (kind === 'open') onOpen(ws);
+    else if (kind === 'remove') onRemove(ws);
+    else if (kind === 'copy') {
       try {
         navigator.clipboard?.writeText(ws.path);
       } catch {

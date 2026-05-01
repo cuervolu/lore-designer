@@ -1,5 +1,5 @@
-import { useEditorShellStore } from "@/store/editor-shell";
-import type { InlineSegment } from "@/types/editor";
+import { useEditorShellStore } from '@/store/editor-shell';
+import type { InlineSegment } from '@/types/editor';
 
 function RichText({ segments }: { segments: InlineSegment[] }) {
   return (
@@ -11,10 +11,10 @@ function RichText({ segments }: { segments: InlineSegment[] }) {
           <a
             key={i}
             style={{
-              color: "var(--link)",
-              textDecoration: "none",
-              borderBottom: "1px solid rgba(61,86,124,0.32)",
-              cursor: "pointer",
+              color: 'var(--link)',
+              textDecoration: 'none',
+              borderBottom: '1px solid rgba(61,86,124,0.32)',
+              cursor: 'pointer',
             }}
           >
             {seg.text}
@@ -31,7 +31,7 @@ export function DocumentEditor() {
   return (
     <section
       className="editor-document"
-      style={{ flex: 1, overflow: "auto", minHeight: 0, padding: "40px 0" }}
+      style={{ flex: 1, overflow: 'auto', minHeight: 0, padding: '40px 0' }}
     >
       <div className="editor-document__inner">
         <div className="editor-document__eyebrow">{activeDocument.kind}</div>
@@ -44,25 +44,25 @@ export function DocumentEditor() {
 
         {activeDocument.content.map((block) => {
           switch (block.type) {
-            case "heading":
+            case 'heading':
               return <h2 key={block.id}>{block.text}</h2>;
-            case "paragraph":
+            case 'paragraph':
               return (
                 <p key={block.id}>
                   <RichText segments={block.segments} />
                 </p>
               );
-            case "callout":
+            case 'callout':
               return (
                 <div className="callout" key={block.id}>
                   <RichText segments={block.segments} />
                 </div>
               );
-            case "bullets":
+            case 'bullets':
               return (
                 <ul
                   key={block.id}
-                  style={{ paddingLeft: "1.3rem", lineHeight: 1.85, margin: "0.3rem 0 1rem" }}
+                  style={{ paddingLeft: '1.3rem', lineHeight: 1.85, margin: '0.3rem 0 1rem' }}
                 >
                   {block.items.map((item, idx) => (
                     <li key={idx}>

@@ -1,7 +1,7 @@
-import { create } from "zustand";
-import type { DocumentRecord, EditorShellState, FrontmatterField, OpenTab } from "@/types/editor";
-import { mapWorkspaceToTreesData } from "./editor-shell-helpers";
-import { createInitialEditorShellState } from "./mock-data";
+import { create } from 'zustand';
+import type { DocumentRecord, EditorShellState, FrontmatterField, OpenTab } from '@/types/editor';
+import { mapWorkspaceToTreesData } from './editor-shell-helpers';
+import { createInitialEditorShellState } from './mock-data';
 
 interface EditorShellStore extends EditorShellState {
   activeDocument: DocumentRecord;
@@ -11,7 +11,7 @@ interface EditorShellStore extends EditorShellState {
   updateFrontmatterField: (
     path: string,
     fieldKey: string,
-    value: FrontmatterField["value"],
+    value: FrontmatterField['value'],
   ) => void;
 }
 
@@ -38,7 +38,7 @@ export const useEditorShellStore = create<EditorShellStore>()((set, get) => ({
       activePath: path,
       activeDocument: document,
       tabs: upsertTab(state.tabs, {
-        dirty: document.status === "unsaved",
+        dirty: document.status === 'unsaved',
         path: document.path,
         pinned: false,
         title: document.title,
@@ -60,7 +60,7 @@ export const useEditorShellStore = create<EditorShellStore>()((set, get) => ({
       frontmatter: document.frontmatter.map((field) =>
         field.key === fieldKey ? { ...field, value } : field,
       ),
-      status: "unsaved",
+      status: 'unsaved',
     };
 
     set((state) => ({
