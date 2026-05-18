@@ -99,3 +99,5 @@ __screenshots__/
 
 # Don't include personal Claude Code settings
 .claude/settings.local.json
+
+.tanstack/

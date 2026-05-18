@@ -1,13 +1,12 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
-      "@assets/*": ["src/assets/*"],
-      "@api/*": ["src/api/*"],
-      "@features/*": ["src/features/*"],
-      "@store/*": ["src/store/*"],
+      "@/*": ["./src/*"],
+      "@assets/*": ["./src/assets/*"],
+      "@api/*": ["./src/api/*"],
+      "@features/*": ["./src/features/*"],
+      "@store/*": ["./src/store/*"],
       "@lore/ui": ["../../packages/ui/src/index.ts"],
       "@lore/ui/components": ["../../packages/ui/src/components"],
       "@lore/ui/components/*": ["../../packages/ui/src/components/*"],

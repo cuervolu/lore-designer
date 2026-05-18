@@ -34,7 +34,7 @@ export function WorkspaceList({
     else if (kind === 'remove') onRemove(ws);
     else if (kind === 'copy') {
       try {
-        navigator.clipboard?.writeText(ws.path);
+        void navigator.clipboard?.writeText(ws.path);
       } catch {
         /* noop */
       }

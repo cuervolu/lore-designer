@@ -12,20 +12,17 @@
     "tauri:dev": "vp run @lore/desktop#tauri:dev",
     "tauri:build": "vp run @lore/desktop#tauri:build",
     "tauri": "vp run @lore/desktop#tauri",
-    "prepare": "vp config"
+    "prepare": "vp config",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
+    "fmt": "oxfmt",
+    "fmt:check": "oxfmt --check"
   },
   "devDependencies": {
+    "oxfmt": "^0.50.0",
+    "oxlint": "^1.65.0",
     "vite": "npm:@voidzero-dev/vite-plus-core@^0.1.20",
     "vite-plus": "latest"
   },
-  "packageManager": "pnpm@10.33.2",
-  "pnpm": {
-    "overrides": {
-      "vite": "npm:@voidzero-dev/vite-plus-core@latest",
-      "vitest": "npm:@voidzero-dev/vite-plus-test@latest"
-    },
-    "onlyBuiltDependencies": [
-      "esbuild"
-    ]
-  }
+  "packageManager": "pnpm@11.1.3"
 }
