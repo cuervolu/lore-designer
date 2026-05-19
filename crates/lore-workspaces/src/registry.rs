@@ -37,7 +37,8 @@ pub fn create_workspace(
     }
 
     let validated_name = validate_name(&request.name)?;
-    let root_path = validate_root_path(&request.path)?;
+    let parent_path = validate_parent_path(&request.parent_path)?;
+    let root_path = parent_path.join(slugify_project_name(validated_name));
 
     ensure_destination_ready(&root_path)?;
 
@@ -197,7 +198,7 @@ fn validate_name(name: &str) -> Result<&str, WorkspaceError> {
     Ok(trimmed)
 }
 
-fn validate_root_path(path: &str) -> Result<PathBuf, WorkspaceError> {
+fn validate_parent_path(path: &str) -> Result<PathBuf, WorkspaceError> {
     let trimmed = path.trim();
     if trimmed.is_empty() {
         return Err(WorkspaceError::EmptyPath);
@@ -289,11 +290,12 @@ mod tests {
     #[test]
     fn creates_blank_workspace_scaffold() {
         let temp = tempdir().expect("tempdir");
-        let root_path = temp.path().join("ashen-coast");
+        let parent_path = temp.path().join("Lore");
+        let root_path = parent_path.join("the-ashen-coast");
 
         let result = create_workspace(CreateWorkspaceRequest {
             name: "The Ashen Coast".to_string(),
-            path: root_path.display().to_string(),
+            parent_path: parent_path.display().to_string(),
             template_id: "blank".to_string(),
             app_version: "0.1.0".to_string(),
         })
@@ -305,18 +307,20 @@ mod tests {
         assert!(root_path.join("the-ashen-coast.lore").is_file());
         assert_eq!(result.template_id, "blank");
         assert_eq!(result.workspace_version.major, 1);
+        assert_eq!(result.root_path, root_path.display().to_string());
     }
 
     #[test]
     fn rejects_existing_non_empty_directory() {
         let temp = tempdir().expect("tempdir");
-        let root_path = temp.path().join("occupied");
+        let parent_path = temp.path().join("Lore");
+        let root_path = parent_path.join("occupied");
         fs::create_dir_all(&root_path).expect("create root");
         fs::write(root_path.join("README.md"), "occupied").expect("seed file");
 
         let error = create_workspace(CreateWorkspaceRequest {
             name: "Occupied".to_string(),
-            path: root_path.display().to_string(),
+            parent_path: parent_path.display().to_string(),
             template_id: "blank".to_string(),
             app_version: "0.1.0".to_string(),
         })
@@ -332,16 +336,34 @@ mod tests {
     #[test]
     fn rejects_unknown_template() {
         let temp = tempdir().expect("tempdir");
-        let root_path = temp.path().join("unknown");
+        let parent_path = temp.path().join("Lore");
 
         let error = create_workspace(CreateWorkspaceRequest {
             name: "Unknown".to_string(),
-            path: root_path.display().to_string(),
+            parent_path: parent_path.display().to_string(),
             template_id: "mystery".to_string(),
             app_version: "0.1.0".to_string(),
         })
         .expect_err("must fail");
 
         assert!(error.to_string().contains("does not exist"));
+    }
+
+    #[test]
+    fn slugifies_workspace_directory_from_name() {
+        let temp = tempdir().expect("tempdir");
+        let parent_path = temp.path().join("Lore");
+        let root_path = parent_path.join("the-quiet-atlas");
+
+        create_workspace(CreateWorkspaceRequest {
+            name: "The Quiet Atlas".to_string(),
+            parent_path: parent_path.display().to_string(),
+            template_id: "blank".to_string(),
+            app_version: "0.1.0".to_string(),
+        })
+        .expect("workspace created");
+
+        assert!(root_path.is_dir());
+        assert!(root_path.join("the-quiet-atlas.lore").is_file());
     }
 }

@@ -32,7 +32,7 @@ export interface WorkspaceTemplateSummary {
 export interface CreateWorkspaceRequest {
   appVersion: string;
   name: string;
-  path: string;
+  parentPath: string;
   templateId: string;
 }
 

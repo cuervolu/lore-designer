@@ -15,7 +15,7 @@ interface NewProjectPaneProps {
 
 export function NewProjectPane({ appVersion, onOpen, templates }: NewProjectPaneProps) {
   const [name, setName] = useState('');
-  const [path, setPath] = useState('');
+  const [parentPath, setParentPath] = useState('');
   const [templateId, setTemplateId] = useState('blank');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -39,12 +39,12 @@ export function NewProjectPane({ appVersion, onOpen, templates }: NewProjectPane
     void documentDir()
       .then((directory) => {
         if (!cancelled) {
-          setPath((current) => current || `${directory.replace(/\/$/, '')}/Lore`);
+          setParentPath((current) => current || `${directory.replace(/\/$/, '')}/Lore`);
         }
       })
       .catch(() => {
         if (!cancelled) {
-          setPath((current) => current || 'Lore');
+          setParentPath((current) => current || 'Lore');
         }
       });
 
@@ -58,22 +58,32 @@ export function NewProjectPane({ appVersion, onOpen, templates }: NewProjectPane
     [templateId, templates],
   );
 
+  const workspaceSlug = useMemo(() => slugifyProjectName(name), [name]);
+  const workspacePathPreview = useMemo(() => {
+    const trimmedParentPath = parentPath.trim().replace(/\/$/, '');
+    if (!trimmedParentPath) {
+      return workspaceSlug || 'workspace';
+    }
+
+    return `${trimmedParentPath}/${workspaceSlug || 'workspace'}`;
+  }, [parentPath, workspaceSlug]);
+
   const canSubmit =
     !submitting &&
     name.trim().length >= 2 &&
-    path.trim().length > 0 &&
+    parentPath.trim().length > 0 &&
     selectedTemplate?.supportsCreation === true;
 
   const handleChooseLocation = async () => {
     const selected = await open({
-      defaultPath: path,
+      defaultPath: parentPath,
       directory: true,
       multiple: false,
       title: 'Choose project folder',
     });
 
     if (typeof selected === 'string') {
-      setPath(selected);
+      setParentPath(selected);
       setError(null);
     }
   };
@@ -89,8 +99,8 @@ export function NewProjectPane({ appVersion, onOpen, templates }: NewProjectPane
       return;
     }
 
-    if (!path.trim()) {
-      setError('Choose where the project should be created.');
+    if (!parentPath.trim()) {
+      setError('Choose the parent folder for the project.');
       return;
     }
 
@@ -106,7 +116,7 @@ export function NewProjectPane({ appVersion, onOpen, templates }: NewProjectPane
       const workspace = await createWorkspace({
         appVersion: appVersion ?? '0.1.0',
         name: name.trim(),
-        path: path.trim(),
+        parentPath: parentPath.trim(),
         templateId: selectedTemplate.id,
       });
       onOpen(workspace);
@@ -139,16 +149,16 @@ export function NewProjectPane({ appVersion, onOpen, templates }: NewProjectPane
           <div style={{ display: 'flex', gap: 6 }}>
             <input
               className="wiz-input wiz-input--mono"
-              onChange={(e) => setPath(e.target.value)}
+              onChange={(e) => setParentPath(e.target.value)}
               style={{ flex: 1 }}
-              value={path}
+              value={parentPath}
             />
             <button className="ld-btn" onClick={() => void handleChooseLocation()} type="button">
               Choose…
             </button>
           </div>
           <div className="wiz-input-hint">
-            Enter the target workspace folder. It may already exist if it is empty.
+            The project will be created inside it as <code>{workspacePathPreview}</code>.
           </div>
         </div>
       </div>
@@ -208,6 +218,16 @@ export function NewProjectPane({ appVersion, onOpen, templates }: NewProjectPane
       </div>
     </div>
   );
+}
+
+function slugifyProjectName(name: string) {
+  const slug = name
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+  return slug || 'workspace';
 }
 
 function SampleSummary() {

@@ -6,7 +6,8 @@ pub const WORKSPACE_VERSION: u32 = 1;
 #[serde(rename_all = "camelCase")]
 pub struct CreateWorkspaceRequest {
     pub name: String,
-    pub path: String,
+    #[serde(alias = "path")]
+    pub parent_path: String,
     pub template_id: String,
     pub app_version: String,
 }
