@@ -31,6 +31,7 @@ tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 tauri-plugin-tracing = { workspace = true, features = ["colored"] }
 tokio = { version = "1", features = ["time", "rt"] }
+lore-workspaces = { path = "../../../crates/lore-workspaces" }
 
 [target.'cfg(any(target_os = "macos", windows, target_os = "linux"))'.dependencies]
 tauri-plugin-updater = "2.10.1"

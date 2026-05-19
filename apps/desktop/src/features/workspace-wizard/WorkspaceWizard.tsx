@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Star } from 'lucide-react';
 import logo from '@assets/logo.webp';
+import { listWorkspaceTemplates } from '@api/workspace';
 import { useAppVersion } from '@/api/app';
+import type { CreateWorkspaceResult, WorkspaceTemplateSummary } from './types';
 import { RecentPane } from './components/RecentPane';
 import { NewProjectPane } from './components/NewProjectPane';
 import { OpenExistingPane } from './components/OpenExistingPane';
@@ -59,12 +61,41 @@ const PINNED = [
 type WizardTab = 'recent' | 'new' | 'open';
 
 interface WorkspaceWizardProps {
-  onOpenWorkspace: () => void;
+  onOpenWorkspace: (workspace?: CreateWorkspaceResult) => void;
 }
 
 export function WorkspaceWizard({ onOpenWorkspace }: WorkspaceWizardProps) {
   const [tab, setTab] = useState<WizardTab>('recent');
+  const [templates, setTemplates] = useState<WorkspaceTemplateSummary[]>([]);
+  const [templatesError, setTemplatesError] = useState<string | null>(null);
   const appVersion = useAppVersion();
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void listWorkspaceTemplates()
+      .then((items) => {
+        if (cancelled) {
+          return;
+        }
+
+        const sorted = [...items].sort((left, right) => left.sortOrder - right.sortOrder);
+        setTemplates(sorted);
+        setTemplatesError(null);
+      })
+      .catch((error) => {
+        if (cancelled) {
+          return;
+        }
+
+        setTemplates([]);
+        setTemplatesError(error instanceof Error ? error.message : 'Failed to load templates.');
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <div className="wiz-root ld-fade">
@@ -106,7 +137,12 @@ export function WorkspaceWizard({ onOpenWorkspace }: WorkspaceWizardProps) {
 
         <div className="wiz-rail__section-label">Pinned</div>
         {PINNED.map((p) => (
-          <button className="wiz-pinned-item" key={p.name} onClick={onOpenWorkspace} type="button">
+          <button
+            className="wiz-pinned-item"
+            key={p.name}
+            onClick={() => onOpenWorkspace()}
+            type="button"
+          >
             <Star size={11} color="var(--ink-4)" strokeWidth={1.4} />
             <div>
               <div className="wiz-pinned-item__name">{p.name}</div>
@@ -123,7 +159,20 @@ export function WorkspaceWizard({ onOpenWorkspace }: WorkspaceWizardProps) {
         {tab === 'recent' && (
           <RecentPane onNew={() => setTab('new')} onOpen={onOpenWorkspace} recents={RECENTS} />
         )}
-        {tab === 'new' && <NewProjectPane onOpen={onOpenWorkspace} />}
+        {tab === 'new' && (
+          <>
+            {templatesError && (
+              <div className="wiz-input-hint" style={{ color: '#c6654f', marginBottom: 12 }}>
+                {templatesError}
+              </div>
+            )}
+            <NewProjectPane
+              appVersion={appVersion}
+              onOpen={onOpenWorkspace}
+              templates={templates}
+            />
+          </>
+        )}
         {tab === 'open' && <OpenExistingPane onOpen={onOpenWorkspace} />}
       </main>
     </div>

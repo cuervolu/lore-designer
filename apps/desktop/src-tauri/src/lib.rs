@@ -1,6 +1,7 @@
+mod commands;
 mod core;
 mod system_info;
-use core::config::{commands, preferences};
+use core::config::{commands as config_commands, preferences};
 use tauri_plugin_tracing::{Builder, Rotation, RotationStrategy};
 use tracing::{error, info};
 
@@ -42,11 +43,13 @@ pub fn run() {
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_store::Builder::new().build())
         .invoke_handler(tauri::generate_handler![
-            commands::get_preferences,
-            commands::save_preferences,
-            commands::set_theme,
-            commands::set_language,
-            commands::update_last_project,
+            config_commands::get_preferences,
+            config_commands::save_preferences,
+            config_commands::set_theme,
+            config_commands::set_language,
+            config_commands::update_last_project,
+            commands::workspace::list_workspace_templates,
+            commands::workspace::create_workspace,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

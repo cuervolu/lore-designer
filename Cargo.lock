@@ -2163,10 +2163,23 @@ name = "lore-core"
 version = "0.1.0"
 
 [[package]]
+name = "lore-workspaces"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 2.0.18",
+ "toml 0.9.12+spec-1.1.0",
+]
+
+[[package]]
 name = "lore_designer"
 version = "0.1.0"
 dependencies = [
  "chrono",
+ "lore-workspaces",
  "serde",
  "serde_json",
  "sysinfo",

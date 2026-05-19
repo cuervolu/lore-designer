@@ -1,36 +1,122 @@
-import { useState } from 'react';
+import { open } from '@tauri-apps/plugin-dialog';
+import { useEffect, useMemo, useState } from 'react';
+import { documentDir } from '@tauri-apps/api/path';
+import { createWorkspace } from '@api/workspace';
+import type {
+  CreateWorkspaceResult,
+  WorkspaceTemplateSummary,
+} from '@features/workspace-wizard/types';
 
 interface NewProjectPaneProps {
-  onOpen: () => void;
+  appVersion: string | null;
+  onOpen: (workspace: CreateWorkspaceResult) => void;
+  templates: WorkspaceTemplateSummary[];
 }
 
-const TEMPLATES = [
-  {
-    id: 'blank',
-    title: 'Blank project',
-    desc: 'An empty workspace. Add characters, places, and drafts as you go.',
-  },
-  {
-    id: 'novel',
-    title: 'Long-form novel',
-    desc: 'Pre-organized for chapters, character files, and a places index.',
-  },
-  {
-    id: 'game',
-    title: 'Game / narrative bible',
-    desc: 'Factions, regions, and quest-style threads for ongoing development.',
-  },
-  {
-    id: 'sample',
-    title: 'Sample — Saltreach Cycle',
-    desc: 'A small worked example showing how characters, places, and drafts link together.',
-  },
-];
-
-export function NewProjectPane({ onOpen }: NewProjectPaneProps) {
+export function NewProjectPane({ appVersion, onOpen, templates }: NewProjectPaneProps) {
   const [name, setName] = useState('');
-  const [path, setPath] = useState('~/Documents/Lore');
-  const [template, setTemplate] = useState('blank');
+  const [path, setPath] = useState('');
+  const [templateId, setTemplateId] = useState('blank');
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (templates.length === 0) {
+      return;
+    }
+
+    const nextSelected = templates.find((template) => template.id === templateId)
+      ? templateId
+      : templates[0].id;
+    if (nextSelected !== templateId) {
+      setTemplateId(nextSelected);
+    }
+  }, [templateId, templates]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void documentDir()
+      .then((directory) => {
+        if (!cancelled) {
+          setPath((current) => current || `${directory.replace(/\/$/, '')}/Lore`);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setPath((current) => current || 'Lore');
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const selectedTemplate = useMemo(
+    () => templates.find((template) => template.id === templateId) ?? null,
+    [templateId, templates],
+  );
+
+  const canSubmit =
+    !submitting &&
+    name.trim().length >= 2 &&
+    path.trim().length > 0 &&
+    selectedTemplate?.supportsCreation === true;
+
+  const handleChooseLocation = async () => {
+    const selected = await open({
+      defaultPath: path,
+      directory: true,
+      multiple: false,
+      title: 'Choose project folder',
+    });
+
+    if (typeof selected === 'string') {
+      setPath(selected);
+      setError(null);
+    }
+  };
+
+  const handleCreateProject = async () => {
+    if (!selectedTemplate) {
+      setError('No template is available yet.');
+      return;
+    }
+
+    if (!name.trim()) {
+      setError('Give your project a name.');
+      return;
+    }
+
+    if (!path.trim()) {
+      setError('Choose where the project should be created.');
+      return;
+    }
+
+    if (!selectedTemplate.supportsCreation) {
+      setError(`${selectedTemplate.displayName} is not available yet.`);
+      return;
+    }
+
+    setSubmitting(true);
+    setError(null);
+
+    try {
+      const workspace = await createWorkspace({
+        appVersion: appVersion ?? '0.1.0',
+        name: name.trim(),
+        path: path.trim(),
+        templateId: selectedTemplate.id,
+      });
+      onOpen(workspace);
+    } catch (nextError) {
+      const message = nextError instanceof Error ? nextError.message : 'Failed to create project.';
+      setError(message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="wiz-form-wrap">
@@ -57,12 +143,12 @@ export function NewProjectPane({ onOpen }: NewProjectPaneProps) {
               style={{ flex: 1 }}
               value={path}
             />
-            <button className="ld-btn" type="button">
+            <button className="ld-btn" onClick={() => void handleChooseLocation()} type="button">
               Choose…
             </button>
           </div>
           <div className="wiz-input-hint">
-            A folder will be created at this path. You can move it later.
+            Enter the target workspace folder. It may already exist if it is empty.
           </div>
         </div>
       </div>
@@ -70,32 +156,54 @@ export function NewProjectPane({ onOpen }: NewProjectPaneProps) {
       <div className="wiz-form-row">
         <label className="wiz-form-label">Start from</label>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {TEMPLATES.map((t) => (
+          {templates.map((template) => (
             <button
-              className={`wiz-template-option${template === t.id ? ' selected' : ''}`}
-              key={t.id}
-              onClick={() => setTemplate(t.id)}
+              aria-disabled={!template.supportsCreation}
+              className={`wiz-template-option${templateId === template.id ? ' selected' : ''}`}
+              key={template.id}
+              onClick={() => setTemplateId(template.id)}
+              style={!template.supportsCreation ? { opacity: 0.62 } : undefined}
               type="button"
             >
-              <div className={`wiz-template-option__radio${template === t.id ? ' selected' : ''}`}>
-                {template === t.id && <div className="wiz-template-option__radio-dot" />}
+              <div
+                className={`wiz-template-option__radio${templateId === template.id ? ' selected' : ''}`}
+              >
+                {templateId === template.id && <div className="wiz-template-option__radio-dot" />}
               </div>
               <div>
-                <div className="wiz-template-option__title">{t.title}</div>
-                <div className="wiz-template-option__desc">{t.desc}</div>
-                {t.id === 'sample' && template === 'sample' && <SampleSummary />}
+                <div className="wiz-template-option__title">
+                  {template.displayName}
+                  {!template.supportsCreation && (
+                    <span style={{ marginLeft: 8, color: 'var(--ink-4)', fontSize: 11 }}>
+                      Coming soon
+                    </span>
+                  )}
+                </div>
+                <div className="wiz-template-option__desc">{template.description}</div>
+                {template.id === 'sample' && templateId === 'sample' && <SampleSummary />}
               </div>
             </button>
           ))}
         </div>
       </div>
 
+      {error && (
+        <div className="wiz-input-hint" style={{ color: '#c6654f' }}>
+          {error}
+        </div>
+      )}
+
       <div className="wiz-form-actions">
         <button className="ld-btn" type="button">
           Cancel
         </button>
-        <button className="ld-btn primary" onClick={onOpen} type="button">
-          Create project
+        <button
+          className="ld-btn primary"
+          disabled={!canSubmit}
+          onClick={() => void handleCreateProject()}
+          type="button"
+        >
+          {submitting ? 'Creating…' : 'Create project'}
         </button>
       </div>
     </div>

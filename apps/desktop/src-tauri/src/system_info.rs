@@ -1,4 +1,4 @@
-﻿use chrono::Local;
+use chrono::Local;
 use tracing::info;
 use sysinfo::System;
 use tauri::AppHandle;
