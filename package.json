@@ -19,10 +19,10 @@
     "fmt:check": "oxfmt --check"
   },
   "devDependencies": {
-    "oxfmt": "^0.50.0",
-    "oxlint": "^1.67.0",
-    "vite": "npm:@voidzero-dev/vite-plus-core@^0.1.22",
+    "oxfmt": "^0.58.0",
+    "oxlint": "^1.73.0",
+    "vite": "npm:@voidzero-dev/vite-plus-core@^0.2.4",
     "vite-plus": "latest"
   },
-  "packageManager": "pnpm@11.4.0"
+  "packageManager": "pnpm@11.10.0"
 }

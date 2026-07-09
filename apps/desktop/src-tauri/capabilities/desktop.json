@@ -17,6 +17,8 @@
     "core:window:allow-set-title",
     "opener:allow-open-path",
     "opener:allow-reveal-item-in-dir",
-    "opener:allow-default-urls"
+    "opener:allow-default-urls",
+    "notification:allow-check-permissions",
+    "notification:allow-is-permission-granted"
   ]
 }
