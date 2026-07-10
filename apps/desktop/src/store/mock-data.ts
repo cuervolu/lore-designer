@@ -1,492 +1,226 @@
-import type { DocumentRecord, EditorShellState, WorkspaceNode } from '@/types/editor';
+import type { ProjectSummary, WorkspaceDataset, WorkspaceDatasetId } from '@/types/editor';
 
-const workspaceNodes: WorkspaceNode[] = [
+export const RECENT_PROJECTS: ProjectSummary[] = [
   {
-    children: [
-      {
-        icon: '🪽',
-        id: 'character-wren',
-        kind: 'file',
-        name: 'Wren of the Hollow',
-        path: 'Characters/Wren of the Hollow.md',
-        typeTag: 'character',
-      },
-      {
-        icon: '🗡️',
-        id: 'character-calder',
-        kind: 'file',
-        name: 'Calder Vex',
-        path: 'Characters/Calder Vex.md',
-        typeTag: 'character',
-      },
-      {
-        icon: '🫐',
-        id: 'character-mira',
-        kind: 'file',
-        name: 'Mira Quist',
-        path: 'Characters/Mira Quist.md',
-        typeTag: 'character',
-      },
-      {
-        icon: '🔥',
-        id: 'character-keeper',
-        kind: 'file',
-        name: 'The Keeper',
-        path: 'Characters/The Keeper.md',
-        typeTag: 'character',
-      },
-    ],
-    icon: '👥',
-    id: 'dir-characters',
-    kind: 'directory',
-    name: 'Characters',
-    path: 'Characters',
+    datasetId: 'default',
+    entryCount: 47,
+    id: 'shattered-coast',
+    lastEdited: 'Edited 2 hours ago',
+    name: 'The Shattered Coast',
   },
   {
-    children: [
-      {
-        icon: '⚓',
-        id: 'location-saltreach',
-        kind: 'file',
-        name: 'Saltreach',
-        path: 'Locations/Saltreach.md',
-        typeTag: 'location',
-      },
-      {
-        icon: '🌲',
-        id: 'location-blackpine',
-        kind: 'file',
-        name: 'Blackpine Wood',
-        path: 'Locations/Blackpine Wood.md',
-        typeTag: 'location',
-      },
-      {
-        icon: '🏰',
-        id: 'location-ash-tower',
-        kind: 'file',
-        name: 'The Ash Tower',
-        path: 'Locations/The Ash Tower.md',
-        typeTag: 'location',
-      },
-    ],
-    icon: '🗺️',
-    id: 'dir-locations',
-    kind: 'directory',
-    name: 'Locations',
-    path: 'Locations',
+    datasetId: 'default',
+    entryCount: 112,
+    id: 'ashfall-chronicles',
+    lastEdited: 'Edited 3 days ago',
+    name: 'Ashfall Chronicles',
   },
   {
-    children: [
-      {
-        icon: '⚔️',
-        id: 'faction-grey-covenant',
-        kind: 'file',
-        name: 'The Grey Covenant',
-        path: 'Factions/The Grey Covenant.md',
-        typeTag: 'faction',
-      },
-    ],
-    icon: '⚔️',
-    id: 'dir-factions',
-    kind: 'directory',
-    name: 'Factions',
-    path: 'Factions',
-  },
-  {
-    children: [
-      {
-        icon: '📜',
-        id: 'lore-burning',
-        kind: 'file',
-        name: 'The Burning of Saltreach',
-        path: 'Lore/The Burning of Saltreach.md',
-        typeTag: 'lore',
-      },
-    ],
-    icon: '📚',
-    id: 'dir-lore',
-    kind: 'directory',
-    name: 'Lore',
-    path: 'Lore',
-  },
-  {
-    children: [
-      {
-        icon: '📄',
-        id: 'draft-chapter-01',
-        kind: 'file',
-        name: 'Chapter 01',
-        path: 'Drafts/Chapter 01.md',
-        typeTag: 'draft',
-      },
-      {
-        icon: '📄',
-        id: 'draft-outline',
-        kind: 'file',
-        name: 'Outline',
-        path: 'Drafts/Outline.md',
-        typeTag: 'draft',
-      },
-    ],
-    icon: '📝',
-    id: 'dir-drafts',
-    kind: 'directory',
-    name: 'Drafts',
-    path: 'Drafts',
-  },
-  {
-    icon: '📕',
-    id: 'file-readme',
-    kind: 'file',
-    name: 'README',
-    path: 'README.md',
-    typeTag: 'system',
+    datasetId: 'default',
+    entryCount: 9,
+    id: 'vaelthorn',
+    lastEdited: 'Edited 1 week ago',
+    name: 'Vaelthorn',
+    status: 'Draft',
   },
 ];
 
-const documents: Record<string, DocumentRecord> = {
-  'Characters/Wren of the Hollow.md': {
-    backlinks: ['The Burning of Saltreach', 'Calder Vex', 'Saltreach'],
-    content: [
-      {
-        id: 'wren-intro-1',
-        segments: [
-          {
-            text: 'She was born with a name no one used. The villagers called her Wren for the bird, for her smallness, for how she always seemed about to take flight.',
-          },
-        ],
-        type: 'paragraph',
-      },
-      {
-        id: 'wren-intro-2',
-        segments: [
-          { text: 'On the morning the ' },
-          { text: 'Burning of Saltreach', tone: 'lore' },
-          {
-            text: ' began, she was at the harbour with a basket of letters bound for the keeper. The smoke arrived before the news did.',
-          },
-        ],
-        type: 'paragraph',
-      },
-      { id: 'wren-bearing', text: 'Manner & bearing', type: 'heading' },
-      {
-        id: 'wren-bearing-1',
-        segments: [
-          {
-            text: 'Wren keeps her own counsel. She speaks quickly when she speaks at all, and only when there is something exact to be said. Strangers mistake this for shyness.',
-          },
-        ],
-        type: 'paragraph',
-      },
-      {
-        icon: '🪽',
-        id: 'wren-callout',
-        segments: [
-          {
-            text: 'She is bound to a raven called Notch. The bond is not magical, exactly, but the raven knows things it should not.',
-          },
-        ],
-        type: 'callout',
-      },
-      { id: 'wren-known', text: 'Known whereabouts', type: 'heading' },
-      {
-        id: 'wren-bullets',
-        items: [
-          [
-            { text: 'Last seen at ' },
-            { text: 'Saltreach', tone: 'location' },
-            { text: ', the morning of the fires.' },
-          ],
-          [
-            { text: 'Believed to have travelled north through ' },
-            { text: 'Blackpine Wood', tone: 'location' },
-            { text: '.' },
-          ],
-          [
-            { text: 'One letter, unsigned, arrived at the ' },
-            { text: 'Ash Tower', tone: 'location' },
-            { text: ' three weeks later.' },
-          ],
-        ],
-        type: 'bullets',
-      },
-      { id: 'wren-open-threads', text: 'Open threads', type: 'heading' },
-      {
-        id: 'wren-open-threads-1',
-        items: [
-          [{ text: 'Who taught her to read the old script?' }],
-          [{ text: "What did the raven witness in the keeper's chamber?" }],
-          [{ text: 'Why did she leave Verdant Hollow with only one satchel?' }],
-        ],
-        type: 'bullets',
-      },
-    ],
-    cover: {
-      accent: '#f6b98d',
-      gradient:
-        'linear-gradient(115deg, rgba(156,77,49,0.92) 0%, rgba(68,32,49,0.9) 52%, rgba(13,32,63,0.92) 100%)',
+const DEFAULT_DATASET: WorkspaceDataset = {
+  groupOrder: ['Characters', 'Factions', 'Locations', 'Timeline', 'Items'],
+  entries: [
+    {
+      id: 'iskra-vane',
+      title: 'Iskra Vane',
+      type: 'Character',
+      status: 'Active',
+      group: 'Characters',
+      tags: ['exile', 'diplomat', 'ex-privateer', 'coastal'],
+      relationships: [
+        { name: 'The Ember Concord', note: 'former target, now employer' },
+        { name: 'Thornmere Hold', note: 'place of origin' },
+        { name: 'Thala Ashgrove', note: 'former first mate' },
+      ],
+      paragraphs: [
+        "Iskra Vane spent the first half of her life running contraband through the reefs south of Thornmere, and the second half trying to be forgiven for it. She was born to a net-mender in the Hold's lower quarter and left at sixteen aboard a ship she had no right to board, having talked her way onto the crew with a lie about her age and a truth about her nerve.",
+        'For nine years she captained the Grey Tern under no flag but her own, moving salt, dye, and the occasional fugitive noble between the coastal states. She was good at it. She was better at knowing when to stop.',
+        "When [[The Ember Concord]] offered full pardon in exchange for a season of testimony against her old trading partners, she took it — not out of loyalty to the Concord, but because [[Thornmere Hold]]'s new magistrate had started hanging smugglers younger than she'd been when she started.",
+        'She now serves as an unofficial envoy between Thornmere Hold and the free ports, a job with no formal title and considerable informal power. Nobody trusts her completely. Everybody negotiates through her anyway.',
+      ],
     },
-    frontmatter: [
-      { key: 'name', label: 'Name', type: 'text', value: 'Wren of the Hollow' },
-      {
-        key: 'status',
-        label: 'Status',
-        options: ['alive', 'missing', 'dead'],
-        type: 'select',
-        value: 'alive',
-      },
-      { key: 'role', label: 'Role', type: 'text', value: 'Messenger' },
-      { key: 'faction', label: 'Faction', type: 'text', value: 'The Grey Covenant' },
-      { key: 'age', label: 'Age', type: 'number', value: 24 },
-      { key: 'birthplace', label: 'Birthplace', type: 'text', value: 'Verdant Hollow' },
-      { key: 'firstAppearance', label: 'First appearance', type: 'text', value: 'Chapter 01' },
-      {
-        key: 'tags',
-        label: 'Tags',
-        type: 'tags',
-        value: ['protagonist', 'raven-bound', 'outsider'],
-      },
-      {
-        key: 'relationships',
-        label: 'Relationships',
-        type: 'relations',
-        value: ['Calder Vex', 'Mira Quist'],
-      },
-    ],
-    icon: '🪽',
-    kind: 'character',
-    path: 'Characters/Wren of the Hollow.md',
-    status: 'unsaved',
-    title: 'Wren of the Hollow',
-  },
-  'Characters/Calder Vex.md': {
-    backlinks: ['Wren of the Hollow'],
-    content: [
-      {
-        id: 'calder-p-1',
-        segments: [{ text: 'Calder keeps accounts for the covenant and remembers every debt.' }],
-        type: 'paragraph',
-      },
-    ],
-    frontmatter: [
-      { key: 'name', label: 'Name', type: 'text', value: 'Calder Vex' },
-      {
-        key: 'status',
-        label: 'Status',
-        options: ['alive', 'missing', 'dead'],
-        type: 'select',
-        value: 'alive',
-      },
-      { key: 'role', label: 'Role', type: 'text', value: 'Quartermaster' },
-    ],
-    icon: '🗡️',
-    kind: 'character',
-    path: 'Characters/Calder Vex.md',
-    status: 'saved',
-    title: 'Calder Vex',
-  },
-  'Characters/Mira Quist.md': {
-    backlinks: ['Wren of the Hollow'],
-    content: [
-      {
-        id: 'mira-p-1',
-        segments: [
-          { text: 'Mira keeps the weather ledgers and can read the tide like scripture.' },
-        ],
-        type: 'paragraph',
-      },
-    ],
-    frontmatter: [
-      { key: 'name', label: 'Name', type: 'text', value: 'Mira Quist' },
-      {
-        key: 'status',
-        label: 'Status',
-        options: ['alive', 'missing', 'dead'],
-        type: 'select',
-        value: 'alive',
-      },
-      { key: 'role', label: 'Role', type: 'text', value: 'Navigator' },
-    ],
-    icon: '🫐',
-    kind: 'character',
-    path: 'Characters/Mira Quist.md',
-    status: 'saved',
-    title: 'Mira Quist',
-  },
-  'Characters/The Keeper.md': {
-    backlinks: [],
-    content: [
-      {
-        id: 'keeper-p-1',
-        segments: [{ text: 'The keeper is older than the tower records admit.' }],
-        type: 'paragraph',
-      },
-    ],
-    frontmatter: [{ key: 'name', label: 'Name', type: 'text', value: 'The Keeper' }],
-    icon: '🔥',
-    kind: 'character',
-    path: 'Characters/The Keeper.md',
-    status: 'saved',
-    title: 'The Keeper',
-  },
-  'Locations/Saltreach.md': {
-    backlinks: ['Wren of the Hollow'],
-    content: [
-      {
-        id: 'saltreach-p-1',
-        segments: [
-          {
-            text: 'Saltreach is a harbour town built where the cliffs finally stop resisting the sea.',
-          },
-        ],
-        type: 'paragraph',
-      },
-    ],
-    frontmatter: [{ key: 'name', label: 'Name', type: 'text', value: 'Saltreach' }],
-    icon: '⚓',
-    kind: 'location',
-    path: 'Locations/Saltreach.md',
-    status: 'saved',
-    title: 'Saltreach',
-  },
-  'Locations/Blackpine Wood.md': {
-    backlinks: [],
-    content: [
-      {
-        id: 'blackpine-p-1',
-        segments: [{ text: 'Blackpine is less a forest than an agreement between crows and fog.' }],
-        type: 'paragraph',
-      },
-    ],
-    frontmatter: [{ key: 'name', label: 'Name', type: 'text', value: 'Blackpine Wood' }],
-    icon: '🌲',
-    kind: 'location',
-    path: 'Locations/Blackpine Wood.md',
-    status: 'saved',
-    title: 'Blackpine Wood',
-  },
-  'Locations/The Ash Tower.md': {
-    backlinks: [],
-    content: [
-      {
-        id: 'ash-p-1',
-        segments: [{ text: 'Ash still falls inside the tower even when the sky above is clear.' }],
-        type: 'paragraph',
-      },
-    ],
-    frontmatter: [{ key: 'name', label: 'Name', type: 'text', value: 'The Ash Tower' }],
-    icon: '🏰',
-    kind: 'location',
-    path: 'Locations/The Ash Tower.md',
-    status: 'saved',
-    title: 'The Ash Tower',
-  },
-  'Factions/The Grey Covenant.md': {
-    backlinks: ['Wren of the Hollow'],
-    content: [
-      {
-        id: 'faction-p-1',
-        segments: [
-          { text: 'A courier faction that acts more like a weather vane than a government.' },
-        ],
-        type: 'paragraph',
-      },
-    ],
-    frontmatter: [{ key: 'name', label: 'Name', type: 'text', value: 'The Grey Covenant' }],
-    icon: '⚔️',
-    kind: 'faction',
-    path: 'Factions/The Grey Covenant.md',
-    status: 'saved',
-    title: 'The Grey Covenant',
-  },
-  'Lore/The Burning of Saltreach.md': {
-    backlinks: ['Wren of the Hollow'],
-    content: [
-      {
-        id: 'burning-p-1',
-        segments: [
-          { text: 'The fire began in the rope market and crossed the harbour before dawn bells.' },
-        ],
-        type: 'paragraph',
-      },
-    ],
-    frontmatter: [{ key: 'name', label: 'Name', type: 'text', value: 'The Burning of Saltreach' }],
-    icon: '📜',
-    kind: 'lore',
-    path: 'Lore/The Burning of Saltreach.md',
-    status: 'saved',
-    title: 'The Burning of Saltreach',
-  },
-  'Drafts/Chapter 01.md': {
-    backlinks: [],
-    content: [
-      {
-        id: 'chapter-1-p-1',
-        segments: [{ text: 'The chapter opens with gulls landing where ash should not be.' }],
-        type: 'paragraph',
-      },
-    ],
-    frontmatter: [{ key: 'name', label: 'Name', type: 'text', value: 'Chapter 01' }],
-    icon: '📄',
-    kind: 'draft',
-    path: 'Drafts/Chapter 01.md',
-    status: 'saved',
-    title: 'Chapter 01',
-  },
-  'Drafts/Outline.md': {
-    backlinks: [],
-    content: [
-      {
-        id: 'outline-p-1',
-        segments: [{ text: 'Act I: smoke, letters, and the missing tide log.' }],
-        type: 'paragraph',
-      },
-    ],
-    frontmatter: [{ key: 'name', label: 'Name', type: 'text', value: 'Outline' }],
-    icon: '📄',
-    kind: 'draft',
-    path: 'Drafts/Outline.md',
-    status: 'saved',
-    title: 'Outline',
-  },
-  'README.md': {
-    backlinks: [],
-    content: [
-      {
-        id: 'readme-p-1',
-        segments: [
-          { text: 'Verdant Hollow is a workspace mock used to validate the editor shell.' },
-        ],
-        type: 'paragraph',
-      },
-    ],
-    frontmatter: [{ key: 'name', label: 'Name', type: 'text', value: 'README' }],
-    icon: '📕',
-    kind: 'system',
-    path: 'README.md',
-    status: 'saved',
-    title: 'README',
-  },
+    {
+      id: 'thala-ashgrove',
+      title: 'Thala Ashgrove',
+      type: 'Character',
+      status: 'Draft',
+      group: 'Characters',
+      tags: ['character'],
+      relationships: [{ name: 'Iskra Vane', note: 'former captain' }],
+      paragraphs: [],
+    },
+    {
+      id: 'ember-concord',
+      title: 'The Ember Concord',
+      type: 'Faction',
+      status: 'Active',
+      group: 'Factions',
+      tags: ['merchant guild', 'mages', 'coastal trade'],
+      relationships: [
+        { name: 'Thornmere Hold', note: 'de facto governs' },
+        { name: 'Iskra Vane', note: 'envoy, formerly hunted' },
+        { name: 'The Drowned Parliament', note: 'rival' },
+      ],
+      paragraphs: [
+        'The Ember Concord began as a guild of dye-merchants and ended, within two generations, as the closest thing the coast has to a navy. It still calls itself a trading company.',
+        'Membership requires capital, a demonstrated aptitude in at least one licensed discipline, and a willingness to be audited by Concord accountants who are, without exception, more feared than its enforcers.',
+        'The Concord does not conquer territory. It buys the debt of whoever already governs it, then quietly rewrites the terms. [[Thornmere Hold]] has not been formally annexed. Thornmere Hold has also not set its own tariffs in eleven years.',
+      ],
+    },
+    {
+      id: 'drowned-parliament',
+      title: 'The Drowned Parliament',
+      type: 'Faction',
+      status: 'Draft',
+      group: 'Factions',
+      tags: ['faction'],
+      relationships: [{ name: 'The Ember Concord', note: 'rival' }],
+      paragraphs: [],
+    },
+    {
+      id: 'thornmere-hold',
+      title: 'Thornmere Hold',
+      type: 'Location',
+      status: 'Capital',
+      group: 'Locations',
+      tags: ['fortress-city', 'port', 'capital'],
+      relationships: [
+        { name: 'The Ember Concord', note: 'economically bound to' },
+        { name: 'Iskra Vane', note: 'born here' },
+        { name: 'The Sundering of Thornmere', note: 'site of' },
+      ],
+      paragraphs: [
+        'Thornmere Hold is built into the cliff it is named for, a fortress-city with three harbors and no farmland, entirely dependent on trade for its next meal. This has made it wealthy and, twice in its history, nearly made it starve.',
+        "The Hold proper — the keep, the magistrate's court, the old shrine — sits atop the cliff, reachable only by the Salt Stair or a two-hour cart road inland. Everyone who matters lives up there. Everyone who works lives below.",
+        'The city survived [[The Sundering of Thornmere]] less than a century ago, when a third of the lower cliff face collapsed into the sea during a single stormy night.',
+      ],
+    },
+    {
+      id: 'salt-stair',
+      title: 'The Salt Stair',
+      type: 'Location',
+      status: 'Draft',
+      group: 'Locations',
+      tags: ['location'],
+      relationships: [{ name: 'Thornmere Hold', note: 'part of' }],
+      paragraphs: [],
+    },
+    {
+      id: 'sundering-thornmere',
+      title: 'The Sundering of Thornmere',
+      type: 'Timeline Event',
+      status: 'Draft',
+      group: 'Timeline',
+      tags: ['disaster', 'history'],
+      relationships: [{ name: 'Thornmere Hold', note: 'location' }],
+      paragraphs: [
+        "Ninety-one years ago, roughly a third of Thornmere's lower cliff face gave way in a single night, taking the tanning district and half the fish market with it. Nobody has fully explained why.",
+      ],
+    },
+    {
+      id: 'ashbound-crown',
+      title: 'The Ashbound Crown',
+      type: 'Item',
+      status: 'Draft',
+      group: 'Items',
+      tags: ['item'],
+      relationships: [],
+      paragraphs: [],
+    },
+  ],
 };
 
-export function createInitialEditorShellState(): EditorShellState {
-  return {
-    activePath: 'Characters/Wren of the Hollow.md',
-    documents,
-    expandedPaths: ['Characters', 'Locations', 'Drafts'],
-    searchQuery: '',
-    tabs: [
-      {
-        dirty: false,
-        path: 'Characters/Wren of the Hollow.md',
-        pinned: true,
-        title: 'Wren of the Hollow',
-      },
-      { dirty: false, path: 'Lore/The Burning of Saltreach.md', title: 'The Burning of Saltreach' },
-      { dirty: false, path: 'Locations/Saltreach.md', title: 'Saltreach' },
-      { dirty: true, path: 'Drafts/Chapter 01.md', title: 'Chapter 01' },
-    ],
-    workspaceName: 'Verdant Hollow',
-    workspaceNodes,
-  };
-}
+const HOLLOW_DATASET: WorkspaceDataset = {
+  groupOrder: ['Notes', 'Characters', 'Locations', 'Lore', 'Drafts'],
+  entries: [
+    {
+      id: 'welcome',
+      title: 'Welcome',
+      type: 'Note',
+      status: 'Start Here',
+      group: 'Notes',
+      tags: ['start here'],
+      relationships: [],
+      paragraphs: [
+        "Welcome to The Hollow — not a document, but a place. Everything you write here becomes an entry: a character, a location, a fragment of history. Entries aren't filed away in isolation. They remember each other.",
+        "Mention [[Wren of the Hollow]] in a draft, and that draft becomes something Wren's own page knows about. Write about a fire, and every entry that fire touched carries the mark of it.",
+        "Open [[Wren of the Hollow]] to meet its first resident. Follow the thread to [[Saltreach]], and from there to the night it burned. Nothing here is finished — it's all still connected, still asking to be written further.",
+      ],
+    },
+    {
+      id: 'wren-hollow',
+      title: 'Wren of the Hollow',
+      type: 'Character',
+      status: 'Active',
+      group: 'Characters',
+      tags: ['wanderer', 'oath-bound', 'open thread'],
+      relationships: [
+        { name: 'Saltreach', note: "left home, hasn't returned" },
+        { name: 'The Burning of Saltreach', note: "survived it, won't discuss it" },
+      ],
+      paragraphs: [
+        'Wren left [[Saltreach]] three years before the fire and has never said why. Everyone who remembers the leaving assumes guilt. Wren has never confirmed or denied it.',
+        "What draws Wren back now is unclear — a debt, a dream, or simply the pull of a town that no longer has a name worth keeping. That answer hasn't been written yet.",
+      ],
+    },
+    {
+      id: 'saltreach',
+      title: 'Saltreach',
+      type: 'Location',
+      status: 'Ruined',
+      group: 'Locations',
+      tags: ['coastal', 'abandoned', 'ash'],
+      relationships: [
+        { name: 'Wren of the Hollow', note: 'left, presumed connected to the fire' },
+        { name: 'The Burning of Saltreach', note: 'site of' },
+      ],
+      paragraphs: [
+        'Saltreach was a fishing town of maybe four hundred people, built where a freshwater spring met the tide flats. It had one road in and, after the fire, no reason for anyone to take it.',
+        "What's left is mostly foundation stones and a bell that didn't melt. Nobody has resettled it. Nobody has explained why not.",
+      ],
+    },
+    {
+      id: 'burning-saltreach',
+      title: 'The Burning of Saltreach',
+      type: 'Lore Event',
+      status: 'Unresolved',
+      group: 'Lore',
+      tags: ['fire', 'disaster', 'open question'],
+      relationships: [
+        { name: 'Saltreach', note: 'location' },
+        { name: 'Wren of the Hollow', note: 'left before, returns after' },
+      ],
+      paragraphs: [
+        'The fire took Saltreach in a single night, and — unlike most disasters this world remembers clearly — nobody agrees on how it started. Three accounts exist. All three blame something different.',
+        "Wren was gone three years by then. That hasn't stopped anyone from asking.",
+      ],
+    },
+    {
+      id: 'chapter-01',
+      title: 'Chapter 01',
+      type: 'Draft',
+      status: 'In Progress',
+      group: 'Drafts',
+      tags: ['draft', 'scene'],
+      relationships: [{ name: 'Wren of the Hollow', note: 'mentioned' }],
+      paragraphs: [
+        "The road to [[Saltreach]] hadn't changed, which was the first thing [[Wren of the Hollow]] noticed and the last thing they said out loud.",
+        '[[Wren of the Hollow]] kept walking anyway. Three years was long enough to forget the smell of a place, but not long enough to forget why you left it.',
+      ],
+    },
+  ],
+};
+
+export const WORKSPACE_DATASETS: Record<WorkspaceDatasetId, WorkspaceDataset> = {
+  blank: { entries: [], groupOrder: ['Characters', 'Factions', 'Locations', 'Timeline', 'Items'] },
+  default: DEFAULT_DATASET,
+  hollow: HOLLOW_DATASET,
+};

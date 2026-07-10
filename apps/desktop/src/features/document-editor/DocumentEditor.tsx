@@ -1,81 +1,98 @@
-import { useEditorShellStore } from '@/store/editor-shell';
-import type { InlineSegment } from '@/types/editor';
+import { Fragment, type CSSProperties } from 'react';
+import { getActiveEntry, useEditorShellStore } from '@/store/editor-shell';
 
-function RichText({ segments }: { segments: InlineSegment[] }) {
-  return (
-    <>
-      {segments.map((seg, i) =>
-        seg.tone == null ? (
-          <span key={i}>{seg.text}</span>
-        ) : (
-          <a
-            key={i}
-            style={{
-              color: 'var(--link)',
-              textDecoration: 'none',
-              borderBottom: '1px solid rgba(61,86,124,0.32)',
-              cursor: 'pointer',
-            }}
-          >
-            {seg.text}
-          </a>
-        ),
-      )}
-    </>
+const MENTION_PATTERN = /\[\[([^\]]+)\]\]/g;
+
+export function splitMentions(text: string) {
+  const segments: Array<{ mention: boolean; text: string }> = [];
+  let cursor = 0;
+  for (const match of text.matchAll(MENTION_PATTERN)) {
+    const index = match.index ?? 0;
+    if (index > cursor) segments.push({ mention: false, text: text.slice(cursor, index) });
+    segments.push({ mention: true, text: match[1] });
+    cursor = index + match[0].length;
+  }
+  if (cursor < text.length) segments.push({ mention: false, text: text.slice(cursor) });
+  return segments;
+}
+
+function ParagraphText({ codex, text }: { codex: boolean; text: string }) {
+  const selectEntryByName = useEditorShellStore((state) => state.selectEntryByName);
+  return splitMentions(text).map((segment, index) =>
+    segment.mention ? (
+      <Fragment key={`${segment.text}-${index}`}>
+        {!codex ? <span className="mention-bracket">[[</span> : null}
+        <button
+          className="mention-link"
+          onClick={(event) => {
+            event.stopPropagation();
+            selectEntryByName(segment.text);
+          }}
+          type="button"
+        >
+          {segment.text}
+        </button>
+        {!codex ? <span className="mention-bracket">]]</span> : null}
+      </Fragment>
+    ) : (
+      <Fragment key={index}>{segment.text}</Fragment>
+    ),
   );
 }
 
 export function DocumentEditor() {
-  const { activeDocument } = useEditorShellStore();
+  const state = useEditorShellStore();
+  const entry = getActiveEntry(state);
+
+  if (!entry) {
+    return (
+      <div className="editor-scroll">
+        <div className="no-entry">
+          <h1>No entries yet.</h1>
+          <p>This world is still blank — start writing to give it shape.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const codex = state.viewMode === 'codex';
+  const textSize = { small: 16, medium: 17.5, large: 19.5 }[state.fontSize];
 
   return (
-    <section
-      className="editor-document"
-      style={{ flex: 1, overflow: 'auto', minHeight: 0, padding: '40px 0' }}
-    >
-      <div className="editor-document__inner">
-        <div className="editor-document__eyebrow">{activeDocument.kind}</div>
-
-        <h1>{activeDocument.title}</h1>
-
-        <div className="editor-document__aliases" style={{ marginBottom: 22 }}>
-          {activeDocument.path}
+    <div className="editor-scroll">
+      <article
+        className={codex ? 'codex-document' : 'edit-document'}
+        style={{ '--editor-font-size': `${textSize}px` } as CSSProperties}
+      >
+        <div className={codex ? 'codex-kicker' : 'entry-kicker'}>
+          {codex ? `Codex · ${entry.type}` : `${entry.type} · ${entry.status}`}
         </div>
-
-        {activeDocument.content.map((block) => {
-          switch (block.type) {
-            case 'heading':
-              return <h2 key={block.id}>{block.text}</h2>;
-            case 'paragraph':
-              return (
-                <p key={block.id}>
-                  <RichText segments={block.segments} />
-                </p>
-              );
-            case 'callout':
-              return (
-                <div className="callout" key={block.id}>
-                  <RichText segments={block.segments} />
-                </div>
-              );
-            case 'bullets':
-              return (
-                <ul
-                  key={block.id}
-                  style={{ paddingLeft: '1.3rem', lineHeight: 1.85, margin: '0.3rem 0 1rem' }}
-                >
-                  {block.items.map((item, idx) => (
-                    <li key={idx}>
-                      <RichText segments={item} />
-                    </li>
-                  ))}
-                </ul>
-              );
-            default:
-              return null;
-          }
-        })}
-      </div>
-    </section>
+        <h1>{entry.title}</h1>
+        {entry.paragraphs.length === 0 ? (
+          <p className={codex ? 'codex-empty' : 'entry-empty'}>
+            {codex ? 'Nothing to read yet.' : "This entry hasn't been written yet."}
+          </p>
+        ) : (
+          entry.paragraphs.map((paragraph, index) => {
+            const paragraphId = `${entry.id}-p${index}`;
+            const focused = state.focusedParagraphId === paragraphId;
+            const dimmed = state.focusModeEnabled && state.focusedParagraphId !== null && !focused;
+            return (
+              <p
+                className={`${focused ? 'is-focused' : ''}${dimmed ? ' is-dimmed' : ''}`}
+                key={paragraphId}
+                onClick={
+                  codex || !state.focusModeEnabled
+                    ? undefined
+                    : () => state.setFocusedParagraphId(focused ? null : paragraphId)
+                }
+              >
+                <ParagraphText codex={codex} text={paragraph} />
+              </p>
+            );
+          })
+        )}
+      </article>
+    </div>
   );
 }

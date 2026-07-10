@@ -1,89 +1,67 @@
-import { useState } from 'react';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@lore/ui/components/breadcrumb';
-import { Button } from '@lore/ui/components/button';
-import { ButtonGroup } from '@lore/ui/components/button-group';
-import { Columns2, Search } from 'lucide-react';
-import { useEditorShellStore } from '@/store/editor-shell';
+import { Image, Link, Minus, PanelRight } from 'lucide-react';
 import { DocumentEditor } from '@features/document-editor/DocumentEditor';
-import { EditorTabs } from '@features/editor-tabs/EditorTabs';
+import { getActiveEntry, useEditorShellStore } from '@/store/editor-shell';
 
 export function WorkspaceEditorPane() {
-  const { activeDocument } = useEditorShellStore();
+  const state = useEditorShellStore();
+  const entry = getActiveEntry(state);
 
   return (
     <section className="workspace-editor">
-      <EditorTabs />
-      <EditorSubtoolbar title={activeDocument.title} kind={activeDocument.kind} />
-      <DocumentEditor />
-      <div className="editor-statusbar">
-        <span>
-          {activeDocument.kind} · {activeDocument.title}
-        </span>
-        <span>1,284 words · last edit 2 min ago</span>
-      </div>
-    </section>
-  );
-}
-
-function EditorSubtoolbar({ title, kind }: { title: string; kind: string }) {
-  const { workspaceName } = useEditorShellStore();
-  const [view, setView] = useState<'read' | 'edit' | 'outline'>('read');
-
-  return (
-    <div className="editor-subtoolbar">
-      <Breadcrumb className="editor-breadcrumbs">
-        <BreadcrumbList>
-          <BreadcrumbItem>{workspaceName}</BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>{kind.charAt(0).toUpperCase() + kind.slice(1)}s</BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage className="editor-breadcrumbs__current">{title}</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-
-      <div className="editor-view-controls">
-        <ButtonGroup className="editor-view-controls__group">
-          {(['read', 'edit', 'outline'] as const).map((value) => (
-            <Button
-              className="editor-seg-btn"
-              key={value}
-              onClick={() => setView(value)}
-              size="xs"
+      {entry ? (
+        <div className="editor-mode-row">
+          <span>{state.focusModeEnabled ? 'click a paragraph to focus' : 'focus mode is off'}</span>
+          <div className="segmented-control segmented-control--compact" aria-label="Editor view">
+            <button
+              className={state.viewMode === 'edit' ? 'is-active' : ''}
+              onClick={() => state.setViewMode('edit')}
               type="button"
-              variant={view === value ? 'outline' : 'ghost'}
             >
-              {value.charAt(0).toUpperCase() + value.slice(1)}
-            </Button>
-          ))}
-        </ButtonGroup>
-        <span className="editor-view-sep" />
-        <Button
-          className="editor-view-controls__icon-button"
-          size="icon-xs"
-          title="Find"
-          type="button"
-          variant="ghost"
-        >
-          <Search data-icon="inline-start" strokeWidth={1.5} />
-        </Button>
-        <Button
-          className="editor-view-controls__icon-button"
-          size="icon-xs"
-          title="Split view"
-          type="button"
-          variant="ghost"
-        >
-          <Columns2 data-icon="inline-start" strokeWidth={1.5} />
-        </Button>
-      </div>
-    </div>
+              Edit
+            </button>
+            <button
+              className={state.viewMode === 'codex' ? 'is-active' : ''}
+              onClick={() => state.setViewMode('codex')}
+              type="button"
+            >
+              Codex
+            </button>
+          </div>
+        </div>
+      ) : null}
+      <DocumentEditor />
+      {entry && state.viewMode === 'edit' ? (
+        <div className="editor-toolbar" aria-label="Formatting toolbar">
+          <button aria-label="Bold" className="format-button is-bold" type="button">
+            B
+          </button>
+          <button aria-label="Italic" className="format-button is-italic" type="button">
+            I
+          </button>
+          <button aria-label="Underline" className="format-button is-underline" type="button">
+            U
+          </button>
+          <span className="toolbar-divider" />
+          <button aria-label="Insert link" className="format-button" type="button">
+            <Link size={15} strokeWidth={1.6} />
+          </button>
+          <button aria-label="Insert image" className="format-button" type="button">
+            <Image size={15} strokeWidth={1.6} />
+          </button>
+          <button aria-label="Insert divider" className="format-button" type="button">
+            <Minus size={15} strokeWidth={1.6} />
+          </button>
+          <span className="toolbar-spacer" />
+          <button
+            aria-label={state.metadataOpen ? 'Hide metadata' : 'Show metadata'}
+            className="format-button"
+            onClick={() => state.setMetadataOpen(!state.metadataOpen)}
+            type="button"
+          >
+            <PanelRight size={15} strokeWidth={1.6} />
+          </button>
+        </div>
+      ) : null}
+    </section>
   );
 }

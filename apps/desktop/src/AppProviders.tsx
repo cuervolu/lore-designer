@@ -10,7 +10,7 @@ function ThemeSyncBridge() {
 
 export function AppProviders({ children }: PropsWithChildren) {
   return (
-    <ThemeProvider defaultTheme="system" storageKey="lore-designer-theme">
+    <ThemeProvider defaultTheme="light" storageKey="lore-designer-theme">
       <ThemeSyncBridge />
       <TooltipProvider>{children}</TooltipProvider>
     </ThemeProvider>

@@ -1,15 +1,11 @@
 import { createRootRoute, Outlet } from '@tanstack/react-router';
-import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
 
-export const Route = createRootRoute({
-  component: RootLayout,
-});
+export const Route = createRootRoute({ component: RootLayout });
 
 function RootLayout() {
   return (
     <div className="lore-designer-app">
       <Outlet />
-      <TanStackRouterDevtools initialIsOpen={false} />
     </div>
   );
 }

@@ -1,7 +1,6 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "baseUrl": ".",
     "paths": {
       "@lore/ui": ["./src/index.ts"],
       "@lore/ui/components": ["./src/components"],

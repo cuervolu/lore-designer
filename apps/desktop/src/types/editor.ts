@@ -1,86 +1,40 @@
-export type LoreTypeTag = 'character' | 'location' | 'lore' | 'draft' | 'faction' | 'system';
+export type WorkspaceDatasetId = 'default' | 'hollow' | 'blank';
 
-export type WorkspaceNodeKind = 'directory' | 'file';
+export type EditorViewMode = 'edit' | 'codex';
+export type EditorFontSize = 'small' | 'medium' | 'large';
+export type SettingsReturnPath = '/' | '/workspace';
 
-export interface WorkspaceNode {
-  children?: WorkspaceNode[];
-  icon?: string;
+export interface ProjectSummary {
+  datasetId: WorkspaceDatasetId;
+  entryCount: number;
   id: string;
-  kind: WorkspaceNodeKind;
+  lastEdited: string;
   name: string;
-  path: string;
-  typeTag?: LoreTypeTag;
+  status?: string;
 }
 
-export type FrontmatterFieldType = 'text' | 'select' | 'number' | 'tags' | 'relations';
-
-export interface FrontmatterField {
-  key: string;
-  label: string;
-  options?: string[];
-  type: FrontmatterFieldType;
-  value: number | string | string[];
+export interface EntryRelationship {
+  name: string;
+  note: string;
 }
 
-export interface InlineSegment {
-  text: string;
-  tone?: LoreTypeTag | 'muted';
-}
-
-export type DocumentContentBlock =
-  | {
-      id: string;
-      segments: InlineSegment[];
-      type: 'paragraph';
-    }
-  | {
-      id: string;
-      text: string;
-      type: 'heading';
-    }
-  | {
-      icon?: string;
-      id: string;
-      segments: InlineSegment[];
-      type: 'callout';
-    }
-  | {
-      id: string;
-      items: InlineSegment[][];
-      type: 'bullets';
-    };
-
-export interface DocumentRecord {
-  backlinks: string[];
-  content: DocumentContentBlock[];
-  cover?: {
-    accent: string;
-    gradient: string;
-  };
-  frontmatter: FrontmatterField[];
-  icon?: string;
-  kind: LoreTypeTag;
-  path: string;
-  status?: 'draft' | 'saved' | 'unsaved';
+export interface LoreEntry {
+  group: string;
+  id: string;
+  paragraphs: string[];
+  relationships: EntryRelationship[];
+  status: string;
+  tags: string[];
   title: string;
+  type: string;
 }
 
-export interface OpenTab {
-  dirty: boolean;
-  path: string;
-  pinned?: boolean;
-  title: string;
+export interface WorkspaceDataset {
+  entries: LoreEntry[];
+  groupOrder: string[];
 }
 
-export interface EditorSelectionState {
-  activePath: string;
-  expandedPaths: string[];
-  searchQuery: string;
-}
-
-export interface EditorShellState extends EditorSelectionState {
-  documents: Record<string, DocumentRecord>;
-  tabs: OpenTab[];
-  workspaceName: string;
-  workspaceNodes: WorkspaceNode[];
+export interface EditorPreferences {
+  focusModeEnabled: boolean;
+  fontSize: EditorFontSize;
 }

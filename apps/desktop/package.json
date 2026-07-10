@@ -15,11 +15,7 @@
   },
   "dependencies": {
     "@fltsci/tauri-plugin-tracing": "^0.3.4",
-    "@fontsource-variable/fira-code": "^5.2.7",
-    "@fontsource-variable/ibm-plex-sans": "^5.2.8",
-    "@fontsource-variable/inter": "^5.2.8",
-    "@fontsource-variable/source-serif-4": "^5.2.9",
-    "@fontsource/ibm-plex-mono": "^5.2.7",
+    "@fontsource-variable/lora": "^5.2.8",
     "@lore/ui": "workspace:*",
     "@pierre/trees": "1.0.0-beta.5",
     "@tanstack/react-router": "^1.170.17",
