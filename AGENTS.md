@@ -9,21 +9,20 @@ Docs are local at `node_modules/vite-plus/docs` or online at https://viteplus.de
 ## Review Checklist
 
 - [ ] Run `vp install` after pulling remote changes and before getting started.
-- [ ] Run `vp check` and `vp test` to format, lint, type check and test changes.
+- [ ] Use `vp` for workspace tooling; do not run `pnpm` directly.
+- [ ] Run `vp fmt`, `vp lint`, and `vp test` before handing off frontend changes.
+- [ ] Run Rust validation with `cargo fmt`, `cargo clippy --workspace --all-targets --all-features -- -D warnings`, and `cargo nextest run --workspace` before handing off Rust changes.
+- [ ] Do not consider an implementation complete until compilation and `cargo nextest run --workspace` pass cleanly.
 - [ ] Check if there are `vite.config.ts` tasks or `package.json` scripts necessary for validation, run via `vp run <script>`.
 - [ ] If setup, runtime, or package-manager behavior looks wrong, run `vp env doctor` and include its output when asking for help.
 
 <!--VITE PLUS END-->
 
----
-
-<!--TAURI START-->
-
 # Tauri v2 — Desktop App Development
 
 Lore Designer is a **Tauri v2** desktop application. Tauri runs a Rust backend as the native process and serves the frontend (React + TypeScript) inside a WebView. The two sides communicate exclusively through **Commands** (frontend → Rust) and **Events** (Rust → frontend or frontend → frontend).
 
-## Documentation References (LLM-friendly)
+## Documentation References
 
 Full Tauri v2 docs index for LLMs: **<https://v2.tauri.app/llms.txt>**
 
@@ -66,18 +65,30 @@ Any change to a `.rs` file triggers a Rust recompile. Frontend hot-reload works 
 ## Running Tests
 
 ```bash
+# Frontend formatting and linting
+vp fmt
+vp lint
+
 # Frontend unit tests (Vitest via Vite+)
 vp test
 
-# Rust unit tests
-cargo test --workspace
+# Rust formatting
+cargo fmt --all
+
+# Rust linting
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+
+# Rust tests
+cargo nextest run --workspace
 
 # Rust tests for a specific crate
-cargo test -p lore-editor
-cargo test -p lore-workspaces
+cargo nextest run -p lore-editor
+cargo nextest run -p lore-workspaces
 ```
 
 Frontend tests that exercise Tauri commands must mock the `@tauri-apps/api` module — see the **Mocking** section below.
+
+Compilation is part of the completion bar. Do not treat a change as finished until the affected code compiles and `cargo nextest run --workspace` passes cleanly.
 
 ## Project Structure
 
@@ -257,12 +268,6 @@ Configuration files use TOML (`.lore` workspace manifest, `settings.toml`). JSON
 - **Command handlers must be `async`** if they lock a `Mutex` or call async crate functions, to avoid blocking the main thread.
 - **`tauri::command` serialization errors surface as generic JS errors.** Add `#[derive(Debug)]` to error types and use `.map_err(|e| e.to_string())` until a proper error enum is in place.
 
-<!--TAURI END-->
-
----
-
-<!--LORE DESIGNER START-->
-
 # Lore Designer — Project Context
 
 ## What It Is
@@ -308,17 +313,6 @@ MyProject/
     └── LooseIdeas.md
 ```
 
-## MVP Feature Scope
-
-1. **Workspace management** — create, open, recent workspaces.
-2. **File browser sidebar** — mirrors the real directory tree.
-3. **Rich text editor** — Markdown with a Notion-like `/` command menu. Frontmatter is hidden by default; a "source" toggle reveals it.
-4. **Properties inspector panel** — reads frontmatter fields and renders them as a form. Edits write back to the file.
-5. **File templates** — default templates for `character`, `location`, `lore`. Users can create custom types by defining a new `type` value and frontmatter schema.
-6. **Dynamic Query View** — SQL-like queries across the workspace (`SHOW Characters WHERE faction = "Empire"`). Powered by the SQLite index in `lore-editor`.
-
-Post-MVP (do not implement now): Timelines, Canvas/connection board, plugin system, mobile app.
-
 ## Architectural Rules
 
 ### The Shared Boundary
@@ -344,11 +338,10 @@ Avoid hardcoding logic that would prevent future plugin hooks. Register commands
 
 ## Anti-Patterns to Avoid
 
-- Do not use `tauri-plugin-sql`.
-- Do not encode content type in filenames (no `Hero.character.md`).
 - Do not store canonical data in SQLite — it is always a cache.
 - Do not write business logic inside Tauri command handlers — they delegate to crates.
-- Do not add frontend dependencies without checking if VueUse, native React APIs, or existing libraries already cover it.
+- Do not add frontend dependencies without checking if native React APIs, or existing libraries already cover it.
 - Do not add Rust dependencies without checking if `std` or existing workspace crates cover it.
-
-<!--LORE DESIGNER END-->
+- Do not write comments that restate what the code already says. Comments are only appropriate when they explain why a non-obvious choice exists, such as a constraint, protocol quirk, or known limitation. If a comment is needed to explain what code does, rewrite the code instead.
+- Do not invent explanatory UI copy, helper text, labels, placeholders, banners, or status text unless the user explicitly asks for copywriting or the mockup, spec, or existing product text already provides it.
+- For UI work, prefer the existing mockup or spec wording exactly. If usability appears to require new text, stop and ask before adding it.
