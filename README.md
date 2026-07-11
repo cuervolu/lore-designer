@@ -5,9 +5,9 @@
 
 <div align="center">
   <img src="app_icon.webp" alt="Lore Designer Logo" width="128" height="128">
-  
+
   <h3>Design Narratives, Build Legends</h3>
-  
+
   <p>
     <strong>A personal knowledge management tool designed specifically for worldbuilding and creative writing.</strong>
   </p>

@@ -1,4 +1,6 @@
-import { Settings } from 'lucide-react';
+import { useMemo } from 'react';
+import { ArrowLeftFromLine, Settings } from 'lucide-react';
+import { Button, EntryTree, type EntryTreeGroup } from '@lore/ui';
 import { getActiveDataset, useEditorShellStore } from '@/store/editor-shell';
 
 interface WorkspaceSidebarProps {
@@ -10,49 +12,55 @@ export function WorkspaceSidebar({ onOpenSettings, onSwitchProject }: WorkspaceS
   const state = useEditorShellStore();
   const dataset = getActiveDataset(state);
 
+  const groups = useMemo<EntryTreeGroup[]>(
+    () =>
+      dataset.groupOrder.map((group) => ({
+        entries: dataset.entries
+          .filter((entry) => entry.group === group)
+          .map((entry) => ({ id: entry.id, title: entry.title })),
+        name: group,
+      })),
+    [dataset],
+  );
+
   return (
-    <aside className="workspace-sidebar">
-      <div className="project-switcher">
-        <button className="project-switcher__button" onClick={onSwitchProject} type="button">
-          <span className="project-switcher__label">Project</span>
-          <span className="project-switcher__name">
-            {state.projectName}
-            <em>switch ⌄</em>
+    <aside className="flex h-full w-[250px] shrink-0 flex-col overflow-y-auto bg-sidebar transition-colors">
+      <div className="flex items-center justify-between gap-1.5 border-b border-border px-4 pt-6 pb-[18px]">
+        <div className="min-w-0">
+          <span className="block text-[10px] font-semibold tracking-[0.14em] text-faint uppercase">
+            Project
           </span>
-        </button>
-        <button
-          aria-label="Open settings"
-          className="icon-button"
-          onClick={onOpenSettings}
-          type="button"
-        >
-          <Settings aria-hidden="true" size={15} strokeWidth={1.6} />
-        </button>
+          <span className="mt-1.5 block truncate text-[15px] font-semibold">
+            {state.projectName}
+          </span>
+        </div>
+        <div className="flex shrink-0 items-center gap-0.5">
+          <Button
+            aria-label="Switch project"
+            className="size-6 rounded-[7px] text-faint hover:text-primary"
+            onClick={onSwitchProject}
+            size="icon"
+            variant="ghost"
+          >
+            <ArrowLeftFromLine aria-hidden="true" size={13} strokeWidth={1.7} />
+          </Button>
+          <Button
+            aria-label="Open settings"
+            className="size-6 rounded-[7px] text-faint hover:text-primary"
+            onClick={onOpenSettings}
+            size="icon"
+            variant="ghost"
+          >
+            <Settings aria-hidden="true" size={14} strokeWidth={1.6} />
+          </Button>
+        </div>
       </div>
-      <nav className="entry-navigation" aria-label="Project entries">
-        {dataset.groupOrder.map((group) => (
-          <section className="entry-group" key={group}>
-            <h2>{group}</h2>
-            {dataset.entries
-              .filter((entry) => entry.group === group)
-              .map((entry) => {
-                const active = entry.id === state.selectedEntryId;
-                return (
-                  <button
-                    aria-current={active ? 'page' : undefined}
-                    className={`entry-link${active ? ' is-active' : ''}`}
-                    key={entry.id}
-                    onClick={() => state.selectEntry(entry.id)}
-                    type="button"
-                  >
-                    <span className="entry-link__dot" />
-                    <span>{entry.title}</span>
-                  </button>
-                );
-              })}
-          </section>
-        ))}
-      </nav>
+      <EntryTree
+        className="min-h-0 flex-1 py-1"
+        groups={groups}
+        onSelectEntry={state.selectEntry}
+        selectedEntryId={state.selectedEntryId}
+      />
     </aside>
   );
 }

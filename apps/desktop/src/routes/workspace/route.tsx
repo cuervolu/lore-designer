@@ -3,6 +3,7 @@ import { PropertiesInspector } from '@features/properties-inspector/PropertiesIn
 import { WorkspaceEditorPane } from '@features/workspace-shell/WorkspaceEditorPane';
 import { WorkspaceSidebar } from '@features/workspace-shell/WorkspaceSidebar';
 import { getActiveEntry, useEditorShellStore } from '@/store/editor-shell';
+import { ChevronLeft } from 'lucide-react';
 
 export const Route = createFileRoute('/workspace')({ component: WorkspaceRoute });
 
@@ -12,7 +13,7 @@ function WorkspaceRoute() {
   const activeEntry = getActiveEntry(state);
 
   return (
-    <main className="workspace-shell">
+    <main className="flex h-full w-full overflow-hidden">
       <WorkspaceSidebar
         onOpenSettings={() => {
           state.setSettingsReturnPath('/workspace');
@@ -27,11 +28,11 @@ function WorkspaceRoute() {
       {activeEntry && state.viewMode === 'edit' && !state.metadataOpen ? (
         <button
           aria-label="Show metadata"
-          className="metadata-tab"
+          className="flex h-full w-[18px] shrink-0 cursor-pointer items-center justify-center border-l border-border bg-toolbar text-faint hover:text-primary"
           onClick={() => state.setMetadataOpen(true)}
           type="button"
         >
-          ‹
+          <ChevronLeft size={11} strokeWidth={1.6} />
         </button>
       ) : null}
       <Outlet />

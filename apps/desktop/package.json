@@ -17,7 +17,6 @@
     "@fltsci/tauri-plugin-tracing": "^0.3.4",
     "@fontsource-variable/lora": "^5.2.8",
     "@lore/ui": "workspace:*",
-    "@pierre/trees": "1.0.0-beta.5",
     "@tanstack/react-router": "^1.170.17",
     "@tanstack/react-router-devtools": "^1.167.0",
     "@tauri-apps/api": "^2.11.1",
