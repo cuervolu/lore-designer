@@ -5,6 +5,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.shadow.Shadow
 import com.composeunstyled.theme.ColorScheme
 import com.composeunstyled.theme.ColorSchemedThemeBuilder
 import com.composeunstyled.theme.ThemeToken
@@ -25,12 +26,16 @@ private val LoreTheme = buildThemeV2 {
     defaultTextStyle = typographyValues.getValue(LoreTypography.body)
     colorSchemeTransitionSpec = tween(DURATION_BASE_MILLIS, easing = StandardEasing)
 
-    colorScheme(ColorScheme.Light) { applyColors(LightColors) }
-    colorScheme(ColorScheme.Dark) { applyColors(DarkColors) }
+    colorScheme(ColorScheme.Light) { applyScheme(LightColors, LightShadows) }
+    colorScheme(ColorScheme.Dark) { applyScheme(DarkColors, DarkShadows) }
 }
 
-private fun ColorSchemedThemeBuilder.applyColors(values: Map<ThemeToken<Color>, Color>) {
+private fun ColorSchemedThemeBuilder.applyScheme(
+    values: Map<ThemeToken<Color>, Color>,
+    shadowValues: Map<ThemeToken<List<Shadow>>, List<Shadow>>,
+) {
     properties[colors] = values
+    properties[shadows] = shadowValues
     defaultContentColor = values.getValue(LoreColors.textPrimary)
     val accent = values.getValue(LoreColors.accent)
     // The selection background is drawn over the text, so it needs alpha to keep glyphs legible;

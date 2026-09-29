@@ -37,7 +37,7 @@ class FileSystemWorkspaceStoreTest {
         val location = parent.resolve("My World")
         val store = FileSystemWorkspaceStore()
 
-        val created = CreateWorkspace(store, WorkspaceIdGenerator { id })(location, "My World", ProjectColor.VIOLET)
+        val created = CreateWorkspace(store, WorkspaceIdGenerator { id })(parent, "My World", ProjectColor.VIOLET)
         val opened = OpenWorkspace(store)(location)
 
         val createdWorkspace = assertIs<WorkspaceResult.Success<Workspace>>(created).value
@@ -57,19 +57,19 @@ class FileSystemWorkspaceStoreTest {
 
     @Test
     fun `creates a workspace in an existing empty directory`() = runTestWithTempDirectory { parent ->
-        val location = Files.createDirectory(parent.resolve("existing"))
+        Files.createDirectory(parent.resolve("Existing"))
 
-        val result = CreateWorkspace(FileSystemWorkspaceStore(), WorkspaceIdGenerator { id })(location, "Existing")
+        val result = CreateWorkspace(FileSystemWorkspaceStore(), WorkspaceIdGenerator { id })(parent, "Existing")
 
         assertIs<WorkspaceResult.Success<Workspace>>(result)
     }
 
     @Test
     fun `rejects a non empty destination without changing it`() = runTestWithTempDirectory { parent ->
-        val location = Files.createDirectory(parent.resolve("occupied"))
+        val location = Files.createDirectory(parent.resolve("Occupied"))
         val existingFile = Files.writeString(location.resolve("notes.txt"), "keep me")
 
-        val result = CreateWorkspace(FileSystemWorkspaceStore(), WorkspaceIdGenerator { id })(location, "Occupied")
+        val result = CreateWorkspace(FileSystemWorkspaceStore(), WorkspaceIdGenerator { id })(parent, "Occupied")
 
         assertIs<WorkspaceError.DestinationNotEmpty>(assertIs<WorkspaceResult.Failure>(result).error)
         assertEquals("keep me", existingFile.readText())
@@ -88,9 +88,9 @@ class FileSystemWorkspaceStoreTest {
     @Test
     fun `filesystem failures are returned with context`() = runTestWithTempDirectory { parent ->
         val regularFile = Files.writeString(parent.resolve("regular-file"), "content")
-        val location = regularFile.resolve("workspace")
+        val location = regularFile.resolve("World")
 
-        val result = CreateWorkspace(FileSystemWorkspaceStore(), WorkspaceIdGenerator { id })(location, "World")
+        val result = CreateWorkspace(FileSystemWorkspaceStore(), WorkspaceIdGenerator { id })(regularFile, "World")
 
         val error = assertIs<WorkspaceError.FileSystemFailure>(assertIs<WorkspaceResult.Failure>(result).error)
         assertEquals(location.toAbsolutePath().normalize(), error.path)

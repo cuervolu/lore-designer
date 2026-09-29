@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.compose.multiplatform)
+    alias(libs.plugins.kotlinx.serialization)
 }
 
 kotlin {
@@ -29,7 +30,10 @@ dependencies {
     implementation(libs.compose.nav3)
 
     implementation(libs.koin.compose)
+    implementation(libs.filekit.core)
+    implementation(libs.filekit.dialogs)
     testImplementation(libs.compose.ui.test)
     testImplementation(compose.desktop.currentOs)
+    testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(kotlin("test"))
 }

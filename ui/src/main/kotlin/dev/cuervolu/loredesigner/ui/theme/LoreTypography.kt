@@ -21,6 +21,7 @@ val typography = ThemeProperty<TextStyle>("typography")
 
 object LoreTypography {
     val title = ThemeToken<TextStyle>("title")
+    val headingLarge = ThemeToken<TextStyle>("heading_large")
     val heading = ThemeToken<TextStyle>("heading")
     val body = ThemeToken<TextStyle>("body")
     val bodyStrong = ThemeToken<TextStyle>("body_strong")
@@ -53,6 +54,7 @@ internal fun loreTypography(): Map<ThemeToken<TextStyle>, TextStyle> {
 
     return mapOf(
         LoreTypography.title to ui.copy(fontSize = 22.sp, fontWeight = FontWeight.SemiBold, lineHeight = 1.25.em),
+        LoreTypography.headingLarge to ui.copy(fontSize = 18.sp, fontWeight = FontWeight.SemiBold),
         LoreTypography.heading to ui.copy(fontSize = 16.sp, fontWeight = FontWeight.SemiBold),
         LoreTypography.body to ui.copy(fontSize = 13.sp, fontWeight = FontWeight.Normal),
         LoreTypography.bodyStrong to ui.copy(fontSize = 13.sp, fontWeight = FontWeight.SemiBold),

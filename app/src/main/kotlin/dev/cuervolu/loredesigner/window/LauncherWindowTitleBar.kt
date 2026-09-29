@@ -20,10 +20,10 @@ import dev.nucleusframework.window.windowDragArea
  * the other: combining them would reserve the controls' space twice.
  */
 @Composable
-internal fun DecoratedWindowScope.LauncherWindowTitleBar() {
+internal fun DecoratedWindowScope.LauncherWindowTitleBar(onSettingsClick: () -> Unit) {
     val isMacOS = Platform.Current == Platform.MacOS
     LauncherTitleBar(
-        onSettingsClick = null,
+        onSettingsClick = onSettingsClick,
         modifier = Modifier.windowDragArea(),
         contentPadding = if (isMacOS) LocalWindowChromeInsets.current.controlsInsets else PaddingValues(0.dp),
         windowControls = {

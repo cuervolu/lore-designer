@@ -27,7 +27,10 @@ fun NucleusApplicationScope.LoreDesignerDesktopApp() {
             minimumSize = DpSize(800.dp, 520.dp),
         ) {
             LoreDesignerTheme(darkTheme = darkTheme) {
-                WindowScaffold(titleBar = { LauncherWindowTitleBar() }) { contentPadding ->
+                WindowScaffold(
+                    // The settings screen does not exist yet; the action is shown to match the design.
+                    titleBar = { LauncherWindowTitleBar(onSettingsClick = {}) },
+                ) { contentPadding ->
                     LoreDesignerApp(Modifier.padding(contentPadding))
                 }
             }

@@ -1,0 +1,145 @@
+package dev.cuervolu.loredesigner.ui
+
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.test.ComposeUiTest
+import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performKeyInput
+import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.runComposeUiTest
+import dev.cuervolu.loredesigner.ui.launcher.FakeWorkspaceStore
+import dev.cuervolu.loredesigner.ui.resources.Res
+import dev.cuervolu.loredesigner.ui.resources.launcher_action_new
+import dev.cuervolu.loredesigner.ui.resources.launcher_action_open
+import dev.cuervolu.loredesigner.ui.resources.launcher_browse
+import dev.cuervolu.loredesigner.ui.resources.launcher_empty_welcome_title
+import dev.cuervolu.loredesigner.ui.resources.launcher_error_not_a_workspace
+import dev.cuervolu.loredesigner.ui.resources.launcher_new_location_label
+import dev.cuervolu.loredesigner.ui.resources.launcher_new_name_label
+import dev.cuervolu.loredesigner.ui.resources.launcher_new_submit
+import dev.cuervolu.loredesigner.ui.resources.launcher_open_path_label
+import dev.cuervolu.loredesigner.ui.resources.launcher_open_submit
+import dev.cuervolu.loredesigner.ui.resources.workspace_placeholder_close
+import dev.cuervolu.loredesigner.ui.theme.LoreDesignerTheme
+import dev.cuervolu.loredesigner.workspace.WorkspaceError
+import org.jetbrains.compose.resources.getString
+import java.nio.file.Path
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+
+// Strings are resolved from resources so the tests pass under any machine locale.
+@OptIn(ExperimentalTestApi::class)
+class LoreDesignerAppTest {
+    private val store = FakeWorkspaceStore()
+
+    private fun ComposeUiTest.launchApp(pickedDirectory: Path? = null) {
+        setContent {
+            LoreDesignerTheme(darkTheme = false) {
+                LoreDesignerApp(
+                    createWorkspace = store.createWorkspace(),
+                    openWorkspace = store.openWorkspace(),
+                    pickDirectory = { pickedDirectory },
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `launcher is the initial destination`() = runComposeUiTest {
+        launchApp()
+
+        onNodeWithText(getString(Res.string.launcher_empty_welcome_title)).assertExists()
+    }
+
+    @Test
+    fun `opening a project navigates to the workspace and closing returns`() = runComposeUiTest {
+        launchApp()
+
+        onAllNodesWithText(getString(Res.string.launcher_action_open)).onFirst().performClick()
+        onNodeWithContentDescription(
+            getString(Res.string.launcher_open_path_label),
+        ).performTextInput("/worlds/Embercourt")
+        onNodeWithText(getString(Res.string.launcher_open_submit)).performClick()
+
+        waitUntil { onAllNodesWithText("Embercourt").fetchSemanticsNodes().isNotEmpty() }
+        assertEquals(listOf(Path.of("/worlds/Embercourt")), store.openedLocations)
+
+        val welcome = getString(Res.string.launcher_empty_welcome_title)
+        onNodeWithText(getString(Res.string.workspace_placeholder_close)).performClick()
+        waitUntil { onAllNodesWithText(welcome).fetchSemanticsNodes().isNotEmpty() }
+    }
+
+    @Test
+    fun `failed open stays on the launcher with a message`() = runComposeUiTest {
+        store.openError = WorkspaceError.NotAWorkspace(Path.of("/tmp/notes"))
+        launchApp()
+
+        onAllNodesWithText(getString(Res.string.launcher_action_open)).onFirst().performClick()
+        onNodeWithContentDescription(getString(Res.string.launcher_open_path_label)).performTextInput("/tmp/notes")
+        onNodeWithText(getString(Res.string.launcher_open_submit)).performClick()
+
+        val message = getString(Res.string.launcher_error_not_a_workspace, "notes")
+        waitUntil { onAllNodesWithText(message).fetchSemanticsNodes().isNotEmpty() }
+        onAllNodesWithText(getString(Res.string.workspace_placeholder_close)).fetchSemanticsNodes().let {
+            assertTrue(it.isEmpty(), "Navigated despite the failure")
+        }
+    }
+
+    @Test
+    fun `creating a project with a browsed location navigates to the workspace`() = runComposeUiTest {
+        launchApp(pickedDirectory = Path.of("/worlds"))
+
+        onAllNodesWithText(getString(Res.string.launcher_action_new)).onFirst().performClick()
+        onNodeWithContentDescription(getString(Res.string.launcher_new_name_label)).performTextInput("Thistlewood")
+        onNodeWithText(getString(Res.string.launcher_new_location_label)).assertExists()
+        onAllNodesWithText(getString(Res.string.launcher_browse)).onFirst().performClick()
+        waitForIdle()
+        onNodeWithText(getString(Res.string.launcher_new_submit)).performClick()
+
+        waitUntil { onAllNodes(hasText("Thistlewood")).fetchSemanticsNodes().isNotEmpty() }
+        assertEquals(listOf(Path.of("/worlds", "Thistlewood")), store.createdLocations)
+    }
+
+    @Test
+    fun `failed create does not navigate`() = runComposeUiTest {
+        store.createError = WorkspaceError.DestinationNotEmpty(Path.of("/worlds/Thistlewood"))
+        launchApp()
+
+        onAllNodesWithText(getString(Res.string.launcher_action_new)).onFirst().performClick()
+        onNodeWithContentDescription(getString(Res.string.launcher_new_name_label)).performTextInput("Thistlewood")
+        onNodeWithContentDescription(getString(Res.string.launcher_new_location_label)).performTextInput("/worlds")
+        onNodeWithText(getString(Res.string.launcher_new_submit)).performClick()
+        waitForIdle()
+
+        assertEquals(1, store.createdLocations.size)
+        assertTrue(
+            onAllNodesWithText(getString(Res.string.workspace_placeholder_close)).fetchSemanticsNodes().isEmpty(),
+        )
+    }
+
+    @Test
+    fun `ctrl+n opens the new project dialog`() = runComposeUiTest {
+        val nameLabel = getString(Res.string.launcher_new_name_label)
+        launchApp()
+        waitForIdle()
+
+        onRoot().performKeyInput {
+            keyDown(Key.CtrlLeft)
+            keyDown(Key.N)
+            keyUp(Key.N)
+            keyUp(Key.CtrlLeft)
+        }
+
+        waitUntil {
+            onAllNodes(hasContentDescription(nameLabel)).fetchSemanticsNodes().isNotEmpty()
+        }
+    }
+}

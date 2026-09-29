@@ -17,12 +17,12 @@ class WorkspaceUseCasesTest {
     fun `create builds current project configuration with generated id`() = runTest {
         val store = RecordingWorkspaceStore()
         val createWorkspace = CreateWorkspace(store, WorkspaceIdGenerator { workspaceId })
-        val location = Path.of("world")
+        val parent = Path.of("worlds")
 
-        val result = createWorkspace(location, "My World", ProjectColor.VIOLET)
+        val result = createWorkspace(parent, "My World", ProjectColor.VIOLET)
 
         val workspace = assertIs<WorkspaceResult.Success<Workspace>>(result).value
-        assertEquals(location.toAbsolutePath().normalize(), workspace.location)
+        assertEquals(parent.toAbsolutePath().normalize().resolve("My World"), workspace.location)
         assertEquals(
             ProjectConfig(
                 version = CURRENT_PROJECT_FORMAT_VERSION,
@@ -32,6 +32,53 @@ class WorkspaceUseCasesTest {
             ),
             workspace.config,
         )
+    }
+
+    @Test
+    fun `create trims the name used for the folder and the project`() = runTest {
+        val createWorkspace = CreateWorkspace(RecordingWorkspaceStore(), WorkspaceIdGenerator { workspaceId })
+
+        val result = createWorkspace(Path.of("folder", "..", "worlds"), "  Embercourt  ")
+
+        val workspace = assertIs<WorkspaceResult.Success<Workspace>>(result).value
+        assertEquals(Path.of("worlds", "Embercourt").toAbsolutePath().normalize(), workspace.location)
+        assertEquals("Embercourt", workspace.config.name)
+    }
+
+    @Test
+    fun `create rejects names that are not portable folder names without accessing storage`() = runTest {
+        val invalidNames =
+            listOf(
+                "a/b",
+                "a\\b",
+                "..",
+                ".",
+                "a:b",
+                "what?",
+                "trailing.",
+                "CON",
+                "nul.txt",
+                "Com1",
+                "lpt9.md",
+                "tab\tname",
+            )
+        val createWorkspace = CreateWorkspace(FailingWorkspaceStore(), WorkspaceIdGenerator { workspaceId })
+
+        for (name in invalidNames) {
+            val result = createWorkspace(Path.of("worlds"), name)
+
+            val error = assertIs<WorkspaceError.InvalidWorkspaceName>(assertIs<WorkspaceResult.Failure>(result).error)
+            assertEquals(name, error.name)
+        }
+    }
+
+    @Test
+    fun `create accepts names that only resemble reserved device names`() = runTest {
+        val createWorkspace = CreateWorkspace(RecordingWorkspaceStore(), WorkspaceIdGenerator { workspaceId })
+
+        for (name in listOf("Console", "COM10", "Aux Realm", "Nullspace")) {
+            assertIs<WorkspaceResult.Success<Workspace>>(createWorkspace(Path.of("worlds"), name))
+        }
     }
 
     @Test
