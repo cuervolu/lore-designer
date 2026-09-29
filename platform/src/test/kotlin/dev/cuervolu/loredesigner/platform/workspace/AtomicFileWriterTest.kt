@@ -3,6 +3,7 @@ package dev.cuervolu.loredesigner.platform.workspace
 import java.io.IOException
 import java.nio.file.AtomicMoveNotSupportedException
 import java.nio.file.CopyOption
+import java.nio.file.FileAlreadyExistsException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
@@ -21,7 +22,7 @@ class AtomicFileWriterTest {
         val target = directory.resolve("project.lore")
         Files.writeString(target, "old")
 
-        AtomicFileWriter().write(target, "new")
+        AtomicFileWriter().replace(target, "new")
 
         assertEquals("new", target.readText())
         assertFalse(directory.listDirectoryEntries().any { it.fileName.toString().endsWith(".tmp") })
@@ -32,7 +33,7 @@ class AtomicFileWriterTest {
         val target = directory.resolve("project.lore")
         val mover = AtomicMoveRejectingMover()
 
-        AtomicFileWriter(mover).write(target, "content")
+        AtomicFileWriter(mover).replace(target, "content")
 
         assertEquals("content", target.readText())
         assertEquals(2, mover.calls)
@@ -44,18 +45,54 @@ class AtomicFileWriterTest {
         val target = directory.resolve("project.lore")
         val writer =
             AtomicFileWriter(
-                object : FileMover {
+                object : NioTestFileOperations() {
                     override fun move(source: Path, target: Path, vararg options: CopyOption): Unit =
                         throw IOException("test")
                 },
             )
 
-        assertFailsWith<IOException> { writer.write(target, "content") }
+        assertFailsWith<IOException> { writer.replace(target, "content") }
 
         assertTrue(directory.listDirectoryEntries().isEmpty())
     }
 
-    private class AtomicMoveRejectingMover : FileMover {
+    @Test
+    fun `create fails without replacing a file that appears before publication`() = withTempDirectory { directory ->
+        val target = directory.resolve("project.lore")
+        val operations =
+            object : NioTestFileOperations() {
+                override fun createLink(link: Path, existing: Path) {
+                    Files.writeString(link, "external content")
+                    super.createLink(link, existing)
+                }
+            }
+
+        assertFailsWith<FileAlreadyExistsException> {
+            AtomicFileWriter(operations).create(target, "workspace content")
+        }
+
+        assertEquals("external content", target.readText())
+        assertFalse(directory.listDirectoryEntries().any { it.fileName.toString().endsWith(".tmp") })
+    }
+
+    @Test
+    fun `create falls back to exclusive copy when hard links are unsupported`() = withTempDirectory { directory ->
+        val target = directory.resolve("project.lore")
+        val operations =
+            object : NioTestFileOperations() {
+                override fun createLink(link: Path, existing: Path): Unit = throw UnsupportedOperationException("test")
+            }
+
+        AtomicFileWriter(operations).create(target, "content")
+
+        assertEquals("content", target.readText())
+        assertFailsWith<FileAlreadyExistsException> {
+            AtomicFileWriter(operations).create(target, "replacement")
+        }
+        assertEquals("content", target.readText())
+    }
+
+    private class AtomicMoveRejectingMover : NioTestFileOperations() {
         var calls = 0
         var fallbackUsed = false
 
@@ -66,6 +103,20 @@ class AtomicFileWriterTest {
             }
             fallbackUsed = true
             Files.move(source, target, *options)
+        }
+    }
+
+    private open class NioTestFileOperations : FileOperations {
+        override fun move(source: Path, target: Path, vararg options: CopyOption) {
+            Files.move(source, target, *options)
+        }
+
+        override fun createLink(link: Path, existing: Path) {
+            Files.createLink(link, existing)
+        }
+
+        override fun copy(source: Path, target: Path) {
+            Files.copy(source, target)
         }
     }
 

@@ -24,6 +24,7 @@ import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.readText
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
@@ -113,15 +114,66 @@ class FileSystemWorkspaceStoreTest {
         assertFalse(newLocation.exists())
     }
 
+    @Test
+    fun `file appearing during creation is preserved and reported as an io failure`() =
+        runTestWithTempDirectory { parent ->
+            val location = parent.resolve("racing")
+            val writer = FileAppearingBeforeProjectCreation()
+            val store = FileSystemWorkspaceStore.withFileWriter(writer)
+            val config = ProjectConfig(1, id, "World", null)
+
+            val result = store.create(location, config)
+
+            assertIs<WorkspaceError.FileSystemFailure>(assertIs<WorkspaceResult.Failure>(result).error)
+            assertEquals("external project", location.resolve("project.lore").readText())
+            assertFalse(location.resolve(".lore/types.json").exists())
+            assertFalse(location.resolve(".lore").exists())
+        }
+
+    @Test
+    fun `unexpected writer failures are rolled back and rethrown`() = runTestWithTempDirectory { parent ->
+        val location = parent.resolve("bug")
+        val store =
+            FileSystemWorkspaceStore.withFileWriter(
+                object : WorkspaceFileWriter {
+                    override fun create(target: Path, content: String) {
+                        error("programming bug")
+                    }
+
+                    override fun replace(target: Path, content: String) = error("not used")
+                },
+            )
+        val config = ProjectConfig(1, id, "World", null)
+
+        assertFailsWith<IllegalStateException> { store.create(location, config) }
+
+        assertFalse(location.exists())
+    }
+
     private class FailOnSecondWrite : WorkspaceFileWriter {
         private val delegate = AtomicFileWriter()
         private var calls = 0
 
-        override fun write(target: Path, content: String) {
+        override fun create(target: Path, content: String) {
             calls++
             if (calls == 2) throw IOException("simulated write failure")
-            delegate.write(target, content)
+            delegate.create(target, content)
         }
+
+        override fun replace(target: Path, content: String) = delegate.replace(target, content)
+    }
+
+    private class FileAppearingBeforeProjectCreation : WorkspaceFileWriter {
+        private val delegate = AtomicFileWriter()
+
+        override fun create(target: Path, content: String) {
+            if (target.fileName.toString() == "project.lore") {
+                Files.writeString(target, "external project")
+            }
+            delegate.create(target, content)
+        }
+
+        override fun replace(target: Path, content: String) = delegate.replace(target, content)
     }
 
     private fun runTestWithTempDirectory(block: suspend (Path) -> Unit) = runTest {

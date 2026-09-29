@@ -7,35 +7,65 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 
-internal fun interface WorkspaceFileWriter {
-    fun write(target: Path, content: String)
+internal interface WorkspaceFileWriter {
+    fun create(target: Path, content: String)
+
+    fun replace(target: Path, content: String)
 }
 
-internal interface FileMover {
+internal interface FileOperations {
     fun move(source: Path, target: Path, vararg options: CopyOption)
+
+    fun createLink(link: Path, existing: Path)
+
+    fun copy(source: Path, target: Path)
 }
 
-private object NioFileMover : FileMover {
+private object NioFileOperations : FileOperations {
     override fun move(source: Path, target: Path, vararg options: CopyOption) {
         Files.move(source, target, *options)
     }
+
+    override fun createLink(link: Path, existing: Path) {
+        Files.createLink(link, existing)
+    }
+
+    override fun copy(source: Path, target: Path) {
+        Files.copy(source, target)
+    }
 }
 
-internal class AtomicFileWriter(private val fileMover: FileMover = NioFileMover) : WorkspaceFileWriter {
-    override fun write(target: Path, content: String) {
-        val temporaryFile = Files.createTempFile(target.parent, ".${target.fileName}.", ".tmp")
-        try {
-            Files.writeString(temporaryFile, content, StandardCharsets.UTF_8)
+internal class AtomicFileWriter(private val fileOperations: FileOperations = NioFileOperations) : WorkspaceFileWriter {
+    override fun create(target: Path, content: String) {
+        withTemporaryFile(target, content) { temporaryFile ->
             try {
-                fileMover.move(
+                fileOperations.createLink(target, temporaryFile)
+            } catch (_: UnsupportedOperationException) {
+                fileOperations.copy(temporaryFile, target)
+            }
+        }
+    }
+
+    override fun replace(target: Path, content: String) {
+        withTemporaryFile(target, content) { temporaryFile ->
+            try {
+                fileOperations.move(
                     temporaryFile,
                     target,
                     StandardCopyOption.ATOMIC_MOVE,
                     StandardCopyOption.REPLACE_EXISTING,
                 )
             } catch (_: AtomicMoveNotSupportedException) {
-                fileMover.move(temporaryFile, target, StandardCopyOption.REPLACE_EXISTING)
+                fileOperations.move(temporaryFile, target, StandardCopyOption.REPLACE_EXISTING)
             }
+        }
+    }
+
+    private fun withTemporaryFile(target: Path, content: String, publish: (Path) -> Unit) {
+        val temporaryFile = Files.createTempFile(target.parent, ".${target.fileName}.", ".tmp")
+        try {
+            Files.writeString(temporaryFile, content, StandardCharsets.UTF_8)
+            publish(temporaryFile)
         } finally {
             Files.deleteIfExists(temporaryFile)
         }

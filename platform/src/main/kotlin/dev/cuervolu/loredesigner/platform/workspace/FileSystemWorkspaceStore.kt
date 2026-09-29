@@ -9,13 +9,14 @@ import dev.cuervolu.loredesigner.workspace.WorkspaceStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.LinkOption
 import java.nio.file.Path
 import kotlin.io.path.isDirectory
+import kotlin.io.path.isRegularFile
+import kotlin.io.path.readText
 
 class FileSystemWorkspaceStore private constructor(
     private val fileWriter: WorkspaceFileWriter,
@@ -33,7 +34,10 @@ class FileSystemWorkspaceStore private constructor(
     }
 
     private fun createWorkspace(location: Path, config: ProjectConfig): WorkspaceResult<Workspace> {
+        val typesContent = initialTypesFile()
+        val projectContent = projectFileCodec.encode(config)
         val existedBefore = Files.exists(location, LinkOption.NOFOLLOW_LINKS)
+        val createdResources = mutableListOf<Path>()
         try {
             if (existedBefore) {
                 if (!location.isDirectory()) {
@@ -53,12 +57,9 @@ class FileSystemWorkspaceStore private constructor(
         if (!existedBefore) {
             try {
                 Files.createDirectories(location)
+                createdResources.add(location)
             } catch (exception: IOException) {
-                try {
-                    Files.deleteIfExists(location)
-                } catch (cleanupFailure: IOException) {
-                    exception.addSuppressed(cleanupFailure)
-                }
+                rollbackCreation(createdResources, exception)
                 return WorkspaceResult.Failure(
                     WorkspaceError.FileSystemFailure(location, FileSystemOperation.CREATE_DIRECTORY, exception),
                 )
@@ -72,23 +73,22 @@ class FileSystemWorkspaceStore private constructor(
         var operation = FileSystemOperation.CREATE_DIRECTORY
         try {
             Files.createDirectory(metadataDirectory)
+            createdResources.add(metadataDirectory)
             activePath = typesFile
             operation = FileSystemOperation.WRITE
-            fileWriter.write(typesFile, initialTypesFile())
+            fileWriter.create(typesFile, typesContent)
+            createdResources.add(typesFile)
             activePath = projectFile
-            fileWriter.write(projectFile, projectFileCodec.encode(config))
-        } catch (exception: Exception) {
-            rollbackCreation(
-                location = location,
-                removeLocation = !existedBefore,
-                projectFile = projectFile,
-                typesFile = typesFile,
-                metadataDirectory = metadataDirectory,
-                originalFailure = exception,
-            )
+            fileWriter.create(projectFile, projectContent)
+            createdResources.add(projectFile)
+        } catch (exception: IOException) {
+            rollbackCreation(createdResources, exception)
             return WorkspaceResult.Failure(
                 WorkspaceError.FileSystemFailure(activePath, operation, exception),
             )
+        } catch (exception: RuntimeException) {
+            rollbackCreation(createdResources, exception)
+            throw exception
         }
 
         return WorkspaceResult.Success(Workspace(location, config))
@@ -97,10 +97,10 @@ class FileSystemWorkspaceStore private constructor(
     private fun openWorkspace(location: Path): WorkspaceResult<Workspace> {
         val projectFile = location.resolve(PROJECT_FILE_NAME)
         try {
-            if (!location.isDirectory() || !Files.isRegularFile(projectFile)) {
+            if (!location.isDirectory() || !projectFile.isRegularFile()) {
                 return WorkspaceResult.Failure(WorkspaceError.NotAWorkspace(location))
             }
-            val content = Files.readString(projectFile)
+            val content = projectFile.readText()
             return when (val decoded = projectFileCodec.decode(projectFile, content)) {
                 is WorkspaceResult.Failure -> decoded
                 is WorkspaceResult.Success -> WorkspaceResult.Success(Workspace(location, decoded.value))
@@ -112,16 +112,9 @@ class FileSystemWorkspaceStore private constructor(
         }
     }
 
-    private fun rollbackCreation(
-        location: Path,
-        removeLocation: Boolean,
-        projectFile: Path,
-        typesFile: Path,
-        metadataDirectory: Path,
-        originalFailure: Exception,
-    ) {
-        listOf(projectFile, typesFile, metadataDirectory)
-            .plus(if (removeLocation) listOf(location) else emptyList())
+    private fun rollbackCreation(createdResources: List<Path>, originalFailure: Exception) {
+        createdResources
+            .asReversed()
             .forEach { path ->
                 try {
                     Files.deleteIfExists(path)
