@@ -8,7 +8,7 @@ class ProjectConfigTest {
     @Test
     fun `stores project configuration`() {
         val id = WorkspaceId.parse(
-            "01995f7e-1d74-7c83-a8a9-4fd2ed9cb380"
+            "01995f7e-1d74-7c83-a8a9-4fd2ed9cb380",
         )
 
         val config = ProjectConfig(

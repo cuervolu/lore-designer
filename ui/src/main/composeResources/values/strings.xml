@@ -1,0 +1,11 @@
+<resources>
+    <string name="diagnostic_types_invalid_key">Type key "%1$s" is invalid.</string>
+    <string name="diagnostic_types_blank_name">Type name cannot be blank.</string>
+    <string name="diagnostic_types_invalid_property_key">Property key "%1$s" is invalid.</string>
+    <string name="diagnostic_types_blank_property_name">Property "%1$s" must have a name.</string>
+    <string name="diagnostic_types_duplicate_property_key">Property key "%1$s" is duplicated.</string>
+    <string name="diagnostic_types_duplicate_property_id">Property id "%1$s" is duplicated.</string>
+    <string name="diagnostic_types_invalid_number_range">Property "%1$s" has a minimum (%2$s) greater than its maximum (%3$s).</string>
+    <string name="diagnostic_types_duplicate_select_option_key">Property "%1$s" has a duplicated option key "%2$s".</string>
+    <string name="diagnostic_types_duplicate_select_option_id">Property "%1$s" has a duplicated option id "%2$s".</string>
+</resources>

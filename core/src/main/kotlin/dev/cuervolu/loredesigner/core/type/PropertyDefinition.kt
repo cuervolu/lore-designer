@@ -4,20 +4,20 @@ sealed interface PropertyDefinition {
     val id: PropertyId
     val key: String
     val name: String
-    val required: Boolean
+    val required: kotlin.Boolean
 
     data class Text(
         override val id: PropertyId,
         override val key: String,
         override val name: String,
-        override val required: Boolean,
+        override val required: kotlin.Boolean,
     ) : PropertyDefinition
 
     data class Number(
         override val id: PropertyId,
         override val key: String,
         override val name: String,
-        override val required: Boolean,
+        override val required: kotlin.Boolean,
         val min: Double? = null,
         val max: Double? = null,
     ) : PropertyDefinition
@@ -26,22 +26,22 @@ sealed interface PropertyDefinition {
         override val id: PropertyId,
         override val key: String,
         override val name: String,
-        override val required: Boolean,
+        override val required: kotlin.Boolean,
     ) : PropertyDefinition
 
     data class Date(
         override val id: PropertyId,
         override val key: String,
         override val name: String,
-        override val required: Boolean,
+        override val required: kotlin.Boolean,
     ) : PropertyDefinition
 
     data class Select(
         override val id: PropertyId,
         override val key: String,
         override val name: String,
-        override val required: Boolean,
-        val multiple: Boolean,
+        override val required: kotlin.Boolean,
+        val multiple: kotlin.Boolean,
         val options: List<SelectOption>,
     ) : PropertyDefinition
 
@@ -49,8 +49,8 @@ sealed interface PropertyDefinition {
         override val id: PropertyId,
         override val key: String,
         override val name: String,
-        override val required: Boolean,
-        val multiple: Boolean,
+        override val required: kotlin.Boolean,
+        val multiple: kotlin.Boolean,
         val targetTypes: List<TypeId>,
     ) : PropertyDefinition
 }

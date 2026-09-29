@@ -1,0 +1,11 @@
+<resources>
+    <string name="diagnostic_types_invalid_key">La clave del tipo "%1$s" no es válida.</string>
+    <string name="diagnostic_types_blank_name">El nombre del tipo no puede estar vacío.</string>
+    <string name="diagnostic_types_invalid_property_key">La clave de la propiedad "%1$s" no es válida.</string>
+    <string name="diagnostic_types_blank_property_name">La propiedad "%1$s" debe tener un nombre.</string>
+    <string name="diagnostic_types_duplicate_property_key">La clave de propiedad "%1$s" está duplicada.</string>
+    <string name="diagnostic_types_duplicate_property_id">El id de propiedad "%1$s" está duplicado.</string>
+    <string name="diagnostic_types_invalid_number_range">La propiedad "%1$s" tiene un mínimo (%2$s) mayor que su máximo (%3$s).</string>
+    <string name="diagnostic_types_duplicate_select_option_key">La propiedad "%1$s" tiene la clave de opción "%2$s" duplicada.</string>
+    <string name="diagnostic_types_duplicate_select_option_id">La propiedad "%1$s" tiene el id de opción "%2$s" duplicado.</string>
+</resources>

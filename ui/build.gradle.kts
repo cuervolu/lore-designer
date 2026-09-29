@@ -8,6 +8,10 @@ kotlin {
     jvmToolchain(25)
 }
 
+compose.resources {
+    packageOfResClass = "dev.cuervolu.loredesigner.ui.resources"
+}
+
 dependencies {
     implementation(project(":core"))
     implementation(project(":workspace"))
