@@ -9,6 +9,4 @@ kotlin {
 dependencies {
     implementation(libs.kotlinx.datetime)
     testImplementation(kotlin("test"))
-    testImplementation(platform(libs.junit.bom))
-    testImplementation(libs.junit.jupiter)
 }
