@@ -12,10 +12,8 @@ import kotlin.io.path.createDirectories
  * per [policy]. Retention enforces both a maximum archive count (fixed archive slots) and a
  * maximum total size across the active file and its archives.
  */
-class RotatingFileLogWriter(
-    directory: Path,
-    private val policy: LogRotationPolicy = LogRotationPolicy.Default,
-) : LogWriter() {
+class RotatingFileLogWriter(directory: Path, private val policy: LogRotationPolicy = LogRotationPolicy.Default) :
+    LogWriter() {
     private val directory: File = directory.createDirectories().toFile()
     private val activeFile: File = File(this.directory, ACTIVE_FILE_NAME)
 

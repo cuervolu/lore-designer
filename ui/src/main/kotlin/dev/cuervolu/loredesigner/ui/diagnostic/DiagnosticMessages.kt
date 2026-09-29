@@ -9,7 +9,7 @@ import dev.cuervolu.loredesigner.ui.resources.allStringResources
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import java.text.NumberFormat
-import java.util.*
+import java.util.Locale
 
 /**
  * Resolves a diagnostic into a message for the current locale.

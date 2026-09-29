@@ -3,7 +3,14 @@ package dev.cuervolu.loredesigner.core.types
 import dev.cuervolu.loredesigner.core.diagnostic.Diagnostic
 import dev.cuervolu.loredesigner.core.diagnostic.DiagnosticArgument
 import dev.cuervolu.loredesigner.core.diagnostic.DiagnosticSeverity
-import dev.cuervolu.loredesigner.core.type.*
+import dev.cuervolu.loredesigner.core.type.PropertyDefinition
+import dev.cuervolu.loredesigner.core.type.PropertyId
+import dev.cuervolu.loredesigner.core.type.SelectOption
+import dev.cuervolu.loredesigner.core.type.SelectOptionId
+import dev.cuervolu.loredesigner.core.type.TypeDefinition
+import dev.cuervolu.loredesigner.core.type.TypeDefinitionValidator
+import dev.cuervolu.loredesigner.core.type.TypeDiagnosticCodes
+import dev.cuervolu.loredesigner.core.type.TypeId
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue

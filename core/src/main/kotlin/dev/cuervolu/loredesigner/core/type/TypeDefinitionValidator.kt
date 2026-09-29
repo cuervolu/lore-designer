@@ -17,10 +17,7 @@ class TypeDefinitionValidator {
         return diagnostics
     }
 
-    private fun validateTypeKey(
-        type: TypeDefinition,
-        diagnostics: MutableList<Diagnostic>,
-    ) {
+    private fun validateTypeKey(type: TypeDefinition, diagnostics: MutableList<Diagnostic>) {
         if (!keyPattern.matches(type.key)) {
             diagnostics += Diagnostic(
                 severity = DiagnosticSeverity.ERROR,
@@ -30,10 +27,7 @@ class TypeDefinitionValidator {
         }
     }
 
-    private fun validateTypeName(
-        type: TypeDefinition,
-        diagnostics: MutableList<Diagnostic>,
-    ) {
+    private fun validateTypeName(type: TypeDefinition, diagnostics: MutableList<Diagnostic>) {
         if (type.name.isBlank()) {
             diagnostics += Diagnostic(
                 severity = DiagnosticSeverity.ERROR,
@@ -42,10 +36,7 @@ class TypeDefinitionValidator {
         }
     }
 
-    private fun validateProperties(
-        type: TypeDefinition,
-        diagnostics: MutableList<Diagnostic>,
-    ) {
+    private fun validateProperties(type: TypeDefinition, diagnostics: MutableList<Diagnostic>) {
         validateDuplicatePropertyKeys(type, diagnostics)
         validateDuplicatePropertyIds(type, diagnostics)
 
@@ -65,10 +56,7 @@ class TypeDefinitionValidator {
         }
     }
 
-    private fun validateDuplicatePropertyKeys(
-        type: TypeDefinition,
-        diagnostics: MutableList<Diagnostic>,
-    ) {
+    private fun validateDuplicatePropertyKeys(type: TypeDefinition, diagnostics: MutableList<Diagnostic>) {
         val duplicateKeys = type.properties
             .groupBy { it.key }
             .filterValues { it.size > 1 }
@@ -83,10 +71,7 @@ class TypeDefinitionValidator {
         }
     }
 
-    private fun validateDuplicatePropertyIds(
-        type: TypeDefinition,
-        diagnostics: MutableList<Diagnostic>,
-    ) {
+    private fun validateDuplicatePropertyIds(type: TypeDefinition, diagnostics: MutableList<Diagnostic>) {
         val duplicateIds = type.properties
             .groupBy { it.id }
             .filterValues { it.size > 1 }
@@ -101,10 +86,7 @@ class TypeDefinitionValidator {
         }
     }
 
-    private fun validatePropertyKey(
-        property: PropertyDefinition,
-        diagnostics: MutableList<Diagnostic>,
-    ) {
+    private fun validatePropertyKey(property: PropertyDefinition, diagnostics: MutableList<Diagnostic>) {
         if (!keyPattern.matches(property.key)) {
             diagnostics += Diagnostic(
                 severity = DiagnosticSeverity.ERROR,
@@ -114,10 +96,7 @@ class TypeDefinitionValidator {
         }
     }
 
-    private fun validatePropertyName(
-        property: PropertyDefinition,
-        diagnostics: MutableList<Diagnostic>,
-    ) {
+    private fun validatePropertyName(property: PropertyDefinition, diagnostics: MutableList<Diagnostic>) {
         if (property.name.isBlank()) {
             diagnostics += Diagnostic(
                 severity = DiagnosticSeverity.ERROR,
@@ -127,10 +106,7 @@ class TypeDefinitionValidator {
         }
     }
 
-    private fun validateNumberProperty(
-        property: PropertyDefinition.Number,
-        diagnostics: MutableList<Diagnostic>,
-    ) {
+    private fun validateNumberProperty(property: PropertyDefinition.Number, diagnostics: MutableList<Diagnostic>) {
         val min = property.min
         val max = property.max
 
@@ -147,10 +123,7 @@ class TypeDefinitionValidator {
         }
     }
 
-    private fun validateSelectProperty(
-        property: PropertyDefinition.Select,
-        diagnostics: MutableList<Diagnostic>,
-    ) {
+    private fun validateSelectProperty(property: PropertyDefinition.Select, diagnostics: MutableList<Diagnostic>) {
         val duplicateKeys = property.options
             .groupBy { it.key }
             .filterValues { it.size > 1 }

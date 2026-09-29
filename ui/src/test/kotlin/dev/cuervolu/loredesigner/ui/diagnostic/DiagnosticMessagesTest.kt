@@ -4,7 +4,11 @@ import dev.cuervolu.loredesigner.core.diagnostic.DiagnosticCode
 import dev.cuervolu.loredesigner.core.type.TypeDiagnosticCodes
 import java.io.File
 import javax.xml.parsers.DocumentBuilderFactory
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class DiagnosticMessagesTest {
 

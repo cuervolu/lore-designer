@@ -14,9 +14,12 @@ class RotatingFileLogWriterTest {
         return RotatingFileLogWriter(directory, policy) to directory
     }
 
-    private fun RotatingFileLogWriter.logLine(message: String) = log(Severity.Info, message, tag = "Test", throwable = null)
+    private fun RotatingFileLogWriter.logLine(message: String) =
+        log(Severity.Info, message, tag = "Test", throwable = null)
 
-    private fun Path.archives() = listDirectoryEntries().filter { it.fileName.toString().startsWith("loredesigner.log.") }
+    private fun Path.archives() = listDirectoryEntries().filter {
+        it.fileName.toString().startsWith("loredesigner.log.")
+    }
 
     @Test
     fun `rotates the active file once it exceeds the size limit`() {
@@ -25,7 +28,10 @@ class RotatingFileLogWriterTest {
 
         repeat(20) { writer.logLine("x".repeat(20)) }
 
-        assertTrue(directory.archives().isNotEmpty(), "expected at least one archived file after exceeding the size limit")
+        assertTrue(
+            directory.archives().isNotEmpty(),
+            "expected at least one archived file after exceeding the size limit",
+        )
     }
 
     @Test
@@ -46,6 +52,9 @@ class RotatingFileLogWriterTest {
         repeat(100) { writer.logLine("x".repeat(20)) }
 
         val totalBytes = directory.listDirectoryEntries().sumOf { it.toFile().length() }
-        assertTrue(totalBytes <= policy.maxTotalSizeBytes, "total retained size $totalBytes exceeded ${policy.maxTotalSizeBytes}")
+        assertTrue(
+            totalBytes <= policy.maxTotalSizeBytes,
+            "total retained size $totalBytes exceeded ${policy.maxTotalSizeBytes}",
+        )
     }
 }
