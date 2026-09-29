@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__compose-hot-reload__status",
+      "mcp__compose-hot-reload__list_windows",
+      "mcp__compose-hot-reload__get_semantic_tree",
+      "mcp__compose-hot-reload__take_screenshot",
+      "mcp__compose-hot-reload__get_logs",
+      "mcp__compose-hot-reload__get_ui_error",
+      "mcp__compose-hot-reload__reload",
+      "mcp__compose-hot-reload__resize_window",
+      "mcp__compose-hot-reload__click",
+      "mcp__compose-hot-reload__long_click",
+      "mcp__compose-hot-reload__scroll",
+      "mcp__compose-hot-reload__scroll_to_index",
+      "mcp__compose-hot-reload__type_text",
+      "mcp__compose-hot-reload__restart",
+      "mcp__compose-hot-reload__reset_ui",
+      "mcp__compose-hot-reload__await_reload"
+    ]
+  }
+}

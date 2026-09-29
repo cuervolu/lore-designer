@@ -1,0 +1,29 @@
+[mcp_servers.compose-hot-reload]
+command = "cmd.exe"
+args = ["/d", "/c", "gradlew.bat", "--no-daemon", "--quiet", "--console=plain", ":app:hotMcpServer"]
+startup_timeout_sec = 120
+tool_timeout_sec = 120
+
+[mcp_servers.compose-hot-reload.tools.status]
+approval_mode = "approve"
+
+[mcp_servers.compose-hot-reload.tools.list_windows]
+approval_mode = "approve"
+
+[mcp_servers.compose-hot-reload.tools.get_semantic_tree]
+approval_mode = "approve"
+
+[mcp_servers.compose-hot-reload.tools.take_screenshot]
+approval_mode = "approve"
+
+[mcp_servers.compose-hot-reload.tools.get_logs]
+approval_mode = "approve"
+
+[mcp_servers.compose-hot-reload.tools.get_ui_error]
+approval_mode = "approve"
+
+[mcp_servers.compose-hot-reload.tools.reload]
+approval_mode = "approve"
+
+[mcp_servers.compose-hot-reload.tools.resize_window]
+approval_mode = "approve"
