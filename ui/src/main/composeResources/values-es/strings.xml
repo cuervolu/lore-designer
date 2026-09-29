@@ -1,4 +1,6 @@
 <resources>
+    <string name="app_name">Lore Designer</string>
+    <string name="titlebar_settings">Configuración</string>
     <string name="diagnostic_types_invalid_key">La clave del tipo "%1$s" no es válida.</string>
     <string name="diagnostic_types_blank_name">El nombre del tipo no puede estar vacío.</string>
     <string name="diagnostic_types_invalid_property_key">La clave de la propiedad "%1$s" no es válida.</string>

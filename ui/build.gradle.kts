@@ -30,5 +30,6 @@ dependencies {
 
     implementation(libs.koin.compose)
     testImplementation(libs.compose.ui.test)
+    testImplementation(compose.desktop.currentOs)
     testImplementation(kotlin("test"))
 }

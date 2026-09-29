@@ -84,6 +84,8 @@ dependencies {
     implementation(compose.desktop.currentOs)
     implementation(libs.nucleus.application)
     implementation(libs.nucleus.decorated.window.tao)
+    implementation(libs.nucleus.darkmode.detector)
+    implementation(libs.nucleus.core.runtime)
     implementation(libs.koin.core)
     implementation(libs.filekit.core)
     implementation(libs.kotlinx.coroutines.swing)
