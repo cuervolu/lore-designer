@@ -18,7 +18,7 @@ dependencies {
     implementation(libs.filekit.core)
 
     implementation(libs.multiplatformSettings)
-
+    implementation(libs.ktoml)
     implementation(libs.sqlite.bundled)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.multiplatformSettings.test)

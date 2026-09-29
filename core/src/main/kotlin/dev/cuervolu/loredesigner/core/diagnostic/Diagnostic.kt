@@ -1,7 +1,7 @@
 package dev.cuervolu.loredesigner.core.diagnostic
 
 /**
- * Describes what happened, not how it is shown: the UI resolves [code] and [arguments]
+ * the UI resolves [code] and [arguments]
  * into a localized message.
  */
 data class Diagnostic(
