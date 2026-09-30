@@ -17,9 +17,10 @@ kotlin {
 
 nucleus.application {
     mainClass = "dev.cuervolu.loredesigner.MainKt"
-    jvmArgs += listOf("--enable-native-access=ALL-UNNAMED")
 
     nativeDistributions {
+        enableAotCache = true
+        cleanupNativeLibs = true
         appResourcesRootDir.set(project.layout.projectDirectory.dir("src/main/appResources"))
 
         targetFormats(
