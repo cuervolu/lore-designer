@@ -6,6 +6,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.rememberWindowState
+import dev.cuervolu.loredesigner.resources.Res
+import dev.cuervolu.loredesigner.resources.app_icon
 import dev.cuervolu.loredesigner.ui.LoreDesignerApp
 import dev.cuervolu.loredesigner.ui.theme.LoreDesignerTheme
 import dev.cuervolu.loredesigner.window.LauncherWindowTitleBar
@@ -14,6 +16,7 @@ import dev.nucleusframework.application.NucleusApplicationScope
 import dev.nucleusframework.darkmodedetector.isSystemInDarkMode
 import dev.nucleusframework.window.NucleusDecoratedWindowTheme
 import dev.nucleusframework.window.WindowScaffold
+import org.jetbrains.compose.resources.painterResource
 
 @Composable
 fun NucleusApplicationScope.LoreDesignerDesktopApp() {
@@ -24,6 +27,7 @@ fun NucleusApplicationScope.LoreDesignerDesktopApp() {
             onCloseRequest = ::exitApplication,
             state = rememberWindowState(size = DpSize(1100.dp, 720.dp)),
             title = "Lore Designer",
+            icon = painterResource(Res.drawable.app_icon),
             minimumSize = DpSize(800.dp, 520.dp),
         ) {
             LoreDesignerTheme(darkTheme = darkTheme) {
