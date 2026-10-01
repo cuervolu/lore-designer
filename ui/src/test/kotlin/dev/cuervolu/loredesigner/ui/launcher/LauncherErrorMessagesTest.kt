@@ -2,15 +2,15 @@ package dev.cuervolu.loredesigner.ui.launcher
 
 import dev.cuervolu.loredesigner.workspace.FileSystemOperation
 import dev.cuervolu.loredesigner.workspace.WorkspaceError
+import okio.Path.Companion.toPath
 import java.io.IOException
-import java.nio.file.Path
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
 
 class LauncherErrorMessagesTest {
-    private val folder = Path.of("/worlds/Embercourt")
+    private val folder = "/worlds/Embercourt".toPath()
 
     private val allErrors: List<LauncherError> =
         listOf(

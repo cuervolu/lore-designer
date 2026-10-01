@@ -9,6 +9,7 @@ plugins {
     alias(libs.plugins.stability.analyzer) apply false
     alias(libs.plugins.nucleus) apply false
     alias(libs.plugins.spotless)
+    alias(libs.plugins.kover)
 }
 
 allprojects {
@@ -36,4 +37,13 @@ spotless {
         trimTrailingWhitespace()
         endWithNewline()
     }
+}
+
+dependencies {
+    kover(project(":app"))
+    kover(project(":core"))
+    kover(project(":workspace"))
+    kover(project(":platform"))
+    kover(project(":editor"))
+    kover(project(":ui"))
 }

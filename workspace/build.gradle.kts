@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.kover)
 }
 
 kotlin {
@@ -8,6 +9,7 @@ kotlin {
 
 dependencies {
     implementation(project(":core"))
+    api(libs.okio)
 
     implementation(libs.kotlinx.coroutines.core)
 

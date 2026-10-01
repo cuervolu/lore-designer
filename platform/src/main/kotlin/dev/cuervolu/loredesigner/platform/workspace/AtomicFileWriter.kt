@@ -1,73 +1,38 @@
 package dev.cuervolu.loredesigner.platform.workspace
 
-import java.nio.charset.StandardCharsets
-import java.nio.file.AtomicMoveNotSupportedException
-import java.nio.file.CopyOption
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.StandardCopyOption
+import okio.FileSystem
+import okio.IOException
+import okio.Path
+import kotlin.random.Random
 
-internal interface WorkspaceFileWriter {
-    fun create(target: Path, content: String)
-
-    fun replace(target: Path, content: String)
-}
-
-internal interface FileOperations {
-    fun move(source: Path, target: Path, vararg options: CopyOption)
-
-    fun createLink(link: Path, existing: Path)
-
-    fun copy(source: Path, target: Path)
-}
-
-private object NioFileOperations : FileOperations {
-    override fun move(source: Path, target: Path, vararg options: CopyOption) {
-        Files.move(source, target, *options)
-    }
-
-    override fun createLink(link: Path, existing: Path) {
-        Files.createLink(link, existing)
-    }
-
-    override fun copy(source: Path, target: Path) {
-        Files.copy(source, target)
-    }
-}
-
-internal class AtomicFileWriter(private val fileOperations: FileOperations = NioFileOperations) : WorkspaceFileWriter {
-    override fun create(target: Path, content: String) {
-        withTemporaryFile(target, content) { temporaryFile ->
-            try {
-                fileOperations.createLink(target, temporaryFile)
-            } catch (_: UnsupportedOperationException) {
-                fileOperations.copy(temporaryFile, target)
-            }
-        }
-    }
-
-    override fun replace(target: Path, content: String) {
-        withTemporaryFile(target, content) { temporaryFile ->
-            try {
-                fileOperations.move(
-                    temporaryFile,
-                    target,
-                    StandardCopyOption.ATOMIC_MOVE,
-                    StandardCopyOption.REPLACE_EXISTING,
-                )
-            } catch (_: AtomicMoveNotSupportedException) {
-                fileOperations.move(temporaryFile, target, StandardCopyOption.REPLACE_EXISTING)
-            }
-        }
-    }
-
-    private fun withTemporaryFile(target: Path, content: String, publish: (Path) -> Unit) {
-        val temporaryFile = Files.createTempFile(target.parent, ".${target.fileName}.", ".tmp")
+internal class AtomicFileWriter(private val fileSystem: FileSystem) {
+    /**
+     * Creates [target] with [content], failing if it already exists.
+     *
+     * Okio has no exclusive atomic publish, so the target is first reserved with an exclusive empty
+     * create and then atomically replaced by a fully written temporary file. The reservation only
+     * closes the initial creation race; it is not a lock. A crash after reserving can leave an empty
+     * target behind, which reopens as an invalid project file.
+     */
+    fun create(target: Path, content: String) {
+        fileSystem.write(target, mustCreate = true) {}
+        val temporaryFile =
+            requireNotNull(target.parent) / ".${target.name}.${Random.nextLong().toULong().toString(16)}.tmp"
         try {
-            Files.writeString(temporaryFile, content, StandardCharsets.UTF_8)
-            publish(temporaryFile)
-        } finally {
-            Files.deleteIfExists(temporaryFile)
+            fileSystem.write(temporaryFile, mustCreate = true) { writeUtf8(content) }
+            fileSystem.atomicMove(temporaryFile, target)
+        } catch (failure: Exception) {
+            deleteAfterFailure(temporaryFile, failure)
+            deleteAfterFailure(target, failure)
+            throw failure
+        }
+    }
+
+    private fun deleteAfterFailure(path: Path, originalFailure: Exception) {
+        try {
+            fileSystem.delete(path, mustExist = false)
+        } catch (cleanupFailure: IOException) {
+            originalFailure.addSuppressed(cleanupFailure)
         }
     }
 }

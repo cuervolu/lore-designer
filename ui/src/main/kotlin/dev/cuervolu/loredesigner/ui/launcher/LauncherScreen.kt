@@ -18,14 +18,15 @@ import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.openDirectoryPicker
 import kotlinx.coroutines.launch
+import okio.Path
+import okio.Path.Companion.toOkioPath
 import org.jetbrains.compose.resources.stringResource
-import java.nio.file.Path
 
 /** Picks a directory with the platform's native dialog; `null` when the user cancels. */
 typealias DirectoryPicker = suspend (title: String) -> Path?
 
 internal val FileKitDirectoryPicker: DirectoryPicker = { title ->
-    FileKit.openDirectoryPicker(dialogSettings = FileKitDialogSettings(title = title))?.file?.toPath()
+    FileKit.openDirectoryPicker(dialogSettings = FileKitDialogSettings(title = title))?.file?.toOkioPath()
 }
 
 @Composable

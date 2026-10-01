@@ -1,6 +1,6 @@
 package dev.cuervolu.loredesigner.workspace
 
-import java.nio.file.Path
+import okio.Path
 
 sealed interface WorkspaceResult<out T> {
     data class Success<T>(val value: T) : WorkspaceResult<T>

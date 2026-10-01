@@ -10,43 +10,63 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import java.io.IOException
-import java.nio.file.Files
-import java.nio.file.LinkOption
-import java.nio.file.Path
-import kotlin.io.path.isDirectory
-import kotlin.io.path.isRegularFile
-import kotlin.io.path.readText
+import okio.FileMetadata
+import okio.FileNotFoundException
+import okio.FileSystem
+import okio.IOException
+import okio.Path
+import okio.Path.Companion.toPath
 
-class FileSystemWorkspaceStore private constructor(
-    private val fileWriter: WorkspaceFileWriter,
-    private val projectFileCodec: ProjectFileCodec,
-) : WorkspaceStore {
-    constructor() : this(AtomicFileWriter(), ProjectFileCodec())
+class FileSystemWorkspaceStore(private val fileSystem: FileSystem) : WorkspaceStore {
+    private val fileWriter = AtomicFileWriter(fileSystem)
+    private val projectFileCodec = ProjectFileCodec()
 
     override suspend fun create(location: Path, config: ProjectConfig): WorkspaceResult<Workspace> =
         withContext(Dispatchers.IO) {
-            createWorkspace(location.toAbsolutePath().normalize(), config)
+            val absoluteLocation =
+                try {
+                    absolute(location)
+                } catch (exception: IOException) {
+                    return@withContext WorkspaceResult.Failure(
+                        WorkspaceError.FileSystemFailure(location, FileSystemOperation.INSPECT, exception),
+                    )
+                }
+            createWorkspace(absoluteLocation, config)
         }
 
     override suspend fun open(location: Path): WorkspaceResult<Workspace> = withContext(Dispatchers.IO) {
-        openWorkspace(location.toAbsolutePath().normalize())
+        val absoluteLocation =
+            try {
+                absolute(location)
+            } catch (exception: IOException) {
+                return@withContext WorkspaceResult.Failure(
+                    WorkspaceError.FileSystemFailure(location, FileSystemOperation.READ, exception),
+                )
+            }
+        openWorkspace(absoluteLocation)
+    }
+
+    private fun absolute(location: Path): Path = if (location.isAbsolute) {
+        location.normalized()
+    } else {
+        fileSystem.canonicalize(
+            ".".toPath(),
+        ).resolve(location, normalize = true)
     }
 
     private fun createWorkspace(location: Path, config: ProjectConfig): WorkspaceResult<Workspace> {
         val typesContent = initialTypesFile()
         val projectContent = projectFileCodec.encode(config)
-        val existedBefore = Files.exists(location, LinkOption.NOFOLLOW_LINKS)
         val createdResources = mutableListOf<Path>()
+        val existedBefore: Boolean
         try {
+            existedBefore = fileSystem.metadataOrNull(location) != null
             if (existedBefore) {
-                if (!location.isDirectory()) {
+                if (fileSystem.metadataFollowingLinksOrNull(location)?.isDirectory != true) {
                     return WorkspaceResult.Failure(WorkspaceError.InvalidWorkspaceLocation(location))
                 }
-                Files.list(location).use { entries ->
-                    if (entries.findAny().isPresent) {
-                        return WorkspaceResult.Failure(WorkspaceError.DestinationNotEmpty(location))
-                    }
+                if (fileSystem.list(location).isNotEmpty()) {
+                    return WorkspaceResult.Failure(WorkspaceError.DestinationNotEmpty(location))
                 }
             }
         } catch (exception: IOException) {
@@ -56,7 +76,7 @@ class FileSystemWorkspaceStore private constructor(
         }
         if (!existedBefore) {
             try {
-                Files.createDirectories(location)
+                fileSystem.createDirectories(location)
                 createdResources.add(location)
             } catch (exception: IOException) {
                 rollbackCreation(createdResources, exception)
@@ -72,7 +92,7 @@ class FileSystemWorkspaceStore private constructor(
         var activePath = metadataDirectory
         var operation = FileSystemOperation.CREATE_DIRECTORY
         try {
-            Files.createDirectory(metadataDirectory)
+            fileSystem.createDirectory(metadataDirectory, mustCreate = true)
             createdResources.add(metadataDirectory)
             activePath = typesFile
             operation = FileSystemOperation.WRITE
@@ -97,10 +117,12 @@ class FileSystemWorkspaceStore private constructor(
     private fun openWorkspace(location: Path): WorkspaceResult<Workspace> {
         val projectFile = location.resolve(PROJECT_FILE_NAME)
         try {
-            if (!location.isDirectory() || !projectFile.isRegularFile()) {
+            if (fileSystem.metadataFollowingLinksOrNull(location)?.isDirectory != true ||
+                fileSystem.metadataFollowingLinksOrNull(projectFile)?.isRegularFile != true
+            ) {
                 return WorkspaceResult.Failure(WorkspaceError.NotAWorkspace(location))
             }
-            val content = projectFile.readText()
+            val content = fileSystem.read(projectFile) { readUtf8() }
             return when (val decoded = projectFileCodec.decode(projectFile, content)) {
                 is WorkspaceResult.Failure -> decoded
                 is WorkspaceResult.Success -> WorkspaceResult.Success(Workspace(location, decoded.value))
@@ -117,11 +139,22 @@ class FileSystemWorkspaceStore private constructor(
             .asReversed()
             .forEach { path ->
                 try {
-                    Files.deleteIfExists(path)
+                    fileSystem.delete(path, mustExist = false)
                 } catch (cleanupFailure: IOException) {
                     originalFailure.addSuppressed(cleanupFailure)
                 }
             }
+    }
+
+    // Okio reports symlinks without following them; the workspace checks must see their targets.
+    private fun FileSystem.metadataFollowingLinksOrNull(path: Path): FileMetadata? {
+        val metadata = metadataOrNull(path) ?: return null
+        if (metadata.symlinkTarget == null) return metadata
+        return try {
+            metadataOrNull(canonicalize(path))
+        } catch (_: FileNotFoundException) {
+            null
+        }
     }
 
     private fun initialTypesFile(): String = TYPES_JSON.encodeToString(InitialTypesFile()) + System.lineSeparator()
@@ -129,7 +162,7 @@ class FileSystemWorkspaceStore private constructor(
     @Serializable
     private data class InitialTypesFile(val version: Int = 1, val types: List<String> = emptyList())
 
-    internal companion object {
+    private companion object {
         private const val PROJECT_FILE_NAME = "project.lore"
         private const val METADATA_DIRECTORY_NAME = ".lore"
         private const val TYPES_FILE_NAME = "types.json"
@@ -139,8 +172,5 @@ class FileSystemWorkspaceStore private constructor(
                 prettyPrint = true
                 encodeDefaults = true
             }
-
-        fun withFileWriter(fileWriter: WorkspaceFileWriter): FileSystemWorkspaceStore =
-            FileSystemWorkspaceStore(fileWriter, ProjectFileCodec())
     }
 }

@@ -9,6 +9,7 @@ plugins {
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.compose.multiplatform)
     alias(libs.plugins.nucleus)
+    alias(libs.plugins.kover)
 }
 
 kotlin {
@@ -18,7 +19,6 @@ kotlin {
 compose.resources {
     packageOfResClass = "dev.cuervolu.loredesigner.resources"
 }
-
 
 val appNameStr = "Lore Designer"
 val appId = "dev.cuervolu.loredesigner"

@@ -9,7 +9,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
-import java.nio.file.Path
+import okio.Path.Companion.toPath
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -49,13 +49,13 @@ class LauncherViewModelTest {
         assertNull(state.dialog)
         assertNull(state.error)
         val workspace = assertNotNull(state.openedWorkspace)
-        assertEquals(Path.of("/worlds", "Embercourt"), workspace.location)
+        assertEquals("/worlds/Embercourt".toPath(), workspace.location)
         assertEquals(ProjectColor.GREEN, workspace.config.color)
     }
 
     @Test
     fun `failed create keeps the dialog open with the error`() {
-        store.createError = WorkspaceError.DestinationNotEmpty(Path.of("/worlds/Embercourt"))
+        store.createError = WorkspaceError.DestinationNotEmpty("/worlds/Embercourt".toPath())
         viewModel.showNewProject()
         val dialog = assertIs<LauncherDialog.NewProject>(viewModel.state.value.dialog)
         dialog.name.setTextAndPlaceCursorAtEnd("Embercourt")
@@ -102,13 +102,26 @@ class LauncherViewModelTest {
 
         viewModel.submit()
 
-        assertEquals(Path.of("/home/writer/Worlds/Ceili"), store.openedLocations.single())
+        assertEquals("/home/writer/Worlds/Ceili".toPath(), store.openedLocations.single())
+    }
+
+    @Test
+    fun `location with control characters is invalid without touching storage`() {
+        viewModel.showOpenProject()
+        assertIs<LauncherDialog.OpenProject>(
+            viewModel.state.value.dialog,
+        ).path.setTextAndPlaceCursorAtEnd("/worlds\u0000")
+
+        viewModel.submit()
+
+        assertEquals(LauncherError.InvalidLocation("/worlds\u0000"), viewModel.state.value.error)
+        assertTrue(store.openedLocations.isEmpty())
     }
 
     @Test
     fun `successful open exposes the workspace until handled`() {
         viewModel.showOpenProject()
-        viewModel.onDirectoryChosen(Path.of("/worlds/Embercourt"))
+        viewModel.onDirectoryChosen("/worlds/Embercourt".toPath())
 
         viewModel.submit()
         assertEquals("Embercourt", viewModel.state.value.openedWorkspace?.config?.name)
@@ -119,9 +132,9 @@ class LauncherViewModelTest {
 
     @Test
     fun `failed open does not expose a workspace`() {
-        store.openError = WorkspaceError.NotAWorkspace(Path.of("/tmp"))
+        store.openError = WorkspaceError.NotAWorkspace("/tmp".toPath())
         viewModel.showOpenProject()
-        viewModel.onDirectoryChosen(Path.of("/tmp"))
+        viewModel.onDirectoryChosen("/tmp".toPath())
 
         viewModel.submit()
 
@@ -133,10 +146,10 @@ class LauncherViewModelTest {
     fun `chosen directory fills the active dialog field`() {
         viewModel.showNewProject()
 
-        viewModel.onDirectoryChosen(Path.of("/worlds"))
+        viewModel.onDirectoryChosen("/worlds".toPath())
 
         val dialog = assertIs<LauncherDialog.NewProject>(viewModel.state.value.dialog)
-        assertEquals(Path.of("/worlds").toString(), dialog.location.text.toString())
+        assertEquals("/worlds".toPath().toString(), dialog.location.text.toString())
     }
 
     @Test
@@ -144,7 +157,7 @@ class LauncherViewModelTest {
         val gate = CompletableDeferred<Unit>()
         store.gate = gate
         viewModel.showOpenProject()
-        viewModel.onDirectoryChosen(Path.of("/worlds/Embercourt"))
+        viewModel.onDirectoryChosen("/worlds/Embercourt".toPath())
 
         viewModel.submit()
         assertTrue(viewModel.state.value.busy)

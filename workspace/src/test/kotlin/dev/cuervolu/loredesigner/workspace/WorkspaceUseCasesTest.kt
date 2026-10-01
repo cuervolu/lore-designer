@@ -5,7 +5,8 @@ import dev.cuervolu.loredesigner.core.workspace.ProjectColor
 import dev.cuervolu.loredesigner.core.workspace.ProjectConfig
 import dev.cuervolu.loredesigner.core.workspace.WorkspaceId
 import kotlinx.coroutines.test.runTest
-import java.nio.file.Path
+import okio.Path
+import okio.Path.Companion.toPath
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -17,12 +18,12 @@ class WorkspaceUseCasesTest {
     fun `create builds current project configuration with generated id`() = runTest {
         val store = RecordingWorkspaceStore()
         val createWorkspace = CreateWorkspace(store, WorkspaceIdGenerator { workspaceId })
-        val parent = Path.of("worlds")
+        val parent = "worlds".toPath()
 
         val result = createWorkspace(parent, "My World", ProjectColor.VIOLET)
 
         val workspace = assertIs<WorkspaceResult.Success<Workspace>>(result).value
-        assertEquals(parent.toAbsolutePath().normalize().resolve("My World"), workspace.location)
+        assertEquals("worlds/My World".toPath(), workspace.location)
         assertEquals(
             ProjectConfig(
                 version = CURRENT_PROJECT_FORMAT_VERSION,
@@ -38,10 +39,10 @@ class WorkspaceUseCasesTest {
     fun `create trims the name used for the folder and the project`() = runTest {
         val createWorkspace = CreateWorkspace(RecordingWorkspaceStore(), WorkspaceIdGenerator { workspaceId })
 
-        val result = createWorkspace(Path.of("folder", "..", "worlds"), "  Embercourt  ")
+        val result = createWorkspace("folder/../worlds".toPath(), "  Embercourt  ")
 
         val workspace = assertIs<WorkspaceResult.Success<Workspace>>(result).value
-        assertEquals(Path.of("worlds", "Embercourt").toAbsolutePath().normalize(), workspace.location)
+        assertEquals("worlds/Embercourt".toPath(), workspace.location)
         assertEquals("Embercourt", workspace.config.name)
     }
 
@@ -65,7 +66,7 @@ class WorkspaceUseCasesTest {
         val createWorkspace = CreateWorkspace(FailingWorkspaceStore(), WorkspaceIdGenerator { workspaceId })
 
         for (name in invalidNames) {
-            val result = createWorkspace(Path.of("worlds"), name)
+            val result = createWorkspace("worlds".toPath(), name)
 
             val error = assertIs<WorkspaceError.InvalidWorkspaceName>(assertIs<WorkspaceResult.Failure>(result).error)
             assertEquals(name, error.name)
@@ -77,7 +78,7 @@ class WorkspaceUseCasesTest {
         val createWorkspace = CreateWorkspace(RecordingWorkspaceStore(), WorkspaceIdGenerator { workspaceId })
 
         for (name in listOf("Console", "COM10", "Aux Realm", "Nullspace")) {
-            assertIs<WorkspaceResult.Success<Workspace>>(createWorkspace(Path.of("worlds"), name))
+            assertIs<WorkspaceResult.Success<Workspace>>(createWorkspace("worlds".toPath(), name))
         }
     }
 
@@ -93,7 +94,7 @@ class WorkspaceUseCasesTest {
                 },
             )
 
-        val result = createWorkspace(Path.of("world"), "  ")
+        val result = createWorkspace("world".toPath(), "  ")
 
         assertIs<WorkspaceError.InvalidWorkspaceName>(assertIs<WorkspaceResult.Failure>(result).error)
         assertEquals(false, generated)
@@ -103,9 +104,9 @@ class WorkspaceUseCasesTest {
     fun `open normalizes the workspace location`() = runTest {
         val store = RecordingWorkspaceStore()
 
-        OpenWorkspace(store)(Path.of("folder", "..", "world"))
+        OpenWorkspace(store)("folder/../world".toPath())
 
-        assertEquals(Path.of("world").toAbsolutePath().normalize(), store.openedLocation)
+        assertEquals("world".toPath(), store.openedLocation)
     }
 
     private class RecordingWorkspaceStore : WorkspaceStore {

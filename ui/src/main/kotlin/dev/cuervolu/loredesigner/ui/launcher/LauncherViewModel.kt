@@ -15,8 +15,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.nio.file.InvalidPathException
-import java.nio.file.Path
+import okio.Path
+import okio.Path.Companion.toPath
 
 data class LauncherUiState(
     val dialog: LauncherDialog? = null,
@@ -134,11 +134,12 @@ class LauncherViewModel(
             trimmed.startsWith("~/") || trimmed.startsWith("~\\") -> homeDirectory() + trimmed.substring(1)
             else -> trimmed
         }
-        return try {
-            ParsedLocation.Valid(Path.of(expanded))
-        } catch (_: InvalidPathException) {
-            ParsedLocation.Invalid(LauncherError.InvalidLocation(trimmed))
+        // Control characters are invalid on every supported platform; any other path the OS rejects
+        // surfaces as a filesystem failure when the workspace is accessed.
+        if (expanded.any { it.isISOControl() }) {
+            return ParsedLocation.Invalid(LauncherError.InvalidLocation(trimmed))
         }
+        return ParsedLocation.Valid(expanded.toPath())
     }
 
     private sealed interface ParsedLocation {

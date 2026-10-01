@@ -5,7 +5,7 @@ import dev.cuervolu.loredesigner.core.workspace.ProjectConfig
 import dev.cuervolu.loredesigner.core.workspace.WorkspaceId
 import dev.cuervolu.loredesigner.workspace.WorkspaceError
 import dev.cuervolu.loredesigner.workspace.WorkspaceResult
-import java.nio.file.Path
+import okio.Path.Companion.toPath
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -13,7 +13,7 @@ import kotlin.test.assertIs
 
 class ProjectFileCodecTest {
     private val codec = ProjectFileCodec()
-    private val path = Path.of("project.lore")
+    private val path = "project.lore".toPath()
     private val id = WorkspaceId.parse("01995f7e-1d74-7c83-a8a9-4fd2ed9cb380")
 
     @Test

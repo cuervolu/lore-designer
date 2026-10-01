@@ -2,7 +2,7 @@ package dev.cuervolu.loredesigner.workspace
 
 import dev.cuervolu.loredesigner.core.workspace.ProjectConfig
 import dev.cuervolu.loredesigner.core.workspace.WorkspaceId
-import java.nio.file.Path
+import okio.Path
 
 interface WorkspaceStore {
     suspend fun create(location: Path, config: ProjectConfig): WorkspaceResult<Workspace>

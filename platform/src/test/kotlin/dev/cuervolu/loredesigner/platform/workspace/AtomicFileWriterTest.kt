@@ -1,131 +1,79 @@
 package dev.cuervolu.loredesigner.platform.workspace
 
-import java.io.IOException
-import java.nio.file.AtomicMoveNotSupportedException
-import java.nio.file.CopyOption
-import java.nio.file.FileAlreadyExistsException
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.StandardCopyOption
-import kotlin.io.path.createTempDirectory
-import kotlin.io.path.listDirectoryEntries
-import kotlin.io.path.readText
+import dev.cuervolu.loredesigner.platform.workspace.FaultyFileSystem.Operation
+import okio.IOException
+import okio.Path.Companion.toPath
+import okio.fakefilesystem.FakeFileSystem
+import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class AtomicFileWriterTest {
-    @Test
-    fun `safely replaces an existing file without leaving its temporary file`() = withTempDirectory { directory ->
-        val target = directory.resolve("project.lore")
-        Files.writeString(target, "old")
+    private val fakeFileSystem = FakeFileSystem()
+    private val fileSystem = FaultyFileSystem(fakeFileSystem)
+    private val directory = "/world".toPath().also { fakeFileSystem.createDirectories(it) }
+    private val target = directory / "project.lore"
 
-        AtomicFileWriter().replace(target, "new")
-
-        assertEquals("new", target.readText())
-        assertFalse(directory.listDirectoryEntries().any { it.fileName.toString().endsWith(".tmp") })
+    @AfterTest
+    fun noOpenFiles() {
+        fakeFileSystem.checkNoOpenFiles()
     }
 
     @Test
-    fun `falls back to a non atomic replacement when atomic move is unsupported`() = withTempDirectory { directory ->
-        val target = directory.resolve("project.lore")
-        val mover = AtomicMoveRejectingMover()
+    fun `creates the file with its content without leaving a temporary file`() {
+        AtomicFileWriter(fileSystem).create(target, "content")
 
-        AtomicFileWriter(mover).replace(target, "content")
-
-        assertEquals("content", target.readText())
-        assertEquals(2, mover.calls)
-        assertTrue(mover.fallbackUsed)
+        assertEquals("content", fakeFileSystem.read(target) { readUtf8() })
+        assertEquals(listOf(target), fakeFileSystem.list(directory))
     }
 
     @Test
-    fun `removes the temporary file when replacement fails`() = withTempDirectory { directory ->
-        val target = directory.resolve("project.lore")
-        val writer =
-            AtomicFileWriter(
-                object : NioTestFileOperations() {
-                    override fun move(source: Path, target: Path, vararg options: CopyOption): Unit =
-                        throw IOException("test")
-                },
-            )
+    fun `fails on an existing target without changing it`() {
+        fakeFileSystem.write(target) { writeUtf8("external content") }
 
-        assertFailsWith<IOException> { writer.replace(target, "content") }
+        assertFailsWith<IOException> { AtomicFileWriter(fileSystem).create(target, "workspace content") }
 
-        assertTrue(directory.listDirectoryEntries().isEmpty())
+        assertEquals("external content", fakeFileSystem.read(target) { readUtf8() })
+        assertEquals(listOf(target), fakeFileSystem.list(directory))
     }
 
     @Test
-    fun `create fails without replacing a file that appears before publication`() = withTempDirectory { directory ->
-        val target = directory.resolve("project.lore")
-        val operations =
-            object : NioTestFileOperations() {
-                override fun createLink(link: Path, existing: Path) {
-                    Files.writeString(link, "external content")
-                    super.createLink(link, existing)
-                }
+    fun `removes the temporary file and the reservation when writing fails`() {
+        fileSystem.beforeOperation = { operation, path ->
+            if (operation == Operation.SINK && path.name.endsWith(".tmp")) throw IOException("disk full")
+        }
+
+        assertFailsWith<IOException> { AtomicFileWriter(fileSystem).create(target, "content") }
+
+        assertTrue(fakeFileSystem.list(directory).isEmpty())
+    }
+
+    @Test
+    fun `removes the temporary file and the reservation when publishing fails`() {
+        fileSystem.beforeOperation = { operation, _ ->
+            if (operation == Operation.ATOMIC_MOVE) throw IOException("move failed")
+        }
+
+        assertFailsWith<IOException> { AtomicFileWriter(fileSystem).create(target, "content") }
+
+        assertTrue(fakeFileSystem.list(directory).isEmpty())
+    }
+
+    @Test
+    fun `cleanup failures are attached to the original failure`() {
+        fileSystem.beforeOperation = { operation, _ ->
+            when (operation) {
+                Operation.ATOMIC_MOVE -> throw IOException("move failed")
+                Operation.DELETE -> throw IOException("delete failed")
+                else -> Unit
             }
-
-        assertFailsWith<FileAlreadyExistsException> {
-            AtomicFileWriter(operations).create(target, "workspace content")
         }
 
-        assertEquals("external content", target.readText())
-        assertFalse(directory.listDirectoryEntries().any { it.fileName.toString().endsWith(".tmp") })
-    }
+        val failure = assertFailsWith<IOException> { AtomicFileWriter(fileSystem).create(target, "content") }
 
-    @Test
-    fun `create falls back to exclusive copy when hard links are unsupported`() = withTempDirectory { directory ->
-        val target = directory.resolve("project.lore")
-        val operations =
-            object : NioTestFileOperations() {
-                override fun createLink(link: Path, existing: Path): Unit = throw UnsupportedOperationException("test")
-            }
-
-        AtomicFileWriter(operations).create(target, "content")
-
-        assertEquals("content", target.readText())
-        assertFailsWith<FileAlreadyExistsException> {
-            AtomicFileWriter(operations).create(target, "replacement")
-        }
-        assertEquals("content", target.readText())
-    }
-
-    private class AtomicMoveRejectingMover : NioTestFileOperations() {
-        var calls = 0
-        var fallbackUsed = false
-
-        override fun move(source: Path, target: Path, vararg options: CopyOption) {
-            calls++
-            if (StandardCopyOption.ATOMIC_MOVE in options) {
-                throw AtomicMoveNotSupportedException(source.toString(), target.toString(), "test")
-            }
-            fallbackUsed = true
-            Files.move(source, target, *options)
-        }
-    }
-
-    private open class NioTestFileOperations : FileOperations {
-        override fun move(source: Path, target: Path, vararg options: CopyOption) {
-            Files.move(source, target, *options)
-        }
-
-        override fun createLink(link: Path, existing: Path) {
-            Files.createLink(link, existing)
-        }
-
-        override fun copy(source: Path, target: Path) {
-            Files.copy(source, target)
-        }
-    }
-
-    private fun withTempDirectory(block: (Path) -> Unit) {
-        val directory = createTempDirectory("atomic-file-writer-test")
-        try {
-            block(directory)
-        } finally {
-            directory.toFile().deleteRecursively()
-        }
+        assertEquals("move failed", failure.message)
+        assertEquals(listOf("delete failed", "delete failed"), failure.suppressed.map { it.message })
     }
 }

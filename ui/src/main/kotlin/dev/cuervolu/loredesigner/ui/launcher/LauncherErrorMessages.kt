@@ -14,9 +14,9 @@ import dev.cuervolu.loredesigner.ui.resources.launcher_error_unsupported_version
 import dev.cuervolu.loredesigner.ui.resources.launcher_error_write_failed
 import dev.cuervolu.loredesigner.workspace.FileSystemOperation
 import dev.cuervolu.loredesigner.workspace.WorkspaceError
+import okio.Path
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
-import java.nio.file.Path
 
 /** A launcher message ready to resolve for the current locale. */
 internal data class LauncherMessage(val resource: StringResource, val args: List<Any> = emptyList())
@@ -58,7 +58,7 @@ private fun WorkspaceError.toMessage(): LauncherMessage = when (this) {
     }
 }
 
-private fun Path.displayName(): String = fileName?.toString() ?: toString()
+private fun Path.displayName(): String = name.ifEmpty { toString() }
 
 @Composable
 internal fun LauncherError.localizedMessage(): String {

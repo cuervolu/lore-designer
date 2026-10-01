@@ -3,8 +3,7 @@ package dev.cuervolu.loredesigner.workspace
 import dev.cuervolu.loredesigner.core.workspace.CURRENT_PROJECT_FORMAT_VERSION
 import dev.cuervolu.loredesigner.core.workspace.ProjectColor
 import dev.cuervolu.loredesigner.core.workspace.ProjectConfig
-import java.nio.file.InvalidPathException
-import java.nio.file.Path
+import okio.Path
 
 /**
  * Creates a new workspace in a folder named after the project inside [parentDirectory].
@@ -25,12 +24,7 @@ class CreateWorkspace(
         if (!isPortableFolderName(folderName)) {
             return WorkspaceResult.Failure(WorkspaceError.InvalidWorkspaceName(name))
         }
-        val location =
-            try {
-                parentDirectory.toAbsolutePath().normalize().resolve(folderName)
-            } catch (_: InvalidPathException) {
-                return WorkspaceResult.Failure(WorkspaceError.InvalidWorkspaceName(name))
-            }
+        val location = parentDirectory.normalized() / folderName
 
         val config =
             ProjectConfig(

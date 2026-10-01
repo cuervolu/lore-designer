@@ -10,7 +10,7 @@ import dev.cuervolu.loredesigner.core.workspace.WorkspaceId
 import dev.cuervolu.loredesigner.workspace.WorkspaceError
 import dev.cuervolu.loredesigner.workspace.WorkspaceResult
 import kotlinx.serialization.Serializable
-import java.nio.file.Path
+import okio.Path
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.toJavaUuid
 

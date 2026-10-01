@@ -10,7 +10,7 @@ import dev.cuervolu.loredesigner.workspace.WorkspaceIdGenerator
 import dev.cuervolu.loredesigner.workspace.WorkspaceResult
 import dev.cuervolu.loredesigner.workspace.WorkspaceStore
 import kotlinx.coroutines.CompletableDeferred
-import java.nio.file.Path
+import okio.Path
 
 internal val TestWorkspaceId: WorkspaceId = WorkspaceId.parse("01995f7e-1d74-7c83-a8a9-4fd2ed9cb380")
 
@@ -23,9 +23,11 @@ internal class FakeWorkspaceStore : WorkspaceStore {
 
     val createdLocations = mutableListOf<Path>()
     val openedLocations = mutableListOf<Path>()
+    val createdConfigs = mutableListOf<ProjectConfig>()
 
     override suspend fun create(location: Path, config: ProjectConfig): WorkspaceResult<Workspace> {
         createdLocations.add(location)
+        createdConfigs.add(config)
         gate?.await()
         return createError?.let { WorkspaceResult.Failure(it) } ?: WorkspaceResult.Success(Workspace(location, config))
     }

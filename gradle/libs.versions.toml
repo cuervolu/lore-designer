@@ -21,6 +21,8 @@ androidx-viewmodel = "2.10.0"
 junit = "6.1.3"
 kotlinx-datetime = "0.8.0"
 ktoml = "0.7.1"
+okio = "3.18.2"
+kover = "0.9.8"
 
 [libraries]
 compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose-multiplatform" }
@@ -54,6 +56,9 @@ junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
 
 ktoml = { module = "com.akuleshov7:ktoml-core", version.ref = "ktoml" }
+
+okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
+okio-fakefilesystem = { module = "com.squareup.okio:okio-fakefilesystem", version.ref = "okio" }
 
 # Nucleus
 nucleus-core-runtime = { module = "dev.nucleusframework:nucleus.core-runtime", version.ref = "nucleus" }
@@ -130,3 +135,4 @@ ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
 stability-analyzer = { id = "com.github.skydoves.compose.stability.analyzer", version.ref = "stability" }
 nucleus = { id = "dev.nucleusframework", version.ref = "nucleus" }
+kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
