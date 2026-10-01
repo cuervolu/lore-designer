@@ -1,11 +1,19 @@
 package dev.cuervolu.loredesigner.ui.theme
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performMouseInput
+import androidx.compose.ui.test.rightClick
 import androidx.compose.ui.test.runComposeUiTest
+import com.composeunstyled.Text
 import com.composeunstyled.theme.Theme
 import dev.cuervolu.loredesigner.core.workspace.ProjectColor
 import kotlin.test.Test
@@ -92,5 +100,33 @@ class LoreDesignerThemeTest {
             }
         }
         assertEquals(40f, titleBarHeight.value)
+    }
+
+    @Test
+    fun `clickable falls back to the theme indication without crashing`() = runComposeUiTest {
+        var clicks = 0
+        setContent {
+            LoreDesignerTheme(darkTheme = false) {
+                Text("Tap", Modifier.clickable { clicks++ })
+            }
+        }
+
+        onNodeWithText("Tap").performClick()
+
+        assertEquals(1, clicks)
+    }
+
+    @Test
+    fun `right-clicking selectable text opens the context menu without crashing`() = runComposeUiTest {
+        setContent {
+            LoreDesignerTheme(darkTheme = true) {
+                SelectionContainer { Text("/home/writer/.local/share/lore") }
+            }
+        }
+
+        onNodeWithText("/home/writer/.local/share/lore").performMouseInput { rightClick() }
+        waitForIdle()
+
+        onNodeWithText("/home/writer/.local/share/lore").assertExists()
     }
 }

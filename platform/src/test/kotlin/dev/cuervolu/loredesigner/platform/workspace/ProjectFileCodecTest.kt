@@ -10,6 +10,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
+import kotlin.test.assertTrue
 
 class ProjectFileCodecTest {
     private val codec = ProjectFileCodec()
@@ -23,6 +24,31 @@ class ProjectFileCodecTest {
         val result = codec.decode(path, codec.encode(original))
 
         assertEquals(original, assertIs<WorkspaceResult.Success<ProjectConfig>>(result).value)
+    }
+
+    @Test
+    fun `every color is stored under its stable name and round trips`() {
+        val expected = mapOf(
+            ProjectColor.VIOLET to "violet",
+            ProjectColor.BLUE to "blue",
+            ProjectColor.CYAN to "cyan",
+            ProjectColor.TEAL to "teal",
+            ProjectColor.GREEN to "green",
+            ProjectColor.AMBER to "amber",
+            ProjectColor.ORANGE to "orange",
+            ProjectColor.ROSE to "rose",
+            ProjectColor.RED to "red",
+            ProjectColor.SLATE to "slate",
+        )
+        assertEquals(ProjectColor.entries.toSet(), expected.keys)
+
+        for ((color, name) in expected) {
+            val original = ProjectConfig(1, id, "My World", color)
+            val encoded = codec.encode(original)
+
+            assertTrue(encoded.contains("color = \"$name\""), encoded)
+            assertEquals(original, assertIs<WorkspaceResult.Success<ProjectConfig>>(codec.decode(path, encoded)).value)
+        }
     }
 
     @Test
@@ -83,7 +109,7 @@ class ProjectFileCodecTest {
 
     @Test
     fun `unknown color has a specific error`() {
-        val result = codec.decode(path, validProject(color = "orange"))
+        val result = codec.decode(path, validProject(color = "magenta"))
 
         assertIs<WorkspaceError.UnknownProjectColor>(assertIs<WorkspaceResult.Failure>(result).error)
     }

@@ -46,7 +46,7 @@ kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serializa
 koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
 koin-compose = { module = "io.insert-koin:koin-compose", version.ref = "koin" }
 koin-test = { module = "io.insert-koin:koin-test", version.ref = "koin" }
-multiplatformSettings = { module = "com.russhwolf:multiplatform-settings-no-arg", version.ref = "multiplatformSettings" }
+multiplatformSettings = { module = "com.russhwolf:multiplatform-settings", version.ref = "multiplatformSettings" }
 multiplatformSettings-test = { module = "com.russhwolf:multiplatform-settings-test", version.ref = "multiplatformSettings" }
 room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
@@ -83,6 +83,7 @@ composeunstyled-modal = { module = "com.composables:composeunstyled-modal", vers
 composeunstyled-progress = { module = "com.composables:composeunstyled-progress", version.ref = "composeunstyled" }
 composeunstyled-tab-group = { module = "com.composables:composeunstyled-tab-group", version.ref = "composeunstyled" }
 composeunstyled-tooltip = { module = "com.composables:composeunstyled-tooltip", version.ref = "composeunstyled" }
+composeunstyled-toggle-switch = { module = "com.composables:composeunstyled-toggle-switch", version.ref = "composeunstyled" }
 compose-icons-lucide = { module = "com.composables:icons-lucide-cmp", version.ref = "compose-icons" }
 compose-unstyled-platformtheme = { module = "com.composables:composeunstyled-platformtheme", version.ref = "composeunstyled" }
 compose-unstyled-theming = { module = "com.composables:composeunstyled-theming", version.ref = "composeunstyled" }
@@ -102,6 +103,7 @@ compose-unstyled = [
     "composeunstyled-progress",
     "composeunstyled-tab-group",
     "composeunstyled-tooltip",
+    "composeunstyled-toggle-switch",
     "compose-interaction-capabilities",
     "compose-icons-lucide"
 ]

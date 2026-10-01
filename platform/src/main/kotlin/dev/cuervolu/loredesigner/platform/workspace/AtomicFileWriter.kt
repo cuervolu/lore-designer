@@ -16,8 +16,7 @@ internal class AtomicFileWriter(private val fileSystem: FileSystem) {
      */
     fun create(target: Path, content: String) {
         fileSystem.write(target, mustCreate = true) {}
-        val temporaryFile =
-            requireNotNull(target.parent) / ".${target.name}.${Random.nextLong().toULong().toString(16)}.tmp"
+        val temporaryFile = temporaryFileFor(target)
         try {
             fileSystem.write(temporaryFile, mustCreate = true) { writeUtf8(content) }
             fileSystem.atomicMove(temporaryFile, target)
@@ -27,6 +26,21 @@ internal class AtomicFileWriter(private val fileSystem: FileSystem) {
             throw failure
         }
     }
+
+    /** Replaces (or creates) [target] with [content] so readers only ever see the old or the new file. */
+    fun replace(target: Path, content: String) {
+        val temporaryFile = temporaryFileFor(target)
+        try {
+            fileSystem.write(temporaryFile, mustCreate = true) { writeUtf8(content) }
+            fileSystem.atomicMove(temporaryFile, target)
+        } catch (failure: Exception) {
+            deleteAfterFailure(temporaryFile, failure)
+            throw failure
+        }
+    }
+
+    private fun temporaryFileFor(target: Path): Path =
+        requireNotNull(target.parent) / ".${target.name}.${Random.nextLong().toULong().toString(16)}.tmp"
 
     private fun deleteAfterFailure(path: Path, originalFailure: Exception) {
         try {

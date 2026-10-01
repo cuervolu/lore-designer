@@ -46,6 +46,22 @@ class FileSystemWorkspaceStore(private val fileSystem: FileSystem) : WorkspaceSt
         openWorkspace(absoluteLocation)
     }
 
+    override suspend fun updateConfig(location: Path, config: ProjectConfig): WorkspaceResult<Workspace> =
+        withContext(Dispatchers.IO) {
+            val projectFile = location.resolve(PROJECT_FILE_NAME)
+            try {
+                if (fileSystem.metadataFollowingLinksOrNull(projectFile)?.isRegularFile != true) {
+                    return@withContext WorkspaceResult.Failure(WorkspaceError.NotAWorkspace(location))
+                }
+                fileWriter.replace(projectFile, projectFileCodec.encode(config))
+                WorkspaceResult.Success(Workspace(location, config))
+            } catch (exception: IOException) {
+                WorkspaceResult.Failure(
+                    WorkspaceError.FileSystemFailure(projectFile, FileSystemOperation.WRITE, exception),
+                )
+            }
+        }
+
     private fun absolute(location: Path): Path = if (location.isAbsolute) {
         location.normalized()
     } else {

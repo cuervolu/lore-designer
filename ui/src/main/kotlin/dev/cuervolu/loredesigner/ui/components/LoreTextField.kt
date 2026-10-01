@@ -28,6 +28,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.composeunstyled.Text
 import com.composeunstyled.TextInput
@@ -119,6 +120,7 @@ fun LoreTextField(
                             style = Theme[typography][LoreTypography.body],
                             color = Theme[colors][LoreColors.textMuted],
                             singleLine = true,
+                            overflow = TextOverflow.Ellipsis,
                         )
                     }
                 },

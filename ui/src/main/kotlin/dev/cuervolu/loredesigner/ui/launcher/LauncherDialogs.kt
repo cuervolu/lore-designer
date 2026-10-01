@@ -41,8 +41,15 @@ import dev.cuervolu.loredesigner.ui.resources.common_cancel
 import dev.cuervolu.loredesigner.ui.resources.launcher_action_new
 import dev.cuervolu.loredesigner.ui.resources.launcher_action_open
 import dev.cuervolu.loredesigner.ui.resources.launcher_browse
+import dev.cuervolu.loredesigner.ui.resources.launcher_color_amber
 import dev.cuervolu.loredesigner.ui.resources.launcher_color_blue
+import dev.cuervolu.loredesigner.ui.resources.launcher_color_cyan
 import dev.cuervolu.loredesigner.ui.resources.launcher_color_green
+import dev.cuervolu.loredesigner.ui.resources.launcher_color_orange
+import dev.cuervolu.loredesigner.ui.resources.launcher_color_red
+import dev.cuervolu.loredesigner.ui.resources.launcher_color_rose
+import dev.cuervolu.loredesigner.ui.resources.launcher_color_slate
+import dev.cuervolu.loredesigner.ui.resources.launcher_color_teal
 import dev.cuervolu.loredesigner.ui.resources.launcher_color_violet
 import dev.cuervolu.loredesigner.ui.resources.launcher_new_color_label
 import dev.cuervolu.loredesigner.ui.resources.launcher_new_description
@@ -238,7 +245,7 @@ private fun PathRow(
 }
 
 @Composable
-private fun ColorSwatches(selected: ProjectColor, enabled: Boolean, onSelect: (ProjectColor) -> Unit) {
+internal fun ColorSwatches(selected: ProjectColor?, enabled: Boolean, onSelect: (ProjectColor) -> Unit) {
     val outline = Theme[colors][LoreColors.textPrimary]
     Row(
         modifier = Modifier.selectableGroup(),
@@ -257,7 +264,6 @@ private fun ColorSwatches(selected: ProjectColor, enabled: Boolean, onSelect: (P
                         enabled = enabled,
                         role = Role.RadioButton,
                         interactionSource = null,
-                        // The theme's NoIndication is not an IndicationNodeFactory, so the implicit overload throws.
                         indication = null,
                         onClick = { onSelect(color) },
                     )
@@ -270,10 +276,17 @@ private fun ColorSwatches(selected: ProjectColor, enabled: Boolean, onSelect: (P
     }
 }
 
-private fun ProjectColor.label() = when (this) {
+internal fun ProjectColor.label() = when (this) {
     ProjectColor.VIOLET -> Res.string.launcher_color_violet
     ProjectColor.BLUE -> Res.string.launcher_color_blue
+    ProjectColor.CYAN -> Res.string.launcher_color_cyan
+    ProjectColor.TEAL -> Res.string.launcher_color_teal
     ProjectColor.GREEN -> Res.string.launcher_color_green
+    ProjectColor.AMBER -> Res.string.launcher_color_amber
+    ProjectColor.ORANGE -> Res.string.launcher_color_orange
+    ProjectColor.ROSE -> Res.string.launcher_color_rose
+    ProjectColor.RED -> Res.string.launcher_color_red
+    ProjectColor.SLATE -> Res.string.launcher_color_slate
 }
 
 @Composable

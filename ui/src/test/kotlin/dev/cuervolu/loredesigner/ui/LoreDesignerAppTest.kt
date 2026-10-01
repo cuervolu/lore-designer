@@ -1,8 +1,12 @@
 package dev.cuervolu.loredesigner.ui
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onAllNodesWithText
@@ -14,8 +18,10 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.runComposeUiTest
+import dev.cuervolu.loredesigner.core.settings.AppLanguage
 import dev.cuervolu.loredesigner.core.workspace.ProjectColor
-import dev.cuervolu.loredesigner.ui.launcher.FakeWorkspaceStore
+import dev.cuervolu.loredesigner.ui.chrome.LauncherTitleBar
+import dev.cuervolu.loredesigner.ui.i18n.ProvideAppLocale
 import dev.cuervolu.loredesigner.ui.resources.Res
 import dev.cuervolu.loredesigner.ui.resources.launcher_action_new
 import dev.cuervolu.loredesigner.ui.resources.launcher_action_open
@@ -30,31 +36,121 @@ import dev.cuervolu.loredesigner.ui.resources.launcher_new_name_label
 import dev.cuervolu.loredesigner.ui.resources.launcher_new_submit
 import dev.cuervolu.loredesigner.ui.resources.launcher_open_path_label
 import dev.cuervolu.loredesigner.ui.resources.launcher_open_submit
+import dev.cuervolu.loredesigner.ui.resources.settings_close
+import dev.cuervolu.loredesigner.ui.resources.settings_page_appearance
+import dev.cuervolu.loredesigner.ui.resources.settings_page_general
+import dev.cuervolu.loredesigner.ui.resources.settings_page_language
+import dev.cuervolu.loredesigner.ui.resources.titlebar_settings
 import dev.cuervolu.loredesigner.ui.resources.workspace_placeholder_close
+import dev.cuervolu.loredesigner.ui.session.rememberAppSessionState
+import dev.cuervolu.loredesigner.ui.settings.SettingsTestHarness
 import dev.cuervolu.loredesigner.ui.theme.LoreDesignerTheme
 import dev.cuervolu.loredesigner.workspace.WorkspaceError
 import okio.Path
 import okio.Path.Companion.toPath
 import org.jetbrains.compose.resources.getString
+import java.util.Locale
+import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
 // Strings are resolved from resources so the tests pass under any machine locale.
+private val originalLocale: Locale = Locale.getDefault()
+
 @OptIn(ExperimentalTestApi::class)
 class LoreDesignerAppTest {
-    private val store = FakeWorkspaceStore()
+    private val settings = SettingsTestHarness()
+    private val store = settings.workspaceStore
 
+    @AfterTest
+    fun restoreLocale() {
+        Locale.setDefault(originalLocale)
+    }
+
+    /** Mirrors the desktop composition: session state above the locale boundary, localized UI below. */
     private fun ComposeUiTest.launchApp(pickedDirectory: Path? = null) {
         setContent {
+            val appSettings by settings.repository.settings.collectAsState()
+            val session = rememberAppSessionState()
             LoreDesignerTheme(darkTheme = false) {
-                LoreDesignerApp(
-                    createWorkspace = store.createWorkspace(),
-                    openWorkspace = store.openWorkspace(),
-                    pickDirectory = { pickedDirectory },
-                )
+                ProvideAppLocale(appSettings.language) {
+                    Column {
+                        LauncherTitleBar(onSettingsClick = session.settingsModal::open)
+                        LoreDesignerApp(
+                            session = session,
+                            createWorkspace = store.createWorkspace(),
+                            openWorkspace = store.openWorkspace(),
+                            settingsViewModelFactory = settings.factory,
+                            pickDirectory = { pickedDirectory },
+                        )
+                    }
+                }
             }
         }
+    }
+
+    private suspend fun ComposeUiTest.openProject() {
+        onAllNodesWithText(getString(Res.string.launcher_action_open)).onFirst().performClick()
+        onNodeWithContentDescription(
+            getString(Res.string.launcher_open_path_label),
+        ).performTextInput("/worlds/Embercourt")
+        onNodeWithText(getString(Res.string.launcher_open_submit)).performClick()
+        waitUntil { onAllNodesWithText("Embercourt").fetchSemanticsNodes().isNotEmpty() }
+    }
+
+    @Test
+    fun `settings button on the launcher opens the modal without project settings`() = runComposeUiTest {
+        launchApp()
+
+        val appearance = getString(Res.string.settings_page_appearance)
+        onNodeWithContentDescription(getString(Res.string.titlebar_settings)).performClick()
+
+        waitUntil { onAllNodesWithText(appearance).fetchSemanticsNodes().isNotEmpty() }
+        onAllNodesWithText(getString(Res.string.settings_page_general)).assertCountEquals(0)
+
+        onNodeWithContentDescription(getString(Res.string.settings_close)).performClick()
+        waitUntil { onAllNodesWithText(appearance).fetchSemanticsNodes().isEmpty() }
+    }
+
+    @Test
+    fun `settings opened from a workspace include project settings`() = runComposeUiTest {
+        launchApp()
+        openProject()
+
+        val general = getString(Res.string.settings_page_general)
+        onNodeWithContentDescription(getString(Res.string.titlebar_settings)).performClick()
+
+        waitUntil { onAllNodesWithText(general).fetchSemanticsNodes().isNotEmpty() }
+        onNodeWithText("EMBERCOURT").assertExists()
+    }
+
+    @Test
+    fun `changing the language relocalizes live and keeps the session`() = runComposeUiTest {
+        settings.repository.update { it.copy(language = AppLanguage.ENGLISH) }
+        launchApp()
+        openProject()
+        onNodeWithContentDescription(getString(Res.string.titlebar_settings)).performClick()
+        onNodeWithText(getString(Res.string.settings_page_language)).performClick()
+        val englishClose = getString(Res.string.workspace_placeholder_close)
+
+        settings.repository.update { it.copy(language = AppLanguage.SPANISH) }
+        waitForIdle()
+
+        val spanishLanguagePage = getString(Res.string.settings_page_language)
+        assertEquals("es", Locale.getDefault().language)
+        assertNotEquals(englishClose, getString(Res.string.workspace_placeholder_close))
+        // The workspace is still open, the modal still shows the Language page, now in Spanish.
+        onNodeWithText(getString(Res.string.workspace_placeholder_close)).assertExists()
+        onNodeWithText("Embercourt").assertExists()
+        onAllNodesWithText(spanishLanguagePage).assertCountEquals(2)
+        assertEquals(AppLanguage.SPANISH, settings.store.stored.language)
+
+        settings.repository.update { it.copy(language = AppLanguage.ENGLISH) }
+        waitForIdle()
+
+        onNodeWithText(englishClose).assertExists()
     }
 
     @Test

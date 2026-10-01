@@ -115,6 +115,7 @@ tasks.withType<AbstractComposeHotRun> {
 }
 
 dependencies {
+    implementation(project(":core"))
     implementation(project(":ui"))
     implementation(project(":workspace"))
     implementation(project(":platform"))

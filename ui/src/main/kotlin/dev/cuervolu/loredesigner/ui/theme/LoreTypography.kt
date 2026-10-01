@@ -3,11 +3,13 @@ package dev.cuervolu.loredesigner.ui.theme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.composeunstyled.theme.ThemeProperty
 import com.composeunstyled.theme.ThemeToken
+import dev.cuervolu.loredesigner.core.settings.DocumentFont
 import dev.cuervolu.loredesigner.ui.resources.Res
 import dev.cuervolu.loredesigner.ui.resources.inter_bold
 import dev.cuervolu.loredesigner.ui.resources.inter_medium
@@ -15,6 +17,9 @@ import dev.cuervolu.loredesigner.ui.resources.inter_regular
 import dev.cuervolu.loredesigner.ui.resources.inter_semibold
 import dev.cuervolu.loredesigner.ui.resources.jetbrains_mono_medium
 import dev.cuervolu.loredesigner.ui.resources.jetbrains_mono_regular
+import dev.cuervolu.loredesigner.ui.resources.source_serif_4_italic
+import dev.cuervolu.loredesigner.ui.resources.source_serif_4_regular
+import dev.cuervolu.loredesigner.ui.resources.source_serif_4_semibold
 import org.jetbrains.compose.resources.Font
 
 val typography = ThemeProperty<TextStyle>("typography")
@@ -46,6 +51,21 @@ internal fun jetBrainsMonoFontFamily(): FontFamily = FontFamily(
     Font(Res.font.jetbrains_mono_regular, FontWeight.Normal),
     Font(Res.font.jetbrains_mono_medium, FontWeight.Medium),
 )
+
+@Composable
+internal fun sourceSerif4FontFamily(): FontFamily = FontFamily(
+    Font(Res.font.source_serif_4_regular, FontWeight.Normal),
+    Font(Res.font.source_serif_4_semibold, FontWeight.SemiBold),
+    Font(Res.font.source_serif_4_italic, FontWeight.Normal, FontStyle.Italic),
+)
+
+/** Typeface for document text; unrelated to the UI font. Unknown fonts fall back to the default document font. */
+@Composable
+fun documentFontFamily(font: DocumentFont): FontFamily = when (font) {
+    DocumentFont.Inter -> interFontFamily()
+    DocumentFont.JetBrainsMono -> jetBrainsMonoFontFamily()
+    else -> sourceSerif4FontFamily()
+}
 
 @Composable
 internal fun loreTypography(): Map<ThemeToken<TextStyle>, TextStyle> {

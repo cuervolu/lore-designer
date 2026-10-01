@@ -152,7 +152,7 @@ class FileSystemWorkspaceStoreTest {
                 "version = 2\nid = \"$validId\"\nname = \"W\"" to WorkspaceError.UnsupportedProjectVersion::class,
                 "version = 1\nid = \"8c4a2c1e-0f4b-4d6e-9a3f-2b1c0d9e8f7a\"\nname = \"W\"" to
                     WorkspaceError.InvalidWorkspaceId::class,
-                "version = 1\nid = \"$validId\"\nname = \"W\"\ncolor = \"red\"" to
+                "version = 1\nid = \"$validId\"\nname = \"W\"\ncolor = \"magenta\"" to
                     WorkspaceError.UnknownProjectColor::class,
             )
         val location = parent / "Damaged"
@@ -290,6 +290,50 @@ class FileSystemWorkspaceStoreTest {
         assertFailsWith<IllegalStateException> { store.create(parent / "bug", config) }
 
         assertFalse(fakeFileSystem.exists(parent / "bug"))
+    }
+
+    @Test
+    fun `updating the configuration rewrites project file and keeps the folder`() = runTest {
+        val created = createWorkspace(parent, "World", ProjectColor.VIOLET).successValue()
+        val renamed = created.config.copy(name = "World: Reforged", color = ProjectColor.GREEN)
+
+        val updated = store.updateConfig(created.location, renamed).successValue()
+        val reopened = openWorkspace(created.location).successValue()
+
+        assertEquals(created.location, updated.location)
+        assertEquals(renamed, reopened.config)
+        assertEquals(listOf(parent / "World"), fakeFileSystem.list(parent))
+        assertEquals(
+            listOf(created.location / ".lore", created.location / "project.lore"),
+            fakeFileSystem.list(created.location).sorted(),
+        )
+    }
+
+    @Test
+    fun `updating a folder without a project file reports not a workspace`() = runTest {
+        fakeFileSystem.createDirectory(parent / "empty")
+
+        val error = store.updateConfig(parent / "empty", config).failureError()
+
+        assertIs<WorkspaceError.NotAWorkspace>(error)
+        assertTrue(fakeFileSystem.list(parent / "empty").isEmpty())
+    }
+
+    @Test
+    fun `failed update keeps the previous project file`() = runTest {
+        val created = createWorkspace(parent, "World").successValue()
+        failOn(Operation.ATOMIC_MOVE, "project.lore")
+
+        val error = store.updateConfig(created.location, created.config.copy(name = "Other")).failureError()
+
+        val failure = assertIs<WorkspaceError.FileSystemFailure>(error)
+        assertEquals(FileSystemOperation.WRITE, failure.operation)
+        fileSystem.beforeOperation = { _, _ -> }
+        assertEquals("World", openWorkspace(created.location).successValue().config.name)
+        assertEquals(
+            listOf(created.location / ".lore", created.location / "project.lore"),
+            fakeFileSystem.list(created.location).sorted(),
+        )
     }
 
     private fun failOn(failingOperation: Operation, name: String) {

@@ -67,19 +67,12 @@ internal class ProjectFileCodec {
         }
 
         val color =
-            when (projectFile.color) {
+            when (val serialized = projectFile.color) {
                 null -> null
 
-                "violet" -> ProjectColor.VIOLET
-
-                "blue" -> ProjectColor.BLUE
-
-                "green" -> ProjectColor.GREEN
-
                 else ->
-                    return WorkspaceResult.Failure(
-                        WorkspaceError.UnknownProjectColor(path, projectFile.color),
-                    )
+                    ProjectColor.entries.firstOrNull { it.serializedName == serialized }
+                        ?: return WorkspaceResult.Failure(WorkspaceError.UnknownProjectColor(path, serialized))
             }
 
         return WorkspaceResult.Success(
@@ -96,12 +89,20 @@ internal class ProjectFileCodec {
     private fun WorkspaceId.isVersion7(): Boolean =
         value.toJavaUuid().let { uuid -> uuid.version() == 7 && uuid.variant() == 2 }
 
+    // Persisted in project.lore; these names must never change once released.
     private val ProjectColor.serializedName: String
         get() =
             when (this) {
                 ProjectColor.VIOLET -> "violet"
                 ProjectColor.BLUE -> "blue"
+                ProjectColor.CYAN -> "cyan"
+                ProjectColor.TEAL -> "teal"
                 ProjectColor.GREEN -> "green"
+                ProjectColor.AMBER -> "amber"
+                ProjectColor.ORANGE -> "orange"
+                ProjectColor.ROSE -> "rose"
+                ProjectColor.RED -> "red"
+                ProjectColor.SLATE -> "slate"
             }
 
     @Serializable

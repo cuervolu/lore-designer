@@ -37,22 +37,50 @@ object LoreColors {
     val projectVioletSubtle = ThemeToken<Color>("project_violet_subtle")
     val projectBlue = ThemeToken<Color>("project_blue")
     val projectBlueSubtle = ThemeToken<Color>("project_blue_subtle")
+    val projectCyan = ThemeToken<Color>("project_cyan")
+    val projectCyanSubtle = ThemeToken<Color>("project_cyan_subtle")
+    val projectTeal = ThemeToken<Color>("project_teal")
+    val projectTealSubtle = ThemeToken<Color>("project_teal_subtle")
     val projectGreen = ThemeToken<Color>("project_green")
     val projectGreenSubtle = ThemeToken<Color>("project_green_subtle")
+    val projectAmber = ThemeToken<Color>("project_amber")
+    val projectAmberSubtle = ThemeToken<Color>("project_amber_subtle")
+    val projectOrange = ThemeToken<Color>("project_orange")
+    val projectOrangeSubtle = ThemeToken<Color>("project_orange_subtle")
+    val projectRose = ThemeToken<Color>("project_rose")
+    val projectRoseSubtle = ThemeToken<Color>("project_rose_subtle")
+    val projectRed = ThemeToken<Color>("project_red")
+    val projectRedSubtle = ThemeToken<Color>("project_red_subtle")
+    val projectSlate = ThemeToken<Color>("project_slate")
+    val projectSlateSubtle = ThemeToken<Color>("project_slate_subtle")
 }
 
 /** Color of the small identity dot and icon glyph for a project. */
 fun ProjectColor.dotToken(): ThemeToken<Color> = when (this) {
     ProjectColor.VIOLET -> LoreColors.projectViolet
     ProjectColor.BLUE -> LoreColors.projectBlue
+    ProjectColor.CYAN -> LoreColors.projectCyan
+    ProjectColor.TEAL -> LoreColors.projectTeal
     ProjectColor.GREEN -> LoreColors.projectGreen
+    ProjectColor.AMBER -> LoreColors.projectAmber
+    ProjectColor.ORANGE -> LoreColors.projectOrange
+    ProjectColor.ROSE -> LoreColors.projectRose
+    ProjectColor.RED -> LoreColors.projectRed
+    ProjectColor.SLATE -> LoreColors.projectSlate
 }
 
 /** Subtle tint behind a project's icon. */
 fun ProjectColor.tintToken(): ThemeToken<Color> = when (this) {
     ProjectColor.VIOLET -> LoreColors.projectVioletSubtle
     ProjectColor.BLUE -> LoreColors.projectBlueSubtle
+    ProjectColor.CYAN -> LoreColors.projectCyanSubtle
+    ProjectColor.TEAL -> LoreColors.projectTealSubtle
     ProjectColor.GREEN -> LoreColors.projectGreenSubtle
+    ProjectColor.AMBER -> LoreColors.projectAmberSubtle
+    ProjectColor.ORANGE -> LoreColors.projectOrangeSubtle
+    ProjectColor.ROSE -> LoreColors.projectRoseSubtle
+    ProjectColor.RED -> LoreColors.projectRedSubtle
+    ProjectColor.SLATE -> LoreColors.projectSlateSubtle
 }
 
 internal val LightColors: Map<ThemeToken<Color>, Color> = mapOf(
@@ -79,8 +107,22 @@ internal val LightColors: Map<ThemeToken<Color>, Color> = mapOf(
     LoreColors.projectVioletSubtle to Color(0xFFEEECFA),
     LoreColors.projectBlue to Color(0xFF5382E5),
     LoreColors.projectBlueSubtle to Color(0xFFE9EFFE),
+    LoreColors.projectCyan to Color(0xFF2C99A0),
+    LoreColors.projectCyanSubtle to Color(0xFFE5F4F5),
+    LoreColors.projectTeal to Color(0xFF2C907A),
+    LoreColors.projectTealSubtle to Color(0xFFE5F5F0),
     LoreColors.projectGreen to Color(0xFF489160),
     LoreColors.projectGreenSubtle to Color(0xFFE9F4EC),
+    LoreColors.projectAmber to Color(0xFFB68531),
+    LoreColors.projectAmberSubtle to Color(0xFFFBF1E1),
+    LoreColors.projectOrange to Color(0xFFC67440),
+    LoreColors.projectOrangeSubtle to Color(0xFFFBEEE5),
+    LoreColors.projectRose to Color(0xFFC36484),
+    LoreColors.projectRoseSubtle to Color(0xFFFAEBF0),
+    LoreColors.projectRed to Color(0xFFC15353),
+    LoreColors.projectRedSubtle to Color(0xFFFBEAEA),
+    LoreColors.projectSlate to Color(0xFF65686E),
+    LoreColors.projectSlateSubtle to Color(0xFFEBEBEC),
 )
 
 internal val DarkColors: Map<ThemeToken<Color>, Color> = mapOf(
@@ -107,6 +149,20 @@ internal val DarkColors: Map<ThemeToken<Color>, Color> = mapOf(
     LoreColors.projectVioletSubtle to Color(0xFF302C49),
     LoreColors.projectBlue to Color(0xFF7CA2EF),
     LoreColors.projectBlueSubtle to Color(0xFF252D42),
+    LoreColors.projectCyan to Color(0xFF5DB8BE),
+    LoreColors.projectCyanSubtle to Color(0xFF20343A),
+    LoreColors.projectTeal to Color(0xFF59B29A),
+    LoreColors.projectTealSubtle to Color(0xFF1F3833),
     LoreColors.projectGreen to Color(0xFF74B788),
     LoreColors.projectGreenSubtle to Color(0xFF243A2C),
+    LoreColors.projectAmber to Color(0xFFCEA350),
+    LoreColors.projectAmberSubtle to Color(0xFF3A3221),
+    LoreColors.projectOrange to Color(0xFFDA9263),
+    LoreColors.projectOrangeSubtle to Color(0xFF3A2C22),
+    LoreColors.projectRose to Color(0xFFDD8FA7),
+    LoreColors.projectRoseSubtle to Color(0xFF3A2530),
+    LoreColors.projectRed to Color(0xFFDA7778),
+    LoreColors.projectRedSubtle to Color(0xFF3A2529),
+    LoreColors.projectSlate to Color(0xFF9B9DA5),
+    LoreColors.projectSlateSubtle to Color(0xFF2C2D33),
 )

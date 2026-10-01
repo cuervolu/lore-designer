@@ -21,6 +21,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.composeunstyled.Text
 import com.composeunstyled.UnstyledButton
@@ -38,7 +39,9 @@ import dev.cuervolu.loredesigner.ui.theme.sizes
 import dev.cuervolu.loredesigner.ui.theme.spacing
 import dev.cuervolu.loredesigner.ui.theme.typography
 
-enum class LoreButtonVariant { Primary, Secondary, Ghost }
+enum class LoreButtonVariant { Primary, Secondary, Ghost, Danger }
+
+enum class LoreButtonSize { Medium, Small }
 
 private const val DISABLED_ALPHA = 0.5f
 
@@ -50,6 +53,7 @@ fun LoreButton(
     variant: LoreButtonVariant = LoreButtonVariant.Secondary,
     enabled: Boolean = true,
     leadingIcon: ImageVector? = null,
+    size: LoreButtonSize = LoreButtonSize.Medium,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val hovered by interactionSource.collectIsHoveredAsState()
@@ -64,9 +68,21 @@ fun LoreButton(
         onClick = onClick,
         enabled = enabled,
         interactionSource = interactionSource,
-        contentPadding = PaddingValues(horizontal = Theme[spacing][LoreSpacing.space5]),
+        contentPadding = PaddingValues(
+            horizontal = if (size == LoreButtonSize.Small) 10.dp else Theme[spacing][LoreSpacing.space5],
+        ),
         modifier = modifier
-            .height(Theme[sizes][LoreSizes.controlHeight])
+            .height(
+                Theme[sizes][
+                    if (size ==
+                        LoreButtonSize.Small
+                    ) {
+                        LoreSizes.controlHeightSmall
+                    } else {
+                        LoreSizes.controlHeight
+                    },
+                ],
+            )
             .alpha(if (enabled) 1f else DISABLED_ALPHA)
             .background(background, shape)
             .border(1.dp, palette.border, shape),
@@ -85,7 +101,11 @@ fun LoreButton(
             }
             Text(
                 text = text,
-                style = Theme[typography][LoreTypography.label],
+                style = if (size == LoreButtonSize.Small) {
+                    Theme[typography][LoreTypography.caption].copy(fontWeight = FontWeight.Medium)
+                } else {
+                    Theme[typography][LoreTypography.label]
+                },
                 color = palette.content,
                 singleLine = true,
             )
@@ -115,6 +135,13 @@ private fun LoreButtonVariant.palette(): ButtonPalette = when (this) {
         background = Color.Transparent,
         hoverBackground = Theme[colors][LoreColors.surface],
         content = Theme[colors][LoreColors.textSecondary],
+        border = Color.Transparent,
+    )
+
+    LoreButtonVariant.Danger -> ButtonPalette(
+        background = Theme[colors][LoreColors.danger],
+        hoverBackground = Theme[colors][LoreColors.danger],
+        content = Color.White,
         border = Color.Transparent,
     )
 }

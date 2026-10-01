@@ -3,8 +3,10 @@ package dev.cuervolu.loredesigner
 import co.touchlab.kermit.Logger
 import dev.cuervolu.loredesigner.di.loreDesignerModules
 import dev.cuervolu.loredesigner.platform.logging.DesktopStartupSnapshot
+import dev.cuervolu.loredesigner.platform.logging.DiagnosticLogging
 import dev.cuervolu.loredesigner.platform.logging.LogSession
 import dev.cuervolu.loredesigner.platform.logging.logSessionStart
+import dev.cuervolu.loredesigner.ui.settings.data.ApplicationSettingsRepository
 import dev.nucleusframework.application.NucleusBackend
 import dev.nucleusframework.application.aotTraining
 import dev.nucleusframework.application.nucleusApplication
@@ -16,18 +18,21 @@ private const val APP_ID = "dev.cuervolu.loredesigner"
 
 fun main() {
     FileKit.init(appId = APP_ID)
-    val logsDirectory = FileKit.filesDir.file.toPath().resolve("logs")
+    val appDataDirectory = FileKit.filesDir.file.toPath()
 
-    val koinApplication = startKoin {
-        modules(loreDesignerModules(logsDirectory))
-    }
+    val koin = startKoin {
+        modules(loreDesignerModules(appDataDirectory))
+    }.koin
 
-    val logger = koinApplication.koin.get<Logger>()
+    val settingsRepository = koin.get<ApplicationSettingsRepository>()
+    koin.get<DiagnosticLogging>().setEnabled(settingsRepository.settings.value.diagnosticLogging)
+
+    val logger = koin.get<Logger>()
     val session = LogSession.start()
     logger.logSessionStart(session, DesktopStartupSnapshot.capture(session.startedAt))
 
     nucleusApplication(backend = NucleusBackend.Tao) {
         aotTraining()
-        LoreDesignerDesktopApp()
+        LoreDesignerDesktopApp(settingsRepository)
     }
 }

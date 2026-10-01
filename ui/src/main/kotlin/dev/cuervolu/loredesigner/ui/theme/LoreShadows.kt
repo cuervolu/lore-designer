@@ -11,10 +11,15 @@ import com.composeunstyled.theme.ThemeToken
 val shadows = ThemeProperty<List<Shadow>>("shadows")
 
 object LoreShadows {
+    val menu = ThemeToken<List<Shadow>>("menu")
     val modal = ThemeToken<List<Shadow>>("modal")
 }
 
 internal val LightShadows: Map<ThemeToken<List<Shadow>>, List<Shadow>> = mapOf(
+    LoreShadows.menu to listOf(
+        Shadow(radius = 12.dp, color = Color(0x1A14141A), offset = DpOffset(0.dp, 4.dp)),
+        Shadow(radius = 2.dp, color = Color(0x0F14141A), offset = DpOffset(0.dp, 1.dp)),
+    ),
     LoreShadows.modal to listOf(
         Shadow(radius = 40.dp, color = Color(0x2E14141A), offset = DpOffset(0.dp, 16.dp)),
         Shadow(radius = 6.dp, color = Color(0x1414141A), offset = DpOffset(0.dp, 2.dp)),
@@ -22,6 +27,10 @@ internal val LightShadows: Map<ThemeToken<List<Shadow>>, List<Shadow>> = mapOf(
 )
 
 internal val DarkShadows: Map<ThemeToken<List<Shadow>>, List<Shadow>> = mapOf(
+    LoreShadows.menu to listOf(
+        Shadow(radius = 14.dp, color = Color(0x73000000), offset = DpOffset(0.dp, 4.dp)),
+        Shadow(radius = 2.dp, color = Color(0x4D000000), offset = DpOffset(0.dp, 1.dp)),
+    ),
     LoreShadows.modal to listOf(
         Shadow(radius = 48.dp, color = Color(0x99000000), offset = DpOffset(0.dp, 20.dp)),
         Shadow(radius = 6.dp, color = Color(0x59000000), offset = DpOffset(0.dp, 2.dp)),
