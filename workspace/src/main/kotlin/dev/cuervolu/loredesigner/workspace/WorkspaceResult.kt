@@ -1,5 +1,7 @@
 package dev.cuervolu.loredesigner.workspace
 
+import dev.cuervolu.loredesigner.core.workspace.ProjectConfig
+import dev.cuervolu.loredesigner.core.workspace.WorkspaceId
 import okio.Path
 
 sealed interface WorkspaceResult<out T> {
@@ -24,6 +26,10 @@ sealed interface WorkspaceError {
     data class InvalidWorkspaceId(val path: Path, val value: String) : WorkspaceError
 
     data class UnknownProjectColor(val path: Path, val value: String) : WorkspaceError
+
+    /** [location] holds a valid workspace, but not the [expected] one. */
+    data class DifferentWorkspace(val location: Path, val expected: WorkspaceId, val found: ProjectConfig) :
+        WorkspaceError
 
     data class FileSystemFailure(val path: Path, val operation: FileSystemOperation, val cause: Exception) :
         WorkspaceError

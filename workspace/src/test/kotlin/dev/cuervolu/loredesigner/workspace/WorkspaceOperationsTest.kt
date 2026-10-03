@@ -11,7 +11,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 
-class WorkspaceUseCasesTest {
+class WorkspaceOperationsTest {
     private val workspaceId = WorkspaceId.parse("01995f7e-1d74-7c83-a8a9-4fd2ed9cb380")
 
     @Test
@@ -171,6 +171,8 @@ class WorkspaceUseCasesTest {
             openedLocation = location
             return WorkspaceResult.Failure(WorkspaceError.NotAWorkspace(location))
         }
+
+        override suspend fun hasProjectFile(location: Path): Boolean = false
     }
 
     private class FailingWorkspaceStore : WorkspaceStore {
@@ -181,5 +183,7 @@ class WorkspaceUseCasesTest {
 
         override suspend fun updateConfig(location: Path, config: ProjectConfig): WorkspaceResult<Workspace> =
             error("storage must not be called")
+
+        override suspend fun hasProjectFile(location: Path): Boolean = error("storage must not be called")
     }
 }

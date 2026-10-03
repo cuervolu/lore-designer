@@ -12,6 +12,8 @@ dependencies {
     api(libs.okio)
 
     implementation(libs.kotlinx.coroutines.core)
+    api(libs.kermit)
+    implementation(libs.koin.core)
 
     testImplementation(kotlin("test"))
     testImplementation(libs.kotlinx.coroutines.test)

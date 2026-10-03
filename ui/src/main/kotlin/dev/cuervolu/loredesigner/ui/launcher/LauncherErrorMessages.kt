@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import dev.cuervolu.loredesigner.ui.resources.Res
 import dev.cuervolu.loredesigner.ui.resources.launcher_error_damaged_project
 import dev.cuervolu.loredesigner.ui.resources.launcher_error_destination_not_empty
+import dev.cuervolu.loredesigner.ui.resources.launcher_error_different_workspace
 import dev.cuervolu.loredesigner.ui.resources.launcher_error_invalid_location
 import dev.cuervolu.loredesigner.ui.resources.launcher_error_invalid_name
 import dev.cuervolu.loredesigner.ui.resources.launcher_error_missing_location
@@ -46,6 +47,9 @@ private fun WorkspaceError.toMessage(): LauncherMessage = when (this) {
 
     is WorkspaceError.UnsupportedProjectVersion ->
         LauncherMessage(Res.string.launcher_error_unsupported_version, listOf(version))
+
+    is WorkspaceError.DifferentWorkspace ->
+        LauncherMessage(Res.string.launcher_error_different_workspace, listOf(found.name))
 
     is WorkspaceError.FileSystemFailure -> when (operation) {
         FileSystemOperation.INSPECT,

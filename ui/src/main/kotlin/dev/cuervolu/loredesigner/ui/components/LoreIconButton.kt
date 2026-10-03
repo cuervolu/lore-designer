@@ -13,6 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.composeunstyled.UnstyledButton
 import com.composeunstyled.theme.Theme
@@ -26,7 +27,13 @@ import dev.cuervolu.loredesigner.ui.theme.shapes
 import dev.cuervolu.loredesigner.ui.theme.sizes
 
 @Composable
-fun LoreIconButton(icon: ImageVector, contentDescription: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun LoreIconButton(
+    icon: ImageVector,
+    contentDescription: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    tint: Color = Color.Unspecified,
+) {
     val interactionSource = remember { MutableInteractionSource() }
     val hovered by interactionSource.collectIsHoveredAsState()
     val shape = Theme[shapes][LoreShapes.control]
@@ -46,7 +53,7 @@ fun LoreIconButton(icon: ImageVector, contentDescription: String, onClick: () ->
             imageVector = icon,
             contentDescription = contentDescription,
             modifier = Modifier.size(Theme[sizes][LoreSizes.icon]),
-            colorFilter = ColorFilter.tint(Theme[colors][LoreColors.textSecondary]),
+            colorFilter = ColorFilter.tint(tint.takeOrElse { Theme[colors][LoreColors.textSecondary] }),
         )
     }
 }

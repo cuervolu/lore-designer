@@ -336,6 +336,20 @@ class FileSystemWorkspaceStoreTest {
         )
     }
 
+    @Test
+    fun `project file probe checks presence without parsing`() = runTest {
+        val created = createWorkspace(parent, "World").successValue()
+        val plainFolder = (parent / "plain").also { fakeFileSystem.createDirectory(it) }
+        val damaged = (parent / "damaged").also { fakeFileSystem.createDirectory(it) }
+        fakeFileSystem.write(damaged / "project.lore") { writeUtf8("not toml at all [") }
+
+        assertTrue(store.hasProjectFile(created.location))
+        assertTrue(store.hasProjectFile(damaged), "the probe must not parse project.lore")
+        assertFalse(store.hasProjectFile(plainFolder))
+        assertFalse(store.hasProjectFile(parent / "gone"))
+        assertFalse(store.hasProjectFile(created.location / "project.lore"), "a file is not a workspace folder")
+    }
+
     private fun failOn(failingOperation: Operation, name: String) {
         fileSystem.beforeOperation = { operation, path ->
             if (operation == failingOperation && path.name == name) throw IOException("simulated $operation failure")

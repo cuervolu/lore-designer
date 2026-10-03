@@ -62,6 +62,16 @@ class FileSystemWorkspaceStore(private val fileSystem: FileSystem) : WorkspaceSt
             }
         }
 
+    override suspend fun hasProjectFile(location: Path): Boolean = withContext(Dispatchers.IO) {
+        try {
+            val folder = absolute(location)
+            fileSystem.metadataFollowingLinksOrNull(folder)?.isDirectory == true &&
+                fileSystem.metadataFollowingLinksOrNull(folder.resolve(PROJECT_FILE_NAME))?.isRegularFile == true
+        } catch (_: IOException) {
+            false
+        }
+    }
+
     private fun absolute(location: Path): Path = if (location.isAbsolute) {
         location.normalized()
     } else {

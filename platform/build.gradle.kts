@@ -15,6 +15,9 @@ dependencies {
     implementation(project(":workspace"))
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.kotlinx.serialization.properties)
+    implementation(libs.semver)
+    implementation(libs.koin.core)
 
     implementation(libs.filekit.core)
 

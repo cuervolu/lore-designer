@@ -111,7 +111,8 @@ enum class LauncherSection(
 }
 
 /**
- * Launcher body below the title bar. Dialogs are rendered by the caller
+ * Launcher body below the title bar. Dialogs are rendered by the caller; [error] is shown here only
+ * for failures that happen without a dialog, such as opening a remembered project.
  */
 @Composable
 fun LauncherContent(
@@ -119,8 +120,14 @@ fun LauncherContent(
     onSectionChange: (LauncherSection) -> Unit,
     onNewProject: () -> Unit,
     onOpenProject: () -> Unit,
+    projects: LauncherProjects,
+    projectsLoaded: Boolean,
+    projectActions: LauncherProjectActions,
     modifier: Modifier = Modifier,
+    error: LauncherError? = null,
+    onDismissError: () -> Unit = {},
 ) {
+    val sectionProjects = projects.forSection(section)
     val focusRequester = remember { FocusRequester() }
     LaunchedEffect(Unit) { focusRequester.requestFocus() }
 
@@ -157,9 +164,32 @@ fun LauncherContent(
         LauncherSidebar(section = section, onSectionChange = onSectionChange)
         Column(modifier = Modifier.weight(1f).fillMaxHeight()) {
             LauncherHeader(onNewProject = onNewProject, onOpenProject = onOpenProject)
-            SectionTitle(section)
+            SectionTitle(section, count = sectionProjects.size)
+            if (error != null) {
+                ErrorBanner(
+                    error = error,
+                    onDismiss = onDismissError,
+                    modifier = Modifier.padding(
+                        start = Theme[spacing][LoreSpacing.space6],
+                        end = Theme[spacing][LoreSpacing.space6],
+                        bottom = Theme[spacing][LoreSpacing.space4],
+                    ),
+                )
+            }
             Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
-                SectionEmptyState(section = section, onNewProject = onNewProject, onOpenProject = onOpenProject)
+                when {
+                    // Rendering nothing for a moment beats flashing the welcome state at returning users.
+                    !projectsLoaded -> Unit
+
+                    sectionProjects.isEmpty() ->
+                        SectionEmptyState(section = section, onNewProject = onNewProject, onOpenProject = onOpenProject)
+
+                    else -> LauncherProjectList(
+                        projects = sectionProjects,
+                        actions = projectActions,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
             }
         }
     }
@@ -268,7 +298,7 @@ private fun LauncherHeader(onNewProject: () -> Unit, onOpenProject: () -> Unit) 
 }
 
 @Composable
-private fun SectionTitle(section: LauncherSection) {
+private fun SectionTitle(section: LauncherSection, count: Int) {
     Row(
         modifier = Modifier.padding(
             start = Theme[spacing][LoreSpacing.space6],
@@ -286,7 +316,7 @@ private fun SectionTitle(section: LauncherSection) {
             color = Theme[colors][LoreColors.textPrimary],
         )
         Text(
-            text = pluralStringResource(Res.plurals.launcher_project_count, 0, 0),
+            text = pluralStringResource(Res.plurals.launcher_project_count, count, count),
             modifier = Modifier.alignByBaseline(),
             style = Theme[typography][LoreTypography.body],
             color = Theme[colors][LoreColors.textMuted],
