@@ -30,12 +30,13 @@ import kotlin.time.toJavaInstant
  * unparseable file, a malformed version or payload, an older major version nobody can migrate yet) the
  * whole file is copied to a uniquely named backup. An entry from a newer major version is never written.
  *
- * Logs name files and components but never include stored values.
+ * Logs name files and components but never include stored values. I/O failures carry their exception;
+ * decoding failures report only the exception type, since their messages can quote the stored input.
  */
 class FileStateStore(
     private val directory: Path,
     private val fileSystem: FileSystem = FileSystem.SYSTEM,
-    private val logger: Logger = Logger.withTag("State"),
+    private val logger: Logger,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val clock: Clock = Clock.System,
 ) : StateStore {
@@ -71,12 +72,13 @@ class FileStateStore(
         val file = fileFor(spec.storage)
         lockFor(spec.storage).withLock {
             val content = try {
-                if (!fileSystem.exists(file)) return@withLock StateLoadResult.Missing
+                if (!fileSystem.exists(file)) {
+                    logger.d { "No state file $file yet; ${spec.name} starts from its defaults" }
+                    return@withLock StateLoadResult.Missing
+                }
                 fileSystem.read(file) { readUtf8() }
             } catch (exception: IOException) {
-                logger.w {
-                    "Could not read state file $file (${exception.describe()}); ${spec.name} keeps its defaults"
-                }
+                logger.w(exception) { "Could not read state file $file; ${spec.name} keeps its defaults" }
                 return@withLock StateLoadResult.StorageUnreadable(exception.describe())
             }
             val document = try {
@@ -85,11 +87,15 @@ class FileStateStore(
                 logger.w { "State file $file is unreadable (${exception.message}); ${spec.name} keeps its defaults" }
                 return@withLock StateLoadResult.StorageUnreadable(exception.message ?: "Unreadable")
             }
-            val stored = document.components[spec.name] ?: return@withLock StateLoadResult.Missing
+            val stored = document.components[spec.name] ?: run {
+                logger.d { "$file holds no state for ${spec.name}; it starts from its defaults" }
+                return@withLock StateLoadResult.Missing
+            }
 
             when (val entry = inspect(component, spec, backend, stored)) {
                 is StoredEntry.Readable -> {
                     component.loadState(entry.value)
+                    logger.d { "Loaded ${spec.name} version ${entry.persisted} from $file" }
                     StateLoadResult.Loaded
                 }
 
@@ -174,9 +180,10 @@ class FileStateStore(
                 fileSystem.createDirectories(directory)
                 backupLabel?.let { backUp(file, it) }
                 fileWriter.replace(file, rendered)
+                logger.v { "Saved ${spec.name} version $version to $file" }
                 StateSaveResult.Saved
             } catch (exception: IOException) {
-                logger.e { "Could not save ${spec.name} to $file (${exception.describe()}); keeping it in memory" }
+                logger.e(exception) { "Could not save ${spec.name} to $file; keeping it in memory" }
                 StateSaveResult.Failed(exception)
             }
         }

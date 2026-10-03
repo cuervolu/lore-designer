@@ -16,7 +16,7 @@ import okio.Path
 class WorkspaceOpener(
     private val workspaceStore: WorkspaceStore,
     private val recentWorkspaces: RecentWorkspacesRegistry,
-    private val logger: Logger = Logger.withTag("Workspaces"),
+    private val logger: Logger,
 ) {
     /**
      * Opens the workspace at [location]. With [expectedId], a folder holding any other workspace fails with
@@ -29,6 +29,7 @@ class WorkspaceOpener(
         return if (found.config.id == expectedId) {
             result
         } else {
+            logger.d { "Folder ${found.location} holds workspace ${found.config.id}, expected $expectedId" }
             WorkspaceResult.Failure(WorkspaceError.DifferentWorkspace(found.location, expectedId, found.config))
         }
     }
@@ -37,25 +38,29 @@ class WorkspaceOpener(
     suspend fun relocate(id: WorkspaceId, location: Path): WorkspaceResult<Workspace> {
         val result = open(location, expectedId = id)
         if (result is WorkspaceResult.Success) {
-            bestEffort("update the location of") { recentWorkspaces.updateLocation(result.value) }
+            logger.i { "Workspace $id relocated to ${result.value.location}" }
+            bestEffort("update the location of", id) { recentWorkspaces.updateLocation(result.value) }
         }
         return result
     }
 
     suspend fun recordOpened(workspace: Workspace) {
-        bestEffort("remember") { recentWorkspaces.recordOpened(workspace) }
+        logger.i { "Workspace ${workspace.config.id} opened at ${workspace.location}" }
+        bestEffort("remember", workspace.config.id) { recentWorkspaces.recordOpened(workspace) }
     }
 
     /** Cheap availability probe; see [WorkspaceStore.hasProjectFile]. */
-    suspend fun hasProjectFile(location: Path): Boolean = workspaceStore.hasProjectFile(location)
+    suspend fun hasProjectFile(location: Path): Boolean = workspaceStore.hasProjectFile(location).also { found ->
+        logger.v { "Availability probe of $location: ${if (found) "project file found" else "no project file"}" }
+    }
 
-    private suspend fun bestEffort(action: String, block: suspend () -> Unit) {
+    private suspend fun bestEffort(action: String, id: WorkspaceId, block: suspend () -> Unit) {
         try {
             block()
         } catch (cancellation: CancellationException) {
             throw cancellation
         } catch (exception: Exception) {
-            logger.w(exception) { "Could not $action a recent workspace; the launcher list may be out of date" }
+            logger.w(exception) { "Could not $action recent workspace $id; the launcher list may be out of date" }
         }
     }
 }

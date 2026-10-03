@@ -3,6 +3,7 @@ package dev.cuervolu.loredesigner.platform.settings
 import dev.cuervolu.loredesigner.core.settings.AppLanguage
 import dev.cuervolu.loredesigner.core.settings.ApplicationSettings
 import dev.cuervolu.loredesigner.core.settings.ThemePreference
+import dev.cuervolu.loredesigner.platform.logging.RecordingLogWriter
 import okio.FileSystem
 import okio.Path
 import okio.Path.Companion.toOkioPath
@@ -14,6 +15,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class PropertiesFileSettingsTest {
+    private val logs = RecordingLogWriter()
     private val root: Path = createTempDirectory("settings-test").toOkioPath()
     private val file = root / "app-data" / "settings.properties"
 
@@ -22,7 +24,10 @@ class PropertiesFileSettingsTest {
         FileSystem.SYSTEM.deleteRecursively(root)
     }
 
-    private fun newStore() = MultiplatformApplicationSettingsStore(PropertiesFileSettings.create(file))
+    private fun newStore() = MultiplatformApplicationSettingsStore(
+        PropertiesFileSettings.create(file, logger = logs.logger()),
+        logs.logger(),
+    )
 
     @Test
     fun `missing file yields defaults and is not created by reading`() {

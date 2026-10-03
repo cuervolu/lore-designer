@@ -1,8 +1,10 @@
 package dev.cuervolu.loredesigner.platform.workspace
 
+import co.touchlab.kermit.Severity
 import dev.cuervolu.loredesigner.core.workspace.ProjectColor
 import dev.cuervolu.loredesigner.core.workspace.ProjectConfig
 import dev.cuervolu.loredesigner.core.workspace.WorkspaceId
+import dev.cuervolu.loredesigner.platform.logging.RecordingLogWriter
 import dev.cuervolu.loredesigner.platform.workspace.FaultyFileSystem.Operation
 import dev.cuervolu.loredesigner.workspace.CreateWorkspace
 import dev.cuervolu.loredesigner.workspace.FileSystemOperation
@@ -27,14 +29,16 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 class FileSystemWorkspaceStoreTest {
+    private val logs = RecordingLogWriter()
     private val id = WorkspaceId.parse("01995f7e-1d74-7c83-a8a9-4fd2ed9cb380")
     private val config = ProjectConfig(1, id, "World", null)
     private val fakeFileSystem = FakeFileSystem()
     private val fileSystem = FaultyFileSystem(fakeFileSystem)
-    private val store = FileSystemWorkspaceStore(fileSystem)
+    private val store = FileSystemWorkspaceStore(fileSystem, logs.logger())
     private val parent = "/worlds".toPath().also { fakeFileSystem.createDirectories(it) }
 
     private val createWorkspace = CreateWorkspace(store, WorkspaceIdGenerator { id })
@@ -328,7 +332,6 @@ class FileSystemWorkspaceStoreTest {
 
         val failure = assertIs<WorkspaceError.FileSystemFailure>(error)
         assertEquals(FileSystemOperation.WRITE, failure.operation)
-        fileSystem.beforeOperation = { _, _ -> }
         assertEquals("World", openWorkspace(created.location).successValue().config.name)
         assertEquals(
             listOf(created.location / ".lore", created.location / "project.lore"),
@@ -348,6 +351,84 @@ class FileSystemWorkspaceStoreTest {
         assertFalse(store.hasProjectFile(plainFolder))
         assertFalse(store.hasProjectFile(parent / "gone"))
         assertFalse(store.hasProjectFile(created.location / "project.lore"), "a file is not a workspace folder")
+    }
+
+    @Test
+    fun `filesystem failures are logged once as errors with the original exception`() = runTest {
+        failOn(Operation.CREATE_DIRECTORY, ".lore")
+
+        val failure = assertIs<WorkspaceError.FileSystemFailure>(createWorkspace(parent, "World").failureError())
+
+        val error = logs.at(Severity.Error).single()
+        assertSame(failure.cause, error.throwable)
+        assertTrue(".lore" in error.message && "CREATE_DIRECTORY" in error.message, error.message)
+        assertTrue(logs.at(Severity.Info).isEmpty(), "a failed creation is not reported as created")
+    }
+
+    @Test
+    fun `rollback leftovers are named in a warning without repeating the stack trace`() = runTest {
+        fileSystem.beforeOperation = { operation, path ->
+            if (operation == Operation.ATOMIC_MOVE && path.name == "project.lore") throw IOException("write failed")
+            if (operation == Operation.DELETE && path.name == ".lore") throw IOException("cleanup failed")
+        }
+
+        createWorkspace(parent, "World").failureError()
+
+        // The workspace folder cannot be removed either, because .lore is still inside it.
+        val warnings = logs.at(Severity.Warn)
+        assertEquals(
+            listOf(parent / "World" / ".lore", parent / "World").map { "Could not remove $it " },
+            warnings.map { it.message.substringBefore("after") },
+        )
+        assertTrue(warnings.all { it.throwable == null })
+        assertEquals(1, logs.at(Severity.Error).size)
+    }
+
+    @Test
+    fun `choosing a folder that is not a workspace is only diagnostic`() = runTest {
+        openWorkspace(parent / "missing").failureError()
+
+        assertTrue(logs.entries.all { it.severity == Severity.Debug }, "${logs.entries}")
+        assertTrue(logs.entries.single().message.contains("NotAWorkspace"))
+    }
+
+    @Test
+    fun `invalid project files are warned about without quoting their content`() = runTest {
+        val location = parent / "Damaged"
+        fakeFileSystem.createDirectory(location)
+        fakeFileSystem.write(location / "project.lore") { writeUtf8("secret-lore = = \"The king dies\"") }
+
+        openWorkspace(location).failureError()
+
+        val warning = logs.at(Severity.Warn).single()
+        assertTrue((location / "project.lore").toString() in warning.message)
+        assertTrue(logs.entries.none { "secret-lore" in it.message || "king" in it.message }, "${logs.entries}")
+    }
+
+    @Test
+    fun `creating and updating a workspace are lifecycle events`() = runTest {
+        val workspace = createWorkspace(parent, "World").successValue()
+        store.updateConfig(workspace.location, workspace.config.copy(name = "Renamed")).successValue()
+
+        val info = logs.at(Severity.Info).map { it.message }
+        assertEquals(2, info.size, "$info")
+        assertTrue(info.all { id.toString() in it })
+    }
+
+    @Test
+    fun `probe failures are explained in diagnostic output`() = runTest {
+        val created = createWorkspace(parent, "World").successValue()
+        val failingProbe = FileSystemWorkspaceStore(
+            object : okio.ForwardingFileSystem(fakeFileSystem) {
+                override fun metadataOrNull(path: Path) = throw IOException("permission denied")
+            },
+            logs.logger(),
+        )
+
+        assertFalse(failingProbe.hasProjectFile(created.location))
+
+        val debug = logs.at(Severity.Debug).last()
+        assertEquals("permission denied", debug.throwable?.message)
     }
 
     private fun failOn(failingOperation: Operation, name: String) {

@@ -13,9 +13,10 @@ import okio.Path
  *
  * Values are stored as stable lowercase names rather than ordinals or Kotlin enum names, so reordering
  * or renaming constants never reinterprets an existing file. Unknown or damaged values fall back to
- * the default for that field instead of failing the whole read.
+ * the default for that field instead of failing the whole read. Logs name keys, never their values.
  */
-class MultiplatformApplicationSettingsStore(private val settings: Settings) : ApplicationSettingsStore {
+class MultiplatformApplicationSettingsStore(private val settings: Settings, private val logger: Logger) :
+    ApplicationSettingsStore {
     private val defaults = ApplicationSettings()
 
     override fun read(): ApplicationSettings = ApplicationSettings(
@@ -26,7 +27,7 @@ class MultiplatformApplicationSettingsStore(private val settings: Settings) : Ap
         spellcheck = boolean(Keys.SPELLCHECK, defaults.spellcheck),
         documentFont = settings.getStringOrNull(Keys.DOCUMENT_FONT)
             ?.let(::DocumentFont)
-            ?.takeIf { it in DocumentFont.BuiltIn }
+            ?.let { font -> font.takeIf { it in DocumentFont.BuiltIn } ?: unrecognized(Keys.DOCUMENT_FONT) }
             ?: defaults.documentFont,
         autosaveInterval = enumValue(Keys.AUTOSAVE_INTERVAL, defaults.autosaveInterval),
         keepRecoveryCopies = boolean(Keys.KEEP_RECOVERY, defaults.keepRecoveryCopies),
@@ -34,13 +35,24 @@ class MultiplatformApplicationSettingsStore(private val settings: Settings) : Ap
         diagnosticLogging = boolean(Keys.DIAGNOSTIC_LOGGING, defaults.diagnosticLogging),
         showHiddenFilesIn = settings.getStringOrNull(Keys.SHOW_HIDDEN_FILES_IN)
             ?.split(LIST_SEPARATOR)
-            ?.mapNotNull { runCatching { WorkspaceId.parse(it.trim()) }.getOrNull() }
+            ?.mapNotNull {
+                runCatching { WorkspaceId.parse(it.trim()) }.getOrNull()
+                    ?: unrecognized(Keys.SHOW_HIDDEN_FILES_IN)
+            }
             ?.toSet()
             ?: defaults.showHiddenFilesIn,
     )
 
     override fun write(settings: ApplicationSettings) {
         val current = read()
+        val changedKeys = mutableListOf<String>()
+
+        fun <T> putIfChanged(key: String, stored: T, next: T, encode: (T) -> String) {
+            if (stored == next) return
+            changedKeys += key
+            this.settings.putString(key, encode(next))
+        }
+
         // The file-backed Settings rewrites the file on every put, so only changed keys are written.
         putIfChanged(Keys.THEME, current.theme, settings.theme) { it.storedName }
         putIfChanged(Keys.DENSITY, current.density, settings.density) { it.storedName }
@@ -55,18 +67,22 @@ class MultiplatformApplicationSettingsStore(private val settings: Settings) : Ap
         putIfChanged(Keys.SHOW_HIDDEN_FILES_IN, current.showHiddenFilesIn, settings.showHiddenFilesIn) { ids ->
             ids.map(WorkspaceId::toString).sorted().joinToString(LIST_SEPARATOR)
         }
+        if (changedKeys.isNotEmpty()) logger.d { "Writing changed settings keys: ${changedKeys.joinToString()}" }
     }
 
-    private fun <T> putIfChanged(key: String, current: T, next: T, encode: (T) -> String) {
-        if (current != next) settings.putString(key, encode(next))
+    private fun <T> unrecognized(key: String): T? {
+        logger.d { "Ignoring an unrecognized stored value for $key" }
+        return null
     }
 
-    private fun boolean(key: String, default: Boolean): Boolean =
-        settings.getStringOrNull(key)?.toBooleanStrictOrNull() ?: default
+    private fun boolean(key: String, default: Boolean): Boolean {
+        val stored = settings.getStringOrNull(key) ?: return default
+        return stored.toBooleanStrictOrNull() ?: unrecognized(key) ?: default
+    }
 
     private inline fun <reified E : Enum<E>> enumValue(key: String, default: E): E {
         val stored = settings.getStringOrNull(key) ?: return default
-        return enumValues<E>().firstOrNull { it.storedName == stored } ?: default
+        return enumValues<E>().firstOrNull { it.storedName == stored } ?: unrecognized(key) ?: default
     }
 
     private object Keys {
@@ -91,8 +107,5 @@ class MultiplatformApplicationSettingsStore(private val settings: Settings) : Ap
 private val Enum<*>.storedName: String get() = name.lowercase().replace('_', '-')
 
 /** Application settings persisted to [file] as a properties file. */
-fun fileBackedApplicationSettingsStore(
-    file: Path,
-    logger: Logger = Logger.withTag("Settings"),
-): ApplicationSettingsStore =
-    MultiplatformApplicationSettingsStore(PropertiesFileSettings.create(file, logger = logger))
+fun fileBackedApplicationSettingsStore(file: Path, logger: Logger): ApplicationSettingsStore =
+    MultiplatformApplicationSettingsStore(PropertiesFileSettings.create(file, logger = logger), logger)

@@ -40,13 +40,13 @@ private fun loggingModule(logsDirectory: Path): Module = module {
 }
 
 private fun storageModule(appDataDirectory: Path): Module = module {
-    single<WorkspaceStore> { FileSystemWorkspaceStore(FileSystem.SYSTEM) }
+    single<WorkspaceStore> { FileSystemWorkspaceStore(FileSystem.SYSTEM, get<Logger>().withTag("Workspaces")) }
     single<WorkspaceIdGenerator> { UuidV7WorkspaceIdGenerator() }
     single<StateStore> {
         FileStateStore(appDataDirectory.toOkioPath(), FileSystem.SYSTEM, get<Logger>().withTag("State"))
     }
     single<RecentWorkspacesRegistry> {
-        PersistentRecentWorkspacesRegistry(get(), logger = get<Logger>().withTag("RecentWorkspaces"))
+        PersistentRecentWorkspacesRegistry(get(), get<Logger>().withTag("RecentWorkspaces"))
     }
     single<ApplicationSettingsStore> {
         fileBackedApplicationSettingsStore(

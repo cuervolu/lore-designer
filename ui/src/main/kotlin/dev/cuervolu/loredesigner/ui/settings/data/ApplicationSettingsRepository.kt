@@ -1,7 +1,9 @@
 package dev.cuervolu.loredesigner.ui.settings.data
 
+import co.touchlab.kermit.Logger
 import dev.cuervolu.loredesigner.core.settings.ApplicationSettings
 import dev.cuervolu.loredesigner.core.settings.ApplicationSettingsStore
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -17,11 +19,13 @@ import kotlinx.coroutines.launch
  *
  * The store is read synchronously on construction so the first frame already uses the saved theme
  * and language. Changes apply in memory immediately; disk writes run on [ioDispatcher], one at a
- * time, and rapid changes collapse into a single write of the latest value.
+ * time, and rapid changes collapse into a single write of the latest value. A failed write is logged
+ * and the loop keeps going, so the next change is still persisted.
  */
 class ApplicationSettingsRepository(
     private val store: ApplicationSettingsStore,
     scope: CoroutineScope,
+    private val logger: Logger,
     ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
     private val state = MutableStateFlow(store.read())
@@ -31,7 +35,17 @@ class ApplicationSettingsRepository(
 
     init {
         scope.launch(ioDispatcher) {
-            for (settings in pendingWrites) store.write(settings)
+            for (settings in pendingWrites) write(settings)
+        }
+    }
+
+    private fun write(settings: ApplicationSettings) {
+        try {
+            store.write(settings)
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (exception: Exception) {
+            logger.e(exception) { "Could not save settings; changes are kept in memory for this session" }
         }
     }
 

@@ -2,6 +2,7 @@ package dev.cuervolu.loredesigner.ui.settings
 
 import dev.cuervolu.loredesigner.core.settings.ApplicationSettings
 import dev.cuervolu.loredesigner.core.settings.ApplicationSettingsStore
+import dev.cuervolu.loredesigner.ui.RecordingLogWriter
 import dev.cuervolu.loredesigner.ui.launcher.FakeWorkspaceStore
 import dev.cuervolu.loredesigner.ui.settings.data.ApplicationSettingsRepository
 import dev.cuervolu.loredesigner.ui.settings.pages.builtInSettingsPages
@@ -13,9 +14,16 @@ internal class FakeApplicationSettingsStore(var stored: ApplicationSettings = Ap
     ApplicationSettingsStore {
     val writes = mutableListOf<ApplicationSettings>()
 
+    /** Thrown by the next write instead of storing it. */
+    var nextWriteFailure: Exception? = null
+
     override fun read(): ApplicationSettings = stored
 
     override fun write(settings: ApplicationSettings) {
+        nextWriteFailure?.let { failure ->
+            nextWriteFailure = null
+            throw failure
+        }
         writes += settings
         stored = settings
     }
@@ -45,7 +53,7 @@ internal class SettingsTestHarness(
     ioDispatcher: CoroutineDispatcher = Dispatchers.Unconfined,
 ) {
     val store = FakeApplicationSettingsStore(initial)
-    val repository = ApplicationSettingsRepository(store, scope, ioDispatcher)
+    val repository = ApplicationSettingsRepository(store, scope, RecordingLogWriter().logger(), ioDispatcher)
     val registry = SettingsPageRegistry(builtInSettingsPages())
     val environment = FakeSettingsEnvironment()
     val workspaceStore = FakeWorkspaceStore()

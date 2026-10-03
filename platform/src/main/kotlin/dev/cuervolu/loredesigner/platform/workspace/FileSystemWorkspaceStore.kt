@@ -1,5 +1,6 @@
 package dev.cuervolu.loredesigner.platform.workspace
 
+import co.touchlab.kermit.Logger
 import dev.cuervolu.loredesigner.core.workspace.ProjectConfig
 import dev.cuervolu.loredesigner.workspace.FileSystemOperation
 import dev.cuervolu.loredesigner.workspace.Workspace
@@ -17,7 +18,15 @@ import okio.IOException
 import okio.Path
 import okio.Path.Companion.toPath
 
-class FileSystemWorkspaceStore(private val fileSystem: FileSystem) : WorkspaceStore {
+/**
+ * [WorkspaceStore] on an Okio [FileSystem].
+ *
+ * Failures are logged here, where the original exception is still available, and then returned as
+ * [WorkspaceError]s; callers show them without logging them again. Errors that come from the user's
+ * choice of folder are only diagnostic. Parser messages are never logged because they can quote the
+ * project file.
+ */
+class FileSystemWorkspaceStore(private val fileSystem: FileSystem, private val logger: Logger) : WorkspaceStore {
     private val fileWriter = AtomicFileWriter(fileSystem)
     private val projectFileCodec = ProjectFileCodec()
 
@@ -29,9 +38,15 @@ class FileSystemWorkspaceStore(private val fileSystem: FileSystem) : WorkspaceSt
                 } catch (exception: IOException) {
                     return@withContext WorkspaceResult.Failure(
                         WorkspaceError.FileSystemFailure(location, FileSystemOperation.INSPECT, exception),
-                    )
+                    ).logged("create a workspace at $location")
                 }
             createWorkspace(absoluteLocation, config)
+                .logged("create workspace ${config.id} at $absoluteLocation")
+                .also { result ->
+                    if (result is WorkspaceResult.Success) {
+                        logger.i { "Workspace ${config.id} created at $absoluteLocation" }
+                    }
+                }
         }
 
     override suspend fun open(location: Path): WorkspaceResult<Workspace> = withContext(Dispatchers.IO) {
@@ -41,24 +56,38 @@ class FileSystemWorkspaceStore(private val fileSystem: FileSystem) : WorkspaceSt
             } catch (exception: IOException) {
                 return@withContext WorkspaceResult.Failure(
                     WorkspaceError.FileSystemFailure(location, FileSystemOperation.READ, exception),
-                )
+                ).logged("open the workspace at $location")
             }
         openWorkspace(absoluteLocation)
+            .logged("open the workspace at $absoluteLocation")
+            .also { result ->
+                if (result is WorkspaceResult.Success) {
+                    logger.d { "Read workspace ${result.value.config.id} from $absoluteLocation" }
+                }
+            }
     }
 
     override suspend fun updateConfig(location: Path, config: ProjectConfig): WorkspaceResult<Workspace> =
         withContext(Dispatchers.IO) {
             val projectFile = location.resolve(PROJECT_FILE_NAME)
-            try {
+            val result = try {
                 if (fileSystem.metadataFollowingLinksOrNull(projectFile)?.isRegularFile != true) {
-                    return@withContext WorkspaceResult.Failure(WorkspaceError.NotAWorkspace(location))
+                    WorkspaceResult.Failure(WorkspaceError.NotAWorkspace(location))
+                } else {
+                    fileWriter.replace(projectFile, projectFileCodec.encode(config))
+                    WorkspaceResult.Success(Workspace(location, config))
                 }
-                fileWriter.replace(projectFile, projectFileCodec.encode(config))
-                WorkspaceResult.Success(Workspace(location, config))
             } catch (exception: IOException) {
                 WorkspaceResult.Failure(
                     WorkspaceError.FileSystemFailure(projectFile, FileSystemOperation.WRITE, exception),
                 )
+            }
+            result.logged("update the configuration of workspace ${config.id}").also {
+                if (it is WorkspaceResult.Success) {
+                    logger.i {
+                        "Project configuration of workspace ${config.id} updated"
+                    }
+                }
             }
         }
 
@@ -67,7 +96,8 @@ class FileSystemWorkspaceStore(private val fileSystem: FileSystem) : WorkspaceSt
             val folder = absolute(location)
             fileSystem.metadataFollowingLinksOrNull(folder)?.isDirectory == true &&
                 fileSystem.metadataFollowingLinksOrNull(folder.resolve(PROJECT_FILE_NAME))?.isRegularFile == true
-        } catch (_: IOException) {
+        } catch (exception: IOException) {
+            logger.d(exception) { "Could not inspect $location; treating it as unavailable" }
             false
         }
     }
@@ -78,6 +108,34 @@ class FileSystemWorkspaceStore(private val fileSystem: FileSystem) : WorkspaceSt
         fileSystem.canonicalize(
             ".".toPath(),
         ).resolve(location, normalize = true)
+    }
+
+    private fun WorkspaceResult<Workspace>.logged(action: String): WorkspaceResult<Workspace> {
+        val error = (this as? WorkspaceResult.Failure)?.error ?: return this
+        when (error) {
+            is WorkspaceError.FileSystemFailure ->
+                logger.e(error.cause) { "Could not $action: ${error.operation} of ${error.path} failed" }
+
+            is WorkspaceError.InvalidProjectFile ->
+                logger.w { "Could not $action: ${error.path} is not a valid project file" }
+
+            is WorkspaceError.UnsupportedProjectVersion ->
+                logger.w { "Could not $action: ${error.path} uses unsupported format version ${error.version}" }
+
+            is WorkspaceError.InvalidWorkspaceId ->
+                logger.w { "Could not $action: ${error.path} holds an invalid workspace id" }
+
+            is WorkspaceError.UnknownProjectColor ->
+                logger.w { "Could not $action: ${error.path} uses an unknown project color" }
+
+            is WorkspaceError.NotAWorkspace,
+            is WorkspaceError.InvalidWorkspaceLocation,
+            is WorkspaceError.DestinationNotEmpty,
+            is WorkspaceError.InvalidWorkspaceName,
+            is WorkspaceError.DifferentWorkspace,
+            -> logger.d { "Could not $action: ${error::class.simpleName}" }
+        }
+        return this
     }
 
     private fun createWorkspace(location: Path, config: ProjectConfig): WorkspaceResult<Workspace> {
@@ -166,8 +224,14 @@ class FileSystemWorkspaceStore(private val fileSystem: FileSystem) : WorkspaceSt
             .forEach { path ->
                 try {
                     fileSystem.delete(path, mustExist = false)
+                    logger.v { "Rolled back $path after a failed workspace creation" }
                 } catch (cleanupFailure: IOException) {
+                    // The stack trace travels with the original failure; this entry names what was left behind.
                     originalFailure.addSuppressed(cleanupFailure)
+                    logger.w {
+                        "Could not remove $path after a failed workspace creation " +
+                            "(${cleanupFailure::class.simpleName}); it may be left behind"
+                    }
                 }
             }
     }

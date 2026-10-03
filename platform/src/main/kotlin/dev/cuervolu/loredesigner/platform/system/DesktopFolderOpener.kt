@@ -54,9 +54,11 @@ class DesktopFolderOpener(
         try {
             Files.createDirectories(directory)
             if (osName.startsWith("Linux", ignoreCase = true)) {
+                logger.d { "Opening folder $directory with $XDG_OPEN" }
                 processLauncher.start(listOf(XDG_OPEN, directory.toString()))
                 true
             } else {
+                logger.d { "Opening folder $directory with the desktop file manager" }
                 desktopOpen(directory.toFile()).also { opened ->
                     if (!opened) logger.w { "Opening folders is not supported on $osName" }
                 }

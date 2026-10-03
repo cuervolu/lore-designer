@@ -3,6 +3,7 @@ package dev.cuervolu.loredesigner.platform.workspace
 import dev.cuervolu.loredesigner.core.workspace.ProjectColor
 import dev.cuervolu.loredesigner.core.workspace.ProjectConfig
 import dev.cuervolu.loredesigner.core.workspace.WorkspaceId
+import dev.cuervolu.loredesigner.platform.logging.RecordingLogWriter
 import dev.cuervolu.loredesigner.workspace.CreateWorkspace
 import dev.cuervolu.loredesigner.workspace.OpenWorkspace
 import dev.cuervolu.loredesigner.workspace.Workspace
@@ -21,7 +22,7 @@ import kotlin.test.assertIs
 class FileSystemWorkspaceStoreSystemTest {
     private val id = WorkspaceId.parse("01995f7e-1d74-7c83-a8a9-4fd2ed9cb380")
     private val fileSystem = FileSystem.SYSTEM
-    private val store = FileSystemWorkspaceStore(fileSystem)
+    private val store = FileSystemWorkspaceStore(fileSystem, RecordingLogWriter().logger())
 
     @Test
     fun `workspace created on disk reopens with its configuration and no temporary files`() =

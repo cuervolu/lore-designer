@@ -1,5 +1,6 @@
 package dev.cuervolu.loredesigner.workspace
 
+import co.touchlab.kermit.Severity
 import dev.cuervolu.loredesigner.core.workspace.ProjectConfig
 import dev.cuervolu.loredesigner.core.workspace.WorkspaceId
 import dev.cuervolu.loredesigner.workspace.recent.RecentWorkspace
@@ -19,9 +20,10 @@ import kotlin.test.assertTrue
 class WorkspaceOpenerTest {
     private val remembered = WorkspaceId.parse("01995f7e-1d74-7c83-a8a9-4fd2ed9cb380")
     private val stranger = WorkspaceId.parse("01995f7e-1d74-7c83-a8a9-4fd2ed9cb381")
+    private val logs = RecordingLogWriter()
     private val store = FolderWorkspaceStore()
     private val registry = RecordingRegistry()
-    private val opener = WorkspaceOpener(store, registry)
+    private val opener = WorkspaceOpener(store, registry, logs.logger())
 
     @Test
     fun `opening without an expected id accepts whatever workspace the folder holds`() = runTest {
@@ -71,16 +73,35 @@ class WorkspaceOpenerTest {
     }
 
     @Test
-    fun `registry failures are swallowed but cancellation is not`() = runTest {
+    fun `registry failures are logged as warnings but cancellation is not swallowed`() = runTest {
         val workspace = Workspace("/worlds/Embercourt".toPath(), ProjectConfig(1, remembered, "Embercourt"))
         store.folders[workspace.location] = workspace.config
 
-        registry.failure = IllegalStateException("disk full")
+        val failure = IllegalStateException("disk full")
+        registry.failure = failure
         opener.recordOpened(workspace)
         assertIs<WorkspaceResult.Success<Workspace>>(opener.relocate(remembered, workspace.location))
 
+        val warnings = logs.at(Severity.Warn)
+        assertEquals(2, warnings.size)
+        assertTrue(warnings.all { it.throwable === failure && remembered.toString() in it.message })
+
         registry.failure = CancellationException("closing")
         assertFailsWith<CancellationException> { opener.recordOpened(workspace) }
+    }
+
+    @Test
+    fun `opening and relocating are recorded as lifecycle events`() = runTest {
+        val workspace = Workspace("/worlds/Embercourt".toPath(), ProjectConfig(1, remembered, "Embercourt"))
+        store.folders[workspace.location] = workspace.config
+
+        opener.recordOpened(workspace)
+        opener.relocate(remembered, workspace.location)
+        opener.open("/elsewhere".toPath(), expectedId = remembered)
+
+        val info = logs.at(Severity.Info).map { it.message }
+        assertEquals(2, info.size)
+        assertTrue(info.all { remembered.toString() in it && "/worlds/Embercourt" in it })
     }
 
     @Test
