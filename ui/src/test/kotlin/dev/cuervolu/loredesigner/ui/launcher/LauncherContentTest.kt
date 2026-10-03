@@ -4,26 +4,39 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsFocused
+import androidx.compose.ui.test.assertIsNotSelected
+import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.click
+import androidx.compose.ui.test.doubleClick
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performKeyInput
+import androidx.compose.ui.test.performMouseInput
 import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.requestFocus
+import androidx.compose.ui.test.rightClick
 import androidx.compose.ui.test.v2.runComposeUiTest
 import dev.cuervolu.loredesigner.core.workspace.ProjectColor
 import dev.cuervolu.loredesigner.core.workspace.WorkspaceId
 import dev.cuervolu.loredesigner.ui.resources.Res
-import dev.cuervolu.loredesigner.ui.resources.launcher_empty_missing_title
 import dev.cuervolu.loredesigner.ui.resources.launcher_empty_welcome_title
+import dev.cuervolu.loredesigner.ui.resources.launcher_menu_copy_path
+import dev.cuervolu.loredesigner.ui.resources.launcher_menu_copy_previous_path
+import dev.cuervolu.loredesigner.ui.resources.launcher_menu_locate
+import dev.cuervolu.loredesigner.ui.resources.launcher_menu_open
+import dev.cuervolu.loredesigner.ui.resources.launcher_menu_pin
+import dev.cuervolu.loredesigner.ui.resources.launcher_menu_remove
+import dev.cuervolu.loredesigner.ui.resources.launcher_menu_show_in_folder
+import dev.cuervolu.loredesigner.ui.resources.launcher_menu_unpin
 import dev.cuervolu.loredesigner.ui.resources.launcher_project_count
-import dev.cuervolu.loredesigner.ui.resources.launcher_project_forget
 import dev.cuervolu.loredesigner.ui.resources.launcher_project_locate
-import dev.cuervolu.loredesigner.ui.resources.launcher_project_pin
 import dev.cuervolu.loredesigner.ui.resources.launcher_project_unpin
 import dev.cuervolu.loredesigner.ui.theme.LoreDesignerTheme
+import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.getPluralString
 import org.jetbrains.compose.resources.getString
 import kotlin.test.Test
@@ -60,7 +73,27 @@ class LauncherContentTest {
         onPinnedChange = { id, pinned -> events += "pin $id $pinned" },
         onForget = { events += "forget $it" },
         onLocate = { events += "locate $it" },
+        onShowInFolder = { events += "show $it" },
+        onCopyPath = { events += "copy $it" },
     )
+
+    private fun ComposeUiTest.showSection(section: LauncherSection) {
+        setContent {
+            LoreDesignerTheme(darkTheme = false) {
+                LauncherContent(
+                    section = section,
+                    onSectionChange = {},
+                    onNewProject = {},
+                    onOpenProject = {},
+                    projects = projects,
+                    projectsLoaded = true,
+                    projectActions = actions,
+                )
+            }
+        }
+    }
+
+    private suspend fun menuLabels(vararg resources: StringResource) = resources.map { getString(it) }
 
     @Test
     fun `sections show their real counts and hide empty states when they have projects`() = runComposeUiTest {
@@ -93,59 +126,82 @@ class LauncherContentTest {
     }
 
     @Test
-    fun `available rows open and toggle their pin`() = runComposeUiTest {
-        val unpin = getString(Res.string.launcher_project_unpin)
-        setContent {
-            LoreDesignerTheme(darkTheme = false) {
-                LauncherContent(
-                    section = LauncherSection.Pinned,
-                    onSectionChange = {},
-                    onNewProject = {},
-                    onOpenProject = {},
-                    projects = projects,
-                    projectsLoaded = true,
-                    projectActions = actions,
-                )
-            }
-        }
+    fun `a single click selects a row without opening it and a double click opens it`() = runComposeUiTest {
+        showSection(LauncherSection.Projects)
 
-        onNodeWithText("Embercourt").performClick()
-        onNodeWithContentDescription(unpin).performClick()
+        val row = onNodeWithText("Embercourt")
+        row.assertIsNotSelected()
+        row.performMouseInput { click() }
+        mainClock.advanceTimeBy(1_000)
+        row.assertIsSelected()
+        assertEquals(emptyList(), events)
 
-        assertEquals(listOf("open ${available.id}", "pin ${available.id} false"), events)
+        row.performMouseInput { doubleClick() }
+        mainClock.advanceTimeBy(1_000)
+        assertEquals(listOf("open ${available.id}"), events)
     }
 
     @Test
-    fun `missing rows can be retried, located, pinned or forgotten`() = runComposeUiTest {
-        val locate = getString(Res.string.launcher_project_locate)
-        val forget = getString(Res.string.launcher_project_forget)
-        val pin = getString(Res.string.launcher_project_pin)
-        val nothingMissing = getString(Res.string.launcher_empty_missing_title)
-        setContent {
-            LoreDesignerTheme(darkTheme = false) {
-                LauncherContent(
-                    section = LauncherSection.Missing,
-                    onSectionChange = {},
-                    onNewProject = {},
-                    onOpenProject = {},
-                    projects = projects,
-                    projectsLoaded = true,
-                    projectActions = actions,
-                )
-            }
-        }
+    fun `the pin star still toggles and rows have no remove button`() = runComposeUiTest {
+        val unpin = getString(Res.string.launcher_project_unpin)
+        val remove = getString(Res.string.launcher_menu_remove)
+        showSection(LauncherSection.Pinned)
 
-        onNodeWithText(nothingMissing).assertDoesNotExist()
-        onNodeWithText("/media/usb/Thistlewood").assertExists()
-        onNodeWithText("Thistlewood").performClick()
-        onNodeWithText(locate).performClick()
-        onNodeWithContentDescription(pin).performClick()
-        onNodeWithContentDescription(forget).performClick()
+        onNodeWithContentDescription(unpin).performClick()
 
-        assertEquals(
-            listOf("open ${missing.id}", "locate ${missing.id}", "pin ${missing.id} true", "forget ${missing.id}"),
-            events,
+        assertEquals(listOf("pin ${available.id} false"), events)
+        onNodeWithContentDescription(remove).assertDoesNotExist()
+        onNodeWithText(remove).assertDoesNotExist()
+    }
+
+    @Test
+    fun `available rows offer open, folder, copy, pin and remove in their context menu`() = runComposeUiTest {
+        val expected = menuLabels(
+            Res.string.launcher_menu_open,
+            Res.string.launcher_menu_show_in_folder,
+            Res.string.launcher_menu_copy_path,
+            Res.string.launcher_menu_unpin,
+            Res.string.launcher_menu_remove,
         )
+        val missingOnly = menuLabels(Res.string.launcher_menu_locate, Res.string.launcher_menu_copy_previous_path)
+        showSection(LauncherSection.Projects)
+
+        onNodeWithText("Embercourt").performMouseInput { rightClick() }
+
+        expected.forEach { onNodeWithText(it).assertExists() }
+        missingOnly.forEach { onNodeWithText(it).assertDoesNotExist() }
+    }
+
+    @Test
+    fun `missing rows offer locate, copy previous path and remove in their context menu`() = runComposeUiTest {
+        val expected = menuLabels(
+            Res.string.launcher_menu_locate,
+            Res.string.launcher_menu_copy_previous_path,
+            Res.string.launcher_menu_remove,
+        )
+        val availableOnly = menuLabels(
+            Res.string.launcher_menu_open,
+            Res.string.launcher_menu_show_in_folder,
+            Res.string.launcher_menu_copy_path,
+            Res.string.launcher_menu_pin,
+        )
+        showSection(LauncherSection.Missing)
+
+        onNodeWithText("/media/usb/Thistlewood").assertExists()
+        onNodeWithText("Thistlewood").performMouseInput { rightClick() }
+
+        expected.forEach { onNodeWithText(it).assertExists() }
+        availableOnly.forEach { onNodeWithText(it).assertDoesNotExist() }
+    }
+
+    @Test
+    fun `missing rows keep the inline locate button`() = runComposeUiTest {
+        val locate = getString(Res.string.launcher_project_locate)
+        showSection(LauncherSection.Missing)
+
+        onNodeWithText(locate).performClick()
+
+        assertEquals(listOf("locate ${missing.id}"), events)
     }
 
     @Test

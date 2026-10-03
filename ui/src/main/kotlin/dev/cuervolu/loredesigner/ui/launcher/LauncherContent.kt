@@ -110,10 +110,7 @@ enum class LauncherSection(
     Missing(Res.string.launcher_section_missing, Res.string.launcher_title_missing, Lucide.TriangleAlert),
 }
 
-/**
- * Launcher body below the title bar. Dialogs are rendered by the caller; [error] is shown here only
- * for failures that happen without a dialog, such as opening a remembered project.
- */
+/** Launcher body below the title bar. Dialogs and notifications are rendered by the caller. */
 @Composable
 fun LauncherContent(
     section: LauncherSection,
@@ -124,8 +121,6 @@ fun LauncherContent(
     projectsLoaded: Boolean,
     projectActions: LauncherProjectActions,
     modifier: Modifier = Modifier,
-    error: LauncherError? = null,
-    onDismissError: () -> Unit = {},
 ) {
     val sectionProjects = projects.forSection(section)
     val focusRequester = remember { FocusRequester() }
@@ -165,17 +160,6 @@ fun LauncherContent(
         Column(modifier = Modifier.weight(1f).fillMaxHeight()) {
             LauncherHeader(onNewProject = onNewProject, onOpenProject = onOpenProject)
             SectionTitle(section, count = sectionProjects.size)
-            if (error != null) {
-                ErrorBanner(
-                    error = error,
-                    onDismiss = onDismissError,
-                    modifier = Modifier.padding(
-                        start = Theme[spacing][LoreSpacing.space6],
-                        end = Theme[spacing][LoreSpacing.space6],
-                        bottom = Theme[spacing][LoreSpacing.space4],
-                    ),
-                )
-            }
             Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
                 when {
                     // Rendering nothing for a moment beats flashing the welcome state at returning users.

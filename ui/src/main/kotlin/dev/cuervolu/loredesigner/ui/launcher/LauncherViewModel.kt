@@ -25,13 +25,31 @@ import okio.Path.Companion.toPath
 data class LauncherUiState(
     val dialog: LauncherDialog? = null,
     val busy: Boolean = false,
+    /** Failure shown inside the open dialog; failures without a dialog become [notices]. */
     val error: LauncherError? = null,
     /** Set after a successful create/open; the screen navigates and then calls [LauncherViewModel.onWorkspaceHandled]. */
     val openedWorkspace: Workspace? = null,
     val projects: LauncherProjects = LauncherProjects(),
     /** `false` until the remembered projects are read, so empty states do not flash at startup. */
     val projectsLoaded: Boolean = false,
+    /** Oldest first; the screen shows each one and then calls [LauncherViewModel.onNoticeShown]. */
+    val notices: List<QueuedNotice> = emptyList(),
 )
+
+data class QueuedNotice(val id: Long, val notice: LauncherNotice)
+
+/** Transient feedback for launcher actions that happen outside a dialog. */
+sealed interface LauncherNotice {
+    data class Failed(val error: LauncherError) : LauncherNotice
+
+    data class ProjectLocated(val name: String) : LauncherNotice
+
+    data object PathCopied : LauncherNotice
+
+    data object CopyFailed : LauncherNotice
+
+    data class ShowInFolderFailed(val path: String) : LauncherNotice
+}
 
 // Text fields hold TextFieldState so typing never round-trips through the StateFlow.
 sealed interface LauncherDialog {
@@ -58,6 +76,7 @@ class LauncherViewModel(
     private val createWorkspace: CreateWorkspace,
     private val workspaceOpener: WorkspaceOpener,
     private val recentWorkspaces: RecentWorkspacesRegistry,
+    private val systemActions: ProjectSystemActions,
     private val homeDirectory: () -> String = { System.getProperty("user.home") },
 ) : ViewModel() {
     private val _state = MutableStateFlow(LauncherUiState())
@@ -68,6 +87,8 @@ class LauncherViewModel(
 
     // Locations already probed since the last refresh, so list updates only probe what is new.
     private val probed = mutableSetOf<Pair<WorkspaceId, Path>>()
+
+    private var nextNoticeId = 0L
 
     init {
         viewModelScope.launch { recentWorkspaces.initialize() }
@@ -122,7 +143,11 @@ class LauncherViewModel(
     fun relocateProject(id: WorkspaceId, folder: Path) {
         launchBusy {
             when (val result = workspaceOpener.relocate(id, folder)) {
-                is WorkspaceResult.Success -> markFound(result.value)
+                is WorkspaceResult.Success -> {
+                    markFound(result.value)
+                    notify(LauncherNotice.ProjectLocated(result.value.config.name))
+                }
+
                 is WorkspaceResult.Failure -> fail(result.error)
             }
         }
@@ -137,8 +162,25 @@ class LauncherViewModel(
         viewModelScope.launch { recentWorkspaces.forget(id) }
     }
 
-    fun dismissError() {
-        if (_state.value.dialog == null) _state.update { it.copy(error = null) }
+    /** Copies the remembered location, which for a missing project is where it was last seen. */
+    fun copyPath(id: WorkspaceId) {
+        val recent = recentWorkspaces.workspaces.value.firstOrNull { it.id == id } ?: return
+        viewModelScope.launch {
+            val copied = systemActions.copyText(recent.location.toString())
+            notify(if (copied) LauncherNotice.PathCopied else LauncherNotice.CopyFailed)
+        }
+    }
+
+    fun showInFolder(id: WorkspaceId) {
+        val recent = recentWorkspaces.workspaces.value.firstOrNull { it.id == id } ?: return
+        val location = recent.location.toString()
+        viewModelScope.launch {
+            if (!systemActions.showInFolder(location)) notify(LauncherNotice.ShowInFolderFailed(location))
+        }
+    }
+
+    fun onNoticeShown(id: Long) {
+        _state.update { state -> state.copy(notices = state.notices.filterNot { it.id == id }) }
     }
 
     fun dismissDialog() {
@@ -217,8 +259,21 @@ class LauncherViewModel(
     }
 
     private fun fail(error: WorkspaceError) {
-        _state.update { it.copy(busy = false, error = LauncherError.Workspace(error)) }
+        val launcherError = LauncherError.Workspace(error)
+        _state.update { state ->
+            if (state.dialog != null) {
+                state.copy(busy = false, error = launcherError)
+            } else {
+                state.copy(busy = false, notices = state.notices + queued(LauncherNotice.Failed(launcherError)))
+            }
+        }
     }
+
+    private fun notify(notice: LauncherNotice) {
+        _state.update { it.copy(notices = it.notices + queued(notice)) }
+    }
+
+    private fun queued(notice: LauncherNotice) = QueuedNotice(nextNoticeId++, notice)
 
     private fun probe(recents: List<RecentWorkspace>) {
         recents.filter { probed.add(it.id to it.location) }.forEach { recent ->

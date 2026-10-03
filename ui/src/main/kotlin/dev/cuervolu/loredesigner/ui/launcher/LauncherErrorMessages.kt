@@ -1,6 +1,7 @@
 package dev.cuervolu.loredesigner.ui.launcher
 
 import androidx.compose.runtime.Composable
+import dev.cuervolu.loredesigner.ui.notifications.LoreNotificationType
 import dev.cuervolu.loredesigner.ui.resources.Res
 import dev.cuervolu.loredesigner.ui.resources.launcher_error_damaged_project
 import dev.cuervolu.loredesigner.ui.resources.launcher_error_destination_not_empty
@@ -13,6 +14,10 @@ import dev.cuervolu.loredesigner.ui.resources.launcher_error_not_a_workspace
 import dev.cuervolu.loredesigner.ui.resources.launcher_error_read_failed
 import dev.cuervolu.loredesigner.ui.resources.launcher_error_unsupported_version
 import dev.cuervolu.loredesigner.ui.resources.launcher_error_write_failed
+import dev.cuervolu.loredesigner.ui.resources.launcher_notice_copy_failed
+import dev.cuervolu.loredesigner.ui.resources.launcher_notice_path_copied
+import dev.cuervolu.loredesigner.ui.resources.launcher_notice_project_located
+import dev.cuervolu.loredesigner.ui.resources.launcher_notice_show_in_folder_failed
 import dev.cuervolu.loredesigner.workspace.FileSystemOperation
 import dev.cuervolu.loredesigner.workspace.WorkspaceError
 import okio.Path
@@ -26,6 +31,31 @@ internal fun LauncherError.toMessage(): LauncherMessage = when (this) {
     LauncherError.MissingLocation -> LauncherMessage(Res.string.launcher_error_missing_location)
     is LauncherError.InvalidLocation -> LauncherMessage(Res.string.launcher_error_invalid_location, listOf(input))
     is LauncherError.Workspace -> error.toMessage()
+}
+
+internal fun LauncherNotice.toMessage(): LauncherMessage = when (this) {
+    is LauncherNotice.Failed -> error.toMessage()
+
+    is LauncherNotice.ProjectLocated -> LauncherMessage(Res.string.launcher_notice_project_located, listOf(name))
+
+    LauncherNotice.PathCopied -> LauncherMessage(Res.string.launcher_notice_path_copied)
+
+    LauncherNotice.CopyFailed -> LauncherMessage(Res.string.launcher_notice_copy_failed)
+
+    is LauncherNotice.ShowInFolderFailed ->
+        LauncherMessage(Res.string.launcher_notice_show_in_folder_failed, listOf(path))
+}
+
+internal fun LauncherNotice.notificationType(): LoreNotificationType = when (this) {
+    // The project is still remembered and now listed as missing, so the user can locate it.
+    is LauncherNotice.Failed -> when ((error as? LauncherError.Workspace)?.error) {
+        is WorkspaceError.NotAWorkspace, is WorkspaceError.DifferentWorkspace -> LoreNotificationType.Warning
+        else -> LoreNotificationType.Error
+    }
+
+    LauncherNotice.CopyFailed, is LauncherNotice.ShowInFolderFailed -> LoreNotificationType.Error
+
+    LauncherNotice.PathCopied, is LauncherNotice.ProjectLocated -> LoreNotificationType.Success
 }
 
 private fun WorkspaceError.toMessage(): LauncherMessage = when (this) {

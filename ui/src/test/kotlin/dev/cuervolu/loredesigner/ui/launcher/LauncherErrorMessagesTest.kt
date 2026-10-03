@@ -1,5 +1,7 @@
 package dev.cuervolu.loredesigner.ui.launcher
 
+import dev.cuervolu.loredesigner.core.workspace.ProjectConfig
+import dev.cuervolu.loredesigner.ui.notifications.LoreNotificationType
 import dev.cuervolu.loredesigner.workspace.FileSystemOperation
 import dev.cuervolu.loredesigner.workspace.WorkspaceError
 import okio.Path.Companion.toPath
@@ -59,5 +61,46 @@ class LauncherErrorMessagesTest {
         assertEquals(messageFor(FileSystemOperation.READ), messageFor(FileSystemOperation.INSPECT))
         assertEquals(messageFor(FileSystemOperation.WRITE), messageFor(FileSystemOperation.CREATE_DIRECTORY))
         assertNotEquals(messageFor(FileSystemOperation.READ), messageFor(FileSystemOperation.WRITE))
+    }
+
+    @Test
+    fun `remembered projects that moved warn, while other failures are errors`() {
+        val moved = WorkspaceError.NotAWorkspace(folder)
+        val replaced = WorkspaceError.DifferentWorkspace(
+            folder,
+            TestWorkspaceId,
+            ProjectConfig(1, TestWorkspaceId, "Other"),
+        )
+        val unreadable = WorkspaceError.FileSystemFailure(folder, FileSystemOperation.READ, IOException())
+
+        assertEquals(
+            LoreNotificationType.Warning,
+            LauncherNotice.Failed(LauncherError.Workspace(moved)).notificationType(),
+        )
+        assertEquals(
+            LoreNotificationType.Warning,
+            LauncherNotice.Failed(LauncherError.Workspace(replaced)).notificationType(),
+        )
+        assertEquals(
+            LoreNotificationType.Error,
+            LauncherNotice.Failed(LauncherError.Workspace(unreadable)).notificationType(),
+        )
+        assertEquals(LoreNotificationType.Error, LauncherNotice.CopyFailed.notificationType())
+        assertEquals(LoreNotificationType.Error, LauncherNotice.ShowInFolderFailed("/worlds").notificationType())
+    }
+
+    @Test
+    fun `completed actions are successes`() {
+        assertEquals(LoreNotificationType.Success, LauncherNotice.PathCopied.notificationType())
+        assertEquals(LoreNotificationType.Success, LauncherNotice.ProjectLocated("Embercourt").notificationType())
+    }
+
+    @Test
+    fun `failure notices reuse the launcher error messages`() {
+        val error = LauncherError.Workspace(WorkspaceError.NotAWorkspace(folder))
+
+        assertEquals(error.toMessage(), LauncherNotice.Failed(error).toMessage())
+        assertEquals(listOf("Embercourt"), LauncherNotice.ProjectLocated("Embercourt").toMessage().args)
+        assertEquals(listOf("/worlds/w1"), LauncherNotice.ShowInFolderFailed("/worlds/w1").toMessage().args)
     }
 }

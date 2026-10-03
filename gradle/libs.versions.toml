@@ -24,6 +24,7 @@ ktoml = "0.7.1"
 okio = "3.18.2"
 semver = "3.1.0"
 kover = "0.9.8"
+sonner = "0.4.0"
 
 [libraries]
 compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose-multiplatform" }
@@ -91,6 +92,7 @@ compose-icons-lucide = { module = "com.composables:icons-lucide-cmp", version.re
 compose-unstyled-platformtheme = { module = "com.composables:composeunstyled-platformtheme", version.ref = "composeunstyled" }
 compose-unstyled-theming = { module = "com.composables:composeunstyled-theming", version.ref = "composeunstyled" }
 compose-unstyled-colored-indication = { module = "com.composables:composeunstyled-colored-indication", version.ref = "composeunstyled" }
+sonner = { module = "io.github.dokar3:sonner", version.ref = "sonner" }
 compose-interaction-capabilities = { module = "com.composables:compose-interaction-capabilities", version.ref = "interaction" }
 
 [bundles]
