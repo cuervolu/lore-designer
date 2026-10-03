@@ -17,7 +17,10 @@ import dev.cuervolu.loredesigner.ui.launcher.DirectoryPicker
 import dev.cuervolu.loredesigner.ui.launcher.FileKitDirectoryPicker
 import dev.cuervolu.loredesigner.ui.launcher.LauncherScreen
 import dev.cuervolu.loredesigner.ui.launcher.LauncherViewModel
+import dev.cuervolu.loredesigner.ui.launcher.LocalProjectSystemActions
+import dev.cuervolu.loredesigner.ui.launcher.ProjectSystemActions
 import dev.cuervolu.loredesigner.ui.navigation.AppRoute
+import dev.cuervolu.loredesigner.ui.notifications.LoreNotificationHost
 import dev.cuervolu.loredesigner.ui.session.AppSessionState
 import dev.cuervolu.loredesigner.ui.session.rememberAppSessionState
 import dev.cuervolu.loredesigner.ui.settings.SettingsModal
@@ -43,54 +46,64 @@ fun LoreDesignerApp(
     recentWorkspaces: RecentWorkspacesRegistry = koinInject(),
     settingsViewModelFactory: SettingsViewModelFactory = koinInject(),
     pickDirectory: DirectoryPicker = FileKitDirectoryPicker,
+    projectSystemActions: ProjectSystemActions = LocalProjectSystemActions.current,
 ) {
     val backStack = session.backStack
 
-    DialogHost(modifier = modifier.fillMaxSize().background(Theme[colors][LoreColors.background])) {
-        NavDisplay(
-            backStack = backStack,
-            onBack = { if (backStack.size > 1) backStack.removeAt(backStack.lastIndex) },
-            entryDecorators = listOf(
-                rememberSaveableStateHolderNavEntryDecorator(),
-                rememberViewModelStoreNavEntryDecorator(),
-            ),
-            entryProvider = entryProvider {
-                entry<AppRoute.Launcher> {
-                    LauncherScreen(
-                        viewModel = viewModel {
-                            LauncherViewModel(createWorkspace, workspaceOpener, recentWorkspaces)
-                        },
-                        pickDirectory = pickDirectory,
-                        onWorkspaceOpened = { workspace ->
-                            session.activeWorkspace = workspace
-                            backStack.add(AppRoute.Workspace(workspace.config.id.toString()))
-                        },
-                    )
-                }
-                entry<AppRoute.Workspace> { route ->
-                    WorkspacePlaceholder(
-                        workspace = session.activeWorkspace?.takeIf { it.config.id.toString() == route.workspaceId },
-                        onClose = {
-                            session.activeWorkspace = null
-                            backStack.remove(route)
-                        },
-                    )
-                }
-            },
-        )
-
-        val workspace = session.activeWorkspace
-        CompositionLocalProvider(LocalViewModelStoreOwner provides session.viewModelStoreOwner) {
-            SettingsModal(
-                visible = session.settingsModal.isOpen,
-                viewModel = viewModel(key = "settings:${workspace?.config?.id ?: "launcher"}") {
-                    settingsViewModelFactory.create(workspace)
-                },
-                onDismiss = session.settingsModal::dismiss,
-                onWorkspaceChange = { updated ->
-                    if (session.activeWorkspace?.config?.id == updated.config.id) session.activeWorkspace = updated
+    LoreNotificationHost(modifier = modifier) {
+        DialogHost(modifier = Modifier.fillMaxSize().background(Theme[colors][LoreColors.background])) {
+            NavDisplay(
+                backStack = backStack,
+                onBack = { if (backStack.size > 1) backStack.removeAt(backStack.lastIndex) },
+                entryDecorators = listOf(
+                    rememberSaveableStateHolderNavEntryDecorator(),
+                    rememberViewModelStoreNavEntryDecorator(),
+                ),
+                entryProvider = entryProvider {
+                    entry<AppRoute.Launcher> {
+                        LauncherScreen(
+                            viewModel = viewModel {
+                                LauncherViewModel(
+                                    createWorkspace,
+                                    workspaceOpener,
+                                    recentWorkspaces,
+                                    projectSystemActions,
+                                )
+                            },
+                            pickDirectory = pickDirectory,
+                            onWorkspaceOpened = { workspace ->
+                                session.activeWorkspace = workspace
+                                backStack.add(AppRoute.Workspace(workspace.config.id.toString()))
+                            },
+                        )
+                    }
+                    entry<AppRoute.Workspace> { route ->
+                        WorkspacePlaceholder(
+                            workspace = session.activeWorkspace?.takeIf {
+                                it.config.id.toString() == route.workspaceId
+                            },
+                            onClose = {
+                                session.activeWorkspace = null
+                                backStack.remove(route)
+                            },
+                        )
+                    }
                 },
             )
+
+            val workspace = session.activeWorkspace
+            CompositionLocalProvider(LocalViewModelStoreOwner provides session.viewModelStoreOwner) {
+                SettingsModal(
+                    visible = session.settingsModal.isOpen,
+                    viewModel = viewModel(key = "settings:${workspace?.config?.id ?: "launcher"}") {
+                        settingsViewModelFactory.create(workspace)
+                    },
+                    onDismiss = session.settingsModal::dismiss,
+                    onWorkspaceChange = { updated ->
+                        if (session.activeWorkspace?.config?.id == updated.config.id) session.activeWorkspace = updated
+                    },
+                )
+            }
         }
     }
 }

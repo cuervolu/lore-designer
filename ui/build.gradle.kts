@@ -33,6 +33,8 @@ dependencies {
     implementation(libs.koin.compose)
     implementation(libs.filekit.core)
     implementation(libs.filekit.dialogs)
+    // The published POM pins its build host's Compose desktop runtime (macOS arm64); ours comes from the app.
+    implementation(libs.sonner) { exclude(group = "org.jetbrains.compose.desktop") }
     testImplementation(libs.compose.ui.test)
     testImplementation(compose.desktop.currentOs)
     testImplementation(libs.kotlinx.coroutines.test)

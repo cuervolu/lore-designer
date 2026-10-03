@@ -33,6 +33,6 @@ fun main() {
 
     nucleusApplication(backend = NucleusBackend.Tao) {
         aotTraining()
-        LoreDesignerDesktopApp(settingsRepository)
+        LoreDesignerDesktopApp(settingsRepository, koin.get(), logger)
     }
 }

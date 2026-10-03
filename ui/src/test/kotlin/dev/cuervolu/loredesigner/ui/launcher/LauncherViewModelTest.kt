@@ -3,6 +3,7 @@ package dev.cuervolu.loredesigner.ui.launcher
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import dev.cuervolu.loredesigner.core.workspace.ProjectColor
 import dev.cuervolu.loredesigner.core.workspace.WorkspaceId
+import dev.cuervolu.loredesigner.workspace.FileSystemOperation
 import dev.cuervolu.loredesigner.workspace.WorkspaceError
 import dev.cuervolu.loredesigner.workspace.recent.RecentWorkspace
 import kotlinx.coroutines.CompletableDeferred
@@ -11,6 +12,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
+import okio.IOException
 import okio.Path.Companion.toPath
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -28,12 +30,14 @@ import kotlin.time.Instant
 class LauncherViewModelTest {
     private val store = FakeWorkspaceStore()
     private var registry = FakeRecentWorkspacesRegistry()
+    private val systemActions = FakeProjectSystemActions()
     private val viewModel by lazy { newViewModel() }
 
     private fun newViewModel() = LauncherViewModel(
         store.createWorkspace(),
         store.opener(registry),
         registry,
+        systemActions,
         homeDirectory = { "/home/writer" },
     )
 
@@ -49,6 +53,11 @@ class LauncherViewModelTest {
     )
 
     private fun names(projects: List<LauncherProject>) = projects.map { it.name }
+
+    private fun notices() = viewModel.state.value.notices.map { it.notice }
+
+    private fun failedError(notice: LauncherNotice): WorkspaceError =
+        assertIs<LauncherError.Workspace>(assertIs<LauncherNotice.Failed>(notice).error).error
 
     @BeforeTest
     fun setUp() {
@@ -283,7 +292,7 @@ class LauncherViewModelTest {
 
         val state = viewModel.state.value
         assertNull(state.openedWorkspace)
-        val error = assertIs<WorkspaceError.DifferentWorkspace>(assertIs<LauncherError.Workspace>(state.error).error)
+        val error = assertIs<WorkspaceError.DifferentWorkspace>(failedError(notices().single()))
         assertEquals("Impostor", error.found.name)
         assertEquals(listOf("World 1"), names(state.projects.missing), "its folder holds another project now")
         assertFalse(state.busy)
@@ -317,7 +326,7 @@ class LauncherViewModelTest {
 
         val state = viewModel.state.value
         assertNull(state.openedWorkspace)
-        assertEquals(LauncherError.Workspace(store.openError!!), state.error)
+        assertEquals(listOf(LauncherNotice.Failed(LauncherError.Workspace(store.openError!!))), notices())
         assertEquals(listOf("World 1"), names(state.projects.missing))
         assertTrue(state.projects.all.isEmpty())
     }
@@ -336,6 +345,7 @@ class LauncherViewModelTest {
         assertTrue(state.projects.missing.isEmpty())
         assertEquals("/archive/w1", state.projects.all.single().path)
         assertEquals(recent(1, 1).lastOpenedAt, registry.workspaces.value.single().lastOpenedAt, "nor make it recent")
+        assertEquals(listOf(LauncherNotice.ProjectLocated("Embercourt")), notices())
     }
 
     @Test
@@ -347,7 +357,7 @@ class LauncherViewModelTest {
         viewModel.relocateProject(idOf(1), "/elsewhere".toPath())
 
         val state = viewModel.state.value
-        assertIs<WorkspaceError.DifferentWorkspace>(assertIs<LauncherError.Workspace>(state.error).error)
+        assertIs<WorkspaceError.DifferentWorkspace>(failedError(notices().single()))
         assertEquals("/worlds/w1", state.projects.missing.single().path)
     }
 
@@ -412,13 +422,81 @@ class LauncherViewModelTest {
     }
 
     @Test
-    fun `launcher errors without a dialog can be dismissed`() {
+    fun `failures without a dialog become notices instead of an inline error`() {
         registry = FakeRecentWorkspacesRegistry(listOf(recent(1, 1)))
-        store.openError = WorkspaceError.NotAWorkspace("/worlds/w1".toPath())
+        store.openError = WorkspaceError.FileSystemFailure(
+            "/worlds/w1".toPath(),
+            FileSystemOperation.READ,
+            IOException("unreadable"),
+        )
+
         viewModel.openProject(idOf(1))
 
-        viewModel.dismissError()
-
         assertNull(viewModel.state.value.error)
+        assertEquals(store.openError, failedError(notices().single()))
+    }
+
+    @Test
+    fun `failures inside a dialog stay inline and queue no notice`() {
+        store.openError = WorkspaceError.NotAWorkspace("/tmp".toPath())
+        viewModel.showOpenProject()
+        viewModel.onDirectoryChosen("/tmp".toPath())
+
+        viewModel.submit()
+
+        assertEquals(LauncherError.Workspace(store.openError!!), viewModel.state.value.error)
+        assertTrue(viewModel.state.value.notices.isEmpty())
+    }
+
+    @Test
+    fun `notices queue in order with unique ids and are removed once shown`() {
+        registry = FakeRecentWorkspacesRegistry(listOf(recent(1, 1)))
+        systemActions.copyResult = false
+
+        viewModel.copyPath(idOf(1))
+        systemActions.copyResult = true
+        viewModel.copyPath(idOf(1))
+
+        val queued = viewModel.state.value.notices
+        assertEquals(listOf(LauncherNotice.CopyFailed, LauncherNotice.PathCopied), queued.map { it.notice })
+        assertEquals(2, queued.map { it.id }.toSet().size)
+
+        viewModel.onNoticeShown(queued.first().id)
+        assertEquals(listOf(LauncherNotice.PathCopied), notices())
+    }
+
+    @Test
+    fun `copying a missing project's path copies where it was last seen`() {
+        registry = FakeRecentWorkspacesRegistry(listOf(recent(1, 1)))
+        store.missingLocations += "/worlds/w1".toPath()
+
+        viewModel.copyPath(idOf(1))
+
+        assertEquals(listOf("/worlds/w1".toPath().toString()), systemActions.copiedTexts)
+        assertEquals(listOf(LauncherNotice.PathCopied), notices())
+    }
+
+    @Test
+    fun `show in folder hands over the project location and reports only failures`() {
+        registry = FakeRecentWorkspacesRegistry(listOf(recent(1, 1)))
+        val location = "/worlds/w1".toPath().toString()
+
+        viewModel.showInFolder(idOf(1))
+        assertEquals(listOf(location), systemActions.shownLocations)
+        assertTrue(notices().isEmpty())
+
+        systemActions.showInFolderResult = false
+        viewModel.showInFolder(idOf(1))
+        assertEquals(listOf(LauncherNotice.ShowInFolderFailed(location)), notices())
+    }
+
+    @Test
+    fun `forgetting a project queues no notice`() {
+        registry = FakeRecentWorkspacesRegistry(listOf(recent(1, 1)))
+
+        viewModel.forgetProject(idOf(1))
+
+        assertTrue(viewModel.state.value.projects.all.isEmpty())
+        assertTrue(notices().isEmpty())
     }
 }

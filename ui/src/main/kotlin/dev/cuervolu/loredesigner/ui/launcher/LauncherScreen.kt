@@ -11,6 +11,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import dev.cuervolu.loredesigner.ui.notifications.LocalLoreNotifier
 import dev.cuervolu.loredesigner.ui.resources.Res
 import dev.cuervolu.loredesigner.ui.resources.launcher_browse_title_locate
 import dev.cuervolu.loredesigner.ui.resources.launcher_browse_title_new
@@ -22,6 +23,7 @@ import io.github.vinceglb.filekit.dialogs.openDirectoryPicker
 import kotlinx.coroutines.launch
 import okio.Path
 import okio.Path.Companion.toOkioPath
+import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 
 /** Picks a directory with the platform's native dialog; `null` when the user cancels. */
@@ -42,11 +44,19 @@ fun LauncherScreen(
     var section by rememberSaveable { mutableStateOf(LauncherSection.Projects) }
     val scope = rememberCoroutineScope()
     val currentOnWorkspaceOpened by rememberUpdatedState(onWorkspaceOpened)
+    val notifier = LocalLoreNotifier.current
 
     LaunchedEffect(state.openedWorkspace) {
         val workspace = state.openedWorkspace ?: return@LaunchedEffect
         currentOnWorkspaceOpened(workspace)
         viewModel.onWorkspaceHandled()
+    }
+    LaunchedEffect(state.notices) {
+        state.notices.forEach { queued ->
+            val message = queued.notice.toMessage()
+            notifier.show(getString(message.resource, *message.args.toTypedArray()), queued.notice.notificationType())
+            viewModel.onNoticeShown(queued.id)
+        }
     }
     // The view model outlives the screen while a workspace is open, so folders are re-checked each time
     // the launcher is shown again.
@@ -64,6 +74,8 @@ fun LauncherScreen(
             onOpen = viewModel::openProject,
             onPinnedChange = viewModel::setPinned,
             onForget = viewModel::forgetProject,
+            onShowInFolder = viewModel::showInFolder,
+            onCopyPath = viewModel::copyPath,
             onLocate = { id ->
                 scope.launch { pickDirectory(currentLocateTitle)?.let { viewModel.relocateProject(id, it) } }
             },
@@ -78,8 +90,6 @@ fun LauncherScreen(
         projects = state.projects,
         projectsLoaded = state.projectsLoaded,
         projectActions = projectActions,
-        error = state.error.takeIf { state.dialog == null },
-        onDismissError = viewModel::dismissError,
         modifier = modifier,
     )
     NewProjectDialog(

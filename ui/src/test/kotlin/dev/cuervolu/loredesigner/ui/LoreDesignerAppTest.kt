@@ -7,6 +7,7 @@ import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.doubleClick
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onAllNodesWithText
@@ -16,12 +17,14 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performKeyInput
+import androidx.compose.ui.test.performMouseInput
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.v2.runComposeUiTest
 import dev.cuervolu.loredesigner.core.settings.AppLanguage
 import dev.cuervolu.loredesigner.core.workspace.ProjectColor
 import dev.cuervolu.loredesigner.ui.chrome.LauncherTitleBar
 import dev.cuervolu.loredesigner.ui.i18n.ProvideAppLocale
+import dev.cuervolu.loredesigner.ui.launcher.FakeProjectSystemActions
 import dev.cuervolu.loredesigner.ui.launcher.FakeRecentWorkspacesRegistry
 import dev.cuervolu.loredesigner.ui.resources.Res
 import dev.cuervolu.loredesigner.ui.resources.launcher_action_new
@@ -87,6 +90,7 @@ class LoreDesignerAppTest {
                             recentWorkspaces = registry,
                             settingsViewModelFactory = settings.factory,
                             pickDirectory = { pickedDirectory },
+                            projectSystemActions = FakeProjectSystemActions(),
                         )
                     }
                 }
@@ -189,7 +193,7 @@ class LoreDesignerAppTest {
         onNodeWithText(close).performClick()
         waitUntil { onAllNodesWithText("/worlds/Embercourt").fetchSemanticsNodes().isNotEmpty() }
 
-        onNodeWithText("/worlds/Embercourt").performClick()
+        onNodeWithText("/worlds/Embercourt").performMouseInput { doubleClick() }
 
         waitUntil { onAllNodesWithText(close).fetchSemanticsNodes().isNotEmpty() }
         assertEquals(List(2) { "/worlds/Embercourt".toPath() }, store.openedLocations)
