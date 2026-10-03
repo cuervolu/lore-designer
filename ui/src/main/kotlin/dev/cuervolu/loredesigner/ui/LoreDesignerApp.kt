@@ -26,7 +26,8 @@ import dev.cuervolu.loredesigner.ui.theme.LoreColors
 import dev.cuervolu.loredesigner.ui.theme.colors
 import dev.cuervolu.loredesigner.ui.workspace.WorkspacePlaceholder
 import dev.cuervolu.loredesigner.workspace.CreateWorkspace
-import dev.cuervolu.loredesigner.workspace.OpenWorkspace
+import dev.cuervolu.loredesigner.workspace.WorkspaceOpener
+import dev.cuervolu.loredesigner.workspace.recent.RecentWorkspacesRegistry
 import org.koin.compose.koinInject
 
 /**
@@ -38,7 +39,8 @@ fun LoreDesignerApp(
     modifier: Modifier = Modifier,
     session: AppSessionState = rememberAppSessionState(),
     createWorkspace: CreateWorkspace = koinInject(),
-    openWorkspace: OpenWorkspace = koinInject(),
+    workspaceOpener: WorkspaceOpener = koinInject(),
+    recentWorkspaces: RecentWorkspacesRegistry = koinInject(),
     settingsViewModelFactory: SettingsViewModelFactory = koinInject(),
     pickDirectory: DirectoryPicker = FileKitDirectoryPicker,
 ) {
@@ -55,7 +57,9 @@ fun LoreDesignerApp(
             entryProvider = entryProvider {
                 entry<AppRoute.Launcher> {
                     LauncherScreen(
-                        viewModel = viewModel { LauncherViewModel(createWorkspace, openWorkspace) },
+                        viewModel = viewModel {
+                            LauncherViewModel(createWorkspace, workspaceOpener, recentWorkspaces)
+                        },
                         pickDirectory = pickDirectory,
                         onWorkspaceOpened = { workspace ->
                             session.activeWorkspace = workspace

@@ -29,12 +29,14 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.composables.icons.lucide.Lucide
 import com.composables.icons.lucide.TriangleAlert
+import com.composables.icons.lucide.X
 import com.composeunstyled.Text
 import com.composeunstyled.theme.Theme
 import dev.cuervolu.loredesigner.core.workspace.ProjectColor
 import dev.cuervolu.loredesigner.ui.components.LoreButton
 import dev.cuervolu.loredesigner.ui.components.LoreButtonVariant
 import dev.cuervolu.loredesigner.ui.components.LoreDialog
+import dev.cuervolu.loredesigner.ui.components.LoreIconButton
 import dev.cuervolu.loredesigner.ui.components.LoreTextField
 import dev.cuervolu.loredesigner.ui.resources.Res
 import dev.cuervolu.loredesigner.ui.resources.common_cancel
@@ -51,6 +53,7 @@ import dev.cuervolu.loredesigner.ui.resources.launcher_color_rose
 import dev.cuervolu.loredesigner.ui.resources.launcher_color_slate
 import dev.cuervolu.loredesigner.ui.resources.launcher_color_teal
 import dev.cuervolu.loredesigner.ui.resources.launcher_color_violet
+import dev.cuervolu.loredesigner.ui.resources.launcher_error_dismiss
 import dev.cuervolu.loredesigner.ui.resources.launcher_new_color_label
 import dev.cuervolu.loredesigner.ui.resources.launcher_new_description
 import dev.cuervolu.loredesigner.ui.resources.launcher_new_location_label
@@ -290,10 +293,10 @@ internal fun ProjectColor.label() = when (this) {
 }
 
 @Composable
-private fun ErrorBanner(error: LauncherError) {
+internal fun ErrorBanner(error: LauncherError, modifier: Modifier = Modifier, onDismiss: (() -> Unit)? = null) {
     val danger = Theme[colors][LoreColors.danger]
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .background(Theme[colors][LoreColors.dangerSubtle], Theme[shapes][LoreShapes.control])
             .padding(10.dp)
@@ -310,6 +313,15 @@ private fun ErrorBanner(error: LauncherError) {
             text = error.localizedMessage(),
             style = Theme[typography][LoreTypography.caption],
             color = danger,
+            modifier = Modifier.weight(1f),
         )
+        if (onDismiss != null) {
+            LoreIconButton(
+                icon = Lucide.X,
+                contentDescription = stringResource(Res.string.launcher_error_dismiss),
+                onClick = onDismiss,
+                tint = danger,
+            )
+        }
     }
 }

@@ -64,6 +64,14 @@
     <string name="launcher_error_unsupported_version">This project uses format version %1$d, which this version of Lore Designer can’t open.</string>
     <string name="launcher_error_read_failed">Lore Designer couldn’t read “%1$s”. Check that the folder is available and that you have access to it.</string>
     <string name="launcher_error_write_failed">Lore Designer couldn’t write to “%1$s”. Check that you have permission to write in that location.</string>
+    <string name="launcher_error_different_workspace">This folder contains a different project, “%1$s”. Choose the folder of the project you’re looking for.</string>
+    <string name="launcher_error_dismiss">Dismiss</string>
+    <string name="launcher_project_pin">Pin project</string>
+    <string name="launcher_project_unpin">Unpin project</string>
+    <string name="launcher_project_forget">Remove from list</string>
+    <string name="launcher_project_locate">Locate…</string>
+    <string name="launcher_project_missing">Missing</string>
+    <string name="launcher_browse_title_locate">Choose the project’s new folder</string>
     <string name="workspace_placeholder_note">The editor isn’t available yet. This screen confirms which project is open.</string>
     <string name="workspace_placeholder_path">Path</string>
     <string name="workspace_placeholder_id">Project ID</string>

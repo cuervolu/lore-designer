@@ -17,11 +17,12 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.performTextInput
-import androidx.compose.ui.test.runComposeUiTest
+import androidx.compose.ui.test.v2.runComposeUiTest
 import dev.cuervolu.loredesigner.core.settings.AppLanguage
 import dev.cuervolu.loredesigner.core.workspace.ProjectColor
 import dev.cuervolu.loredesigner.ui.chrome.LauncherTitleBar
 import dev.cuervolu.loredesigner.ui.i18n.ProvideAppLocale
+import dev.cuervolu.loredesigner.ui.launcher.FakeRecentWorkspacesRegistry
 import dev.cuervolu.loredesigner.ui.resources.Res
 import dev.cuervolu.loredesigner.ui.resources.launcher_action_new
 import dev.cuervolu.loredesigner.ui.resources.launcher_action_open
@@ -63,6 +64,7 @@ private val originalLocale: Locale = Locale.getDefault()
 class LoreDesignerAppTest {
     private val settings = SettingsTestHarness()
     private val store = settings.workspaceStore
+    private val registry = FakeRecentWorkspacesRegistry()
 
     @AfterTest
     fun restoreLocale() {
@@ -81,7 +83,8 @@ class LoreDesignerAppTest {
                         LoreDesignerApp(
                             session = session,
                             createWorkspace = store.createWorkspace(),
-                            openWorkspace = store.openWorkspace(),
+                            workspaceOpener = store.opener(registry),
+                            recentWorkspaces = registry,
                             settingsViewModelFactory = settings.factory,
                             pickDirectory = { pickedDirectory },
                         )
@@ -173,9 +176,23 @@ class LoreDesignerAppTest {
         waitUntil { onAllNodesWithText("Embercourt").fetchSemanticsNodes().isNotEmpty() }
         assertEquals(listOf("/worlds/Embercourt".toPath()), store.openedLocations)
 
-        val welcome = getString(Res.string.launcher_empty_welcome_title)
         onNodeWithText(getString(Res.string.workspace_placeholder_close)).performClick()
-        waitUntil { onAllNodesWithText(welcome).fetchSemanticsNodes().isNotEmpty() }
+        waitUntil { onAllNodesWithText("/worlds/Embercourt").fetchSemanticsNodes().isNotEmpty() }
+        onNodeWithText(getString(Res.string.launcher_empty_welcome_title)).assertDoesNotExist()
+    }
+
+    @Test
+    fun `a closed project stays listed and reopens from the launcher`() = runComposeUiTest {
+        val close = getString(Res.string.workspace_placeholder_close)
+        launchApp()
+        openProject()
+        onNodeWithText(close).performClick()
+        waitUntil { onAllNodesWithText("/worlds/Embercourt").fetchSemanticsNodes().isNotEmpty() }
+
+        onNodeWithText("/worlds/Embercourt").performClick()
+
+        waitUntil { onAllNodesWithText(close).fetchSemanticsNodes().isNotEmpty() }
+        assertEquals(List(2) { "/worlds/Embercourt".toPath() }, store.openedLocations)
     }
 
     @Test

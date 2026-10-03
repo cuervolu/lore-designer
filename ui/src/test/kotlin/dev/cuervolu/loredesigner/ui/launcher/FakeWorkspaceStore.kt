@@ -3,13 +3,14 @@ package dev.cuervolu.loredesigner.ui.launcher
 import dev.cuervolu.loredesigner.core.workspace.ProjectConfig
 import dev.cuervolu.loredesigner.core.workspace.WorkspaceId
 import dev.cuervolu.loredesigner.workspace.CreateWorkspace
-import dev.cuervolu.loredesigner.workspace.OpenWorkspace
 import dev.cuervolu.loredesigner.workspace.UpdateProjectConfig
 import dev.cuervolu.loredesigner.workspace.Workspace
 import dev.cuervolu.loredesigner.workspace.WorkspaceError
 import dev.cuervolu.loredesigner.workspace.WorkspaceIdGenerator
+import dev.cuervolu.loredesigner.workspace.WorkspaceOpener
 import dev.cuervolu.loredesigner.workspace.WorkspaceResult
 import dev.cuervolu.loredesigner.workspace.WorkspaceStore
+import dev.cuervolu.loredesigner.workspace.recent.RecentWorkspacesRegistry
 import kotlinx.coroutines.CompletableDeferred
 import okio.Path
 
@@ -20,6 +21,10 @@ internal class FakeWorkspaceStore : WorkspaceStore {
     var createError: WorkspaceError? = null
     var openError: WorkspaceError? = null
     var openedName: String = "Embercourt"
+    var openedId: WorkspaceId = TestWorkspaceId
+
+    /** Locations [hasProjectFile] reports as gone; every other location looks like a workspace. */
+    val missingLocations = mutableSetOf<Path>()
     var gate: CompletableDeferred<Unit>? = null
 
     val createdLocations = mutableListOf<Path>()
@@ -39,7 +44,7 @@ internal class FakeWorkspaceStore : WorkspaceStore {
         openedLocations.add(location)
         gate?.await()
         return openError?.let { WorkspaceResult.Failure(it) }
-            ?: WorkspaceResult.Success(Workspace(location, ProjectConfig(1, TestWorkspaceId, openedName)))
+            ?: WorkspaceResult.Success(Workspace(location, ProjectConfig(1, openedId, openedName)))
     }
 
     override suspend fun updateConfig(location: Path, config: ProjectConfig): WorkspaceResult<Workspace> {
@@ -48,9 +53,11 @@ internal class FakeWorkspaceStore : WorkspaceStore {
         return updateError?.let { WorkspaceResult.Failure(it) } ?: WorkspaceResult.Success(Workspace(location, config))
     }
 
+    override suspend fun hasProjectFile(location: Path): Boolean = location !in missingLocations
+
     fun createWorkspace() = CreateWorkspace(this, WorkspaceIdGenerator { TestWorkspaceId })
 
-    fun openWorkspace() = OpenWorkspace(this)
-
     fun updateProjectConfig() = UpdateProjectConfig(this)
+
+    fun opener(registry: RecentWorkspacesRegistry) = WorkspaceOpener(this, registry)
 }
