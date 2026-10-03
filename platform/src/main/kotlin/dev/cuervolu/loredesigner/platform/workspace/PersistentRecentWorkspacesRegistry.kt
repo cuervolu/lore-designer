@@ -25,8 +25,8 @@ import kotlin.time.Instant
 /** [RecentWorkspacesRegistry] persisted in `workspaces.json` in the application data folder. */
 class PersistentRecentWorkspacesRegistry(
     private val stateStore: StateStore,
+    private val logger: Logger,
     private val clock: Clock = Clock.System,
-    private val logger: Logger = Logger.withTag("RecentWorkspaces"),
 ) : RecentWorkspacesRegistry {
     private val entries = MutableStateFlow<List<RecentWorkspace>>(emptyList())
     override val workspaces: StateFlow<List<RecentWorkspace>> = entries.asStateFlow()
@@ -42,20 +42,21 @@ class PersistentRecentWorkspacesRegistry(
 
     override suspend fun initialize() = mutex.withLock { ensureLoaded() }
 
-    override suspend fun recordOpened(workspace: Workspace) = mutate { current ->
-        val id = workspace.config.id
-        val opened = RecentWorkspace(
-            id = id,
-            location = workspace.location,
-            lastKnownName = workspace.config.name,
-            lastKnownColor = workspace.config.color,
-            lastOpenedAt = clock.now(),
-            pinned = current.firstOrNull { it.id == id }?.pinned ?: false,
-        )
-        current.filterNot { it.id == id } + opened
-    }
+    override suspend fun recordOpened(workspace: Workspace) =
+        mutate("record opening ${workspace.config.id}") { current ->
+            val id = workspace.config.id
+            val opened = RecentWorkspace(
+                id = id,
+                location = workspace.location,
+                lastKnownName = workspace.config.name,
+                lastKnownColor = workspace.config.color,
+                lastOpenedAt = clock.now(),
+                pinned = current.firstOrNull { it.id == id }?.pinned ?: false,
+            )
+            current.filterNot { it.id == id } + opened
+        }
 
-    override suspend fun updateLocation(workspace: Workspace) = mutate { current ->
+    override suspend fun updateLocation(workspace: Workspace) = mutate("relocate ${workspace.config.id}") { current ->
         current.map { recent ->
             if (recent.id != workspace.config.id) return@map recent
             recent.copy(
@@ -66,18 +67,23 @@ class PersistentRecentWorkspacesRegistry(
         }
     }
 
-    override suspend fun setPinned(id: WorkspaceId, pinned: Boolean) = mutate { current ->
-        current.map { if (it.id == id) it.copy(pinned = pinned) else it }
-    }
+    override suspend fun setPinned(id: WorkspaceId, pinned: Boolean) =
+        mutate("${if (pinned) "pin" else "unpin"} $id") { current ->
+            current.map { if (it.id == id) it.copy(pinned = pinned) else it }
+        }
 
-    override suspend fun forget(id: WorkspaceId) = mutate { current -> current.filterNot { it.id == id } }
+    override suspend fun forget(id: WorkspaceId) = mutate("forget $id") { current -> current.filterNot { it.id == id } }
 
-    private suspend fun mutate(transform: (List<RecentWorkspace>) -> List<RecentWorkspace>) {
+    private suspend fun mutate(operation: String, transform: (List<RecentWorkspace>) -> List<RecentWorkspace>) {
         mutex.withLock {
             ensureLoaded()
             val current = entries.value
             val next = transform(current).sortedForDisplay()
-            if (next == current) return
+            if (next == current) {
+                logger.v { "Recent workspaces: $operation changed nothing" }
+                return
+            }
+            logger.d { "Recent workspaces: $operation (${next.size} remembered)" }
             entries.value = next
             // Failures are logged by the store; the in-memory list stays authoritative for this session.
             stateStore.save(persisted)
@@ -102,20 +108,25 @@ class PersistentRecentWorkspacesRegistry(
         pinned = pinned,
     )
 
-    private fun JsonElement.toRecentWorkspace(): RecentWorkspace? {
+    // Decoding messages can quote the stored entry, so only the position and exception type are logged.
+    private fun JsonElement.toRecentWorkspace(index: Int): RecentWorkspace? {
         val entry = try {
             entryJson.decodeFromJsonElement(StoredEntry.serializer(), this)
-        } catch (_: SerializationException) {
-            logger.w { "Ignoring a remembered workspace entry that cannot be read" }
+        } catch (exception: SerializationException) {
+            logger.w {
+                "Ignoring remembered workspace entry #$index that cannot be read (${exception::class.simpleName})"
+            }
             return null
-        } catch (_: IllegalArgumentException) {
-            logger.w { "Ignoring a remembered workspace entry that cannot be read" }
+        } catch (exception: IllegalArgumentException) {
+            logger.w {
+                "Ignoring remembered workspace entry #$index that cannot be read (${exception::class.simpleName})"
+            }
             return null
         }
         val workspaceId = try {
             WorkspaceId.parse(entry.id)
         } catch (_: IllegalArgumentException) {
-            logger.w { "Ignoring remembered workspace with invalid id" }
+            logger.w { "Ignoring remembered workspace entry #$index with an invalid id" }
             return null
         }
         return RecentWorkspace(
@@ -139,11 +150,15 @@ class PersistentRecentWorkspacesRegistry(
         )
 
         override fun loadState(state: RecentWorkspacesState) {
-            entries.value = state.entries
-                .mapNotNull { it.toRecentWorkspace() }
+            val readable = state.entries.mapIndexedNotNull { index, entry -> entry.toRecentWorkspace(index) }
+            entries.value = readable
                 .groupBy { it.id }
                 .map { (_, duplicates) -> duplicates.maxBy { it.lastOpenedAt } }
                 .sortedForDisplay()
+            logger.d {
+                "Loaded ${entries.value.size} recent workspaces (${state.entries.size - readable.size} unreadable, " +
+                    "${readable.size - entries.value.size} duplicates dropped)"
+            }
         }
     }
 

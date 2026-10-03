@@ -1,5 +1,6 @@
 package dev.cuervolu.loredesigner.ui.di
 
+import co.touchlab.kermit.Logger
 import dev.cuervolu.loredesigner.ui.settings.SettingsPageRegistry
 import dev.cuervolu.loredesigner.ui.settings.SettingsViewModel
 import dev.cuervolu.loredesigner.ui.settings.SettingsViewModelFactory
@@ -13,7 +14,13 @@ import org.koin.dsl.module
 
 /** UI state holders and settings pages. [dev.cuervolu.loredesigner.ui.settings.SettingsEnvironment] is bound by the app. */
 fun uiModule(): Module = module {
-    single { ApplicationSettingsRepository(get(), CoroutineScope(SupervisorJob() + Dispatchers.Default)) }
+    single {
+        ApplicationSettingsRepository(
+            store = get(),
+            scope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
+            logger = get<Logger>().withTag("Settings"),
+        )
+    }
     single { SettingsPageRegistry(builtInSettingsPages()) }
     single<SettingsViewModelFactory> {
         SettingsViewModelFactory { workspace -> SettingsViewModel(get(), get(), workspace, get(), get()) }

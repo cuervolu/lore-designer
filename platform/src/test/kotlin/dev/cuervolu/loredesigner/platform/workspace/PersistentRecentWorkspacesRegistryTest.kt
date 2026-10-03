@@ -1,8 +1,10 @@
 package dev.cuervolu.loredesigner.platform.workspace
 
+import co.touchlab.kermit.Severity
 import dev.cuervolu.loredesigner.core.workspace.ProjectColor
 import dev.cuervolu.loredesigner.core.workspace.ProjectConfig
 import dev.cuervolu.loredesigner.core.workspace.WorkspaceId
+import dev.cuervolu.loredesigner.platform.logging.RecordingLogWriter
 import dev.cuervolu.loredesigner.platform.state.FileStateStore
 import dev.cuervolu.loredesigner.workspace.Workspace
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -25,6 +27,7 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
 
 class PersistentRecentWorkspacesRegistryTest {
+    private val logs = RecordingLogWriter()
     private val fileSystem = FakeFileSystem()
     private val appData = "/app-data".toPath()
     private val dispatcher = StandardTestDispatcher()
@@ -38,7 +41,8 @@ class PersistentRecentWorkspacesRegistryTest {
 
     /** A fresh store and registry, as after an application restart. */
     private fun newRegistry() = PersistentRecentWorkspacesRegistry(
-        FileStateStore(appData, fileSystem, ioDispatcher = dispatcher, clock = clock),
+        FileStateStore(appData, fileSystem, logs.logger("State"), ioDispatcher = dispatcher, clock = clock),
+        logs.logger("RecentWorkspaces"),
         clock,
     )
 
@@ -221,6 +225,10 @@ class PersistentRecentWorkspacesRegistryTest {
         val registry = newRegistry().apply { initialize() }
 
         assertEquals(listOf(idB), registry.workspaces.value.map { it.id })
+        val warnings = logs.at(Severity.Warn).map { it.message }
+        assertEquals(2, warnings.size, "$warnings")
+        assertTrue("#0" in warnings[0] && "#1" in warnings[1], "$warnings")
+        assertTrue(warnings.none { "not a date" in it || "/a" in it }, "$warnings")
     }
 
     @Test

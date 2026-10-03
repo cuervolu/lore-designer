@@ -2,6 +2,7 @@ package dev.cuervolu.loredesigner.ui.launcher
 
 import dev.cuervolu.loredesigner.core.workspace.ProjectConfig
 import dev.cuervolu.loredesigner.core.workspace.WorkspaceId
+import dev.cuervolu.loredesigner.ui.RecordingLogWriter
 import dev.cuervolu.loredesigner.workspace.CreateWorkspace
 import dev.cuervolu.loredesigner.workspace.UpdateProjectConfig
 import dev.cuervolu.loredesigner.workspace.Workspace
@@ -59,5 +60,5 @@ internal class FakeWorkspaceStore : WorkspaceStore {
 
     fun updateProjectConfig() = UpdateProjectConfig(this)
 
-    fun opener(registry: RecentWorkspacesRegistry) = WorkspaceOpener(this, registry)
+    fun opener(registry: RecentWorkspacesRegistry) = WorkspaceOpener(this, registry, RecordingLogWriter().logger())
 }

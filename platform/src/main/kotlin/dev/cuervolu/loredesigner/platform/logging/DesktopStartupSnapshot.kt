@@ -5,28 +5,28 @@ import dev.nucleusframework.core.runtime.LinuxDesktopEnvironment
 import dev.nucleusframework.core.runtime.NucleusApp
 import dev.nucleusframework.core.runtime.Platform
 import dev.nucleusframework.systeminfo.SystemInfo
-import java.time.Instant
+import java.time.ZoneId
 
 /** Desktop/runtime metadata recorded once per launch alongside a [LogSession]. */
 data class DesktopStartupSnapshot(
     val appVersion: String,
-    val startedAt: String,
     val runningOn: String,
     val kernelVersion: String,
     val executableType: String,
     val desktopEnvironment: String? = null,
     val displayServer: String? = null,
+    /** Log timestamps are local time, so the zone they are in is recorded once per run. */
+    val timeZone: String = ZoneId.systemDefault().id,
 ) {
     companion object {
         // SystemInfo.osInfo() can fail depending on platform/permissions; fall back rather than
         // let a startup-metadata failure take down the application.
-        fun capture(startedAt: Instant): DesktopStartupSnapshot {
+        fun capture(): DesktopStartupSnapshot {
             val osInfo = runCatching { SystemInfo.osInfo() }.getOrNull()
             val platform = Platform.Current
 
             return DesktopStartupSnapshot(
                 appVersion = NucleusApp.version ?: ExecutableRuntime.markerVersion() ?: "unknown",
-                startedAt = startedAt.toString(),
                 runningOn = osInfo?.name?.let { name ->
                     osInfo.osVersion?.let { version -> "$name $version" } ?: name
                 } ?: platform.name,

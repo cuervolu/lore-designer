@@ -2,9 +2,12 @@ package dev.cuervolu.loredesigner
 
 import co.touchlab.kermit.Logger
 import dev.cuervolu.loredesigner.di.loreDesignerModules
+import dev.cuervolu.loredesigner.platform.logging.APP_TAG
 import dev.cuervolu.loredesigner.platform.logging.DesktopStartupSnapshot
 import dev.cuervolu.loredesigner.platform.logging.DiagnosticLogging
 import dev.cuervolu.loredesigner.platform.logging.LogSession
+import dev.cuervolu.loredesigner.platform.logging.installUncaughtExceptionLogging
+import dev.cuervolu.loredesigner.platform.logging.logSessionEnd
 import dev.cuervolu.loredesigner.platform.logging.logSessionStart
 import dev.cuervolu.loredesigner.ui.settings.data.ApplicationSettingsRepository
 import dev.nucleusframework.application.NucleusBackend
@@ -24,12 +27,16 @@ fun main() {
         modules(loreDesignerModules(appDataDirectory))
     }.koin
 
+    // Resolved before anything else so later startup failures already reach the log file.
+    val logger = koin.get<Logger>()
+    installUncaughtExceptionLogging(logger.withTag(APP_TAG))
+    val session = LogSession.start()
+    logger.logSessionStart(session, DesktopStartupSnapshot.capture())
+    // Nucleus ends the process with exitProcess, so code after nucleusApplication never runs.
+    Runtime.getRuntime().addShutdownHook(Thread({ logger.logSessionEnd(session) }, "log-session-end"))
+
     val settingsRepository = koin.get<ApplicationSettingsRepository>()
     koin.get<DiagnosticLogging>().setEnabled(settingsRepository.settings.value.diagnosticLogging)
-
-    val logger = koin.get<Logger>()
-    val session = LogSession.start()
-    logger.logSessionStart(session, DesktopStartupSnapshot.capture(session.startedAt))
 
     nucleusApplication(backend = NucleusBackend.Tao) {
         aotTraining()

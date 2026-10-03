@@ -1,5 +1,6 @@
 package dev.cuervolu.loredesigner.platform.settings
 
+import co.touchlab.kermit.Severity
 import com.russhwolf.settings.MapSettings
 import dev.cuervolu.loredesigner.core.settings.AppLanguage
 import dev.cuervolu.loredesigner.core.settings.ApplicationSettings
@@ -9,13 +10,15 @@ import dev.cuervolu.loredesigner.core.settings.RecoveryRetention
 import dev.cuervolu.loredesigner.core.settings.ThemePreference
 import dev.cuervolu.loredesigner.core.settings.UiDensity
 import dev.cuervolu.loredesigner.core.workspace.WorkspaceId
+import dev.cuervolu.loredesigner.platform.logging.RecordingLogWriter
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class MultiplatformApplicationSettingsStoreTest {
+    private val logs = RecordingLogWriter()
     private val backing = MapSettings()
-    private val store = MultiplatformApplicationSettingsStore(backing)
+    private val store = MultiplatformApplicationSettingsStore(backing, logs.logger())
 
     private val customized = ApplicationSettings(
         theme = ThemePreference.DARK,
@@ -43,7 +46,7 @@ class MultiplatformApplicationSettingsStoreTest {
     fun `every field round-trips`() {
         store.write(customized)
 
-        assertEquals(customized, MultiplatformApplicationSettingsStore(backing).read())
+        assertEquals(customized, MultiplatformApplicationSettingsStore(backing, logs.logger()).read())
     }
 
     @Test
@@ -78,5 +81,17 @@ class MultiplatformApplicationSettingsStoreTest {
         assertEquals(DocumentFont.Default, read.documentFont)
         assertEquals(setOf(WorkspaceId.parse("01995f7e-1d74-7c83-a8a9-4fd2ed9cb380")), read.showHiddenFilesIn)
         assertEquals(AppLanguage.SPANISH, read.language)
+        val ignored = logs.at(Severity.Debug).map { it.message }
+        assertEquals(4, ignored.size, "$ignored")
+        assertTrue(ignored.none { "sepia" in it || "maybe" in it || "comic-sans" in it || "not-a-uuid" in it })
+    }
+
+    @Test
+    fun `writes report the changed keys without their values`() {
+        store.write(ApplicationSettings(theme = ThemePreference.DARK, diagnosticLogging = true))
+
+        val entry = logs.at(Severity.Debug).single()
+        assertTrue("appearance.theme" in entry.message && "diagnostics.logging" in entry.message, entry.message)
+        assertTrue("dark" !in entry.message && "true" !in entry.message, entry.message)
     }
 }

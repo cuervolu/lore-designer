@@ -4,6 +4,7 @@ import co.touchlab.kermit.LogWriter
 import co.touchlab.kermit.Logger
 import co.touchlab.kermit.Severity
 import co.touchlab.kermit.mutableLoggerConfigInit
+import dev.cuervolu.loredesigner.platform.logging.RecordingLogWriter
 import dev.cuervolu.loredesigner.platform.workspace.FaultyFileSystem
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.launch
@@ -36,6 +37,7 @@ class FileStateStoreTest {
     private val dispatcher = StandardTestDispatcher()
     private var now = Instant.parse("2026-10-01T12:00:00Z")
     private val logged = mutableListOf<String>()
+    private val errors = mutableListOf<RecordingLogWriter.Entry>()
     private val logger = Logger(
         mutableLoggerConfigInit(
             listOf(
@@ -43,6 +45,11 @@ class FileStateStoreTest {
                     override fun log(severity: Severity, message: String, tag: String, throwable: Throwable?) {
                         logged += message
                         throwable?.let { logged += it.stackTraceToString() }
+                        if (severity ==
+                            Severity.Error
+                        ) {
+                            errors += RecordingLogWriter.Entry(severity, tag, message, throwable)
+                        }
                     }
                 },
             ),
@@ -440,6 +447,7 @@ class FileStateStoreTest {
         val result = store.save(component)
 
         assertIs<StateSaveResult.Failed>(result)
+        assertEquals("disk full", errors.single().throwable?.message, "the I/O cause is logged with the failure")
         assertEquals("after", component.getState().label, "in-memory state is kept")
         assertEquals(before, read("ui.json"))
         assertEquals(listOf("ui.json"), stateFiles())

@@ -19,11 +19,7 @@ import kotlin.random.Random
  * The file is not created until the first write.
  */
 object PropertiesFileSettings {
-    fun create(
-        file: Path,
-        fileSystem: FileSystem = FileSystem.SYSTEM,
-        logger: Logger = Logger.withTag("Settings"),
-    ): Settings {
+    fun create(file: Path, fileSystem: FileSystem = FileSystem.SYSTEM, logger: Logger): Settings {
         val properties = load(file, fileSystem, logger)
         return PropertiesSettings(properties) { persist(file, fileSystem, it, logger) }
     }
@@ -33,13 +29,16 @@ object PropertiesFileSettings {
         try {
             if (fileSystem.exists(file)) {
                 fileSystem.source(file).buffer().use { properties.load(it.inputStream()) }
+                logger.d { "Read ${properties.size} settings from $file" }
+            } else {
+                logger.d { "No settings file at $file; using defaults" }
             }
         } catch (exception: IOException) {
-            logger.w(exception) { "Could not read settings file; using defaults" }
+            logger.w(exception) { "Could not read settings file $file; using defaults" }
             properties.clear()
         } catch (exception: IllegalArgumentException) {
-            // Properties.load throws this for malformed unicode escapes.
-            logger.w(exception) { "Settings file is malformed; using defaults" }
+            // Properties.load throws this for malformed unicode escapes; its message can quote the file.
+            logger.w { "Settings file $file is malformed (${exception::class.simpleName}); using defaults" }
             properties.clear()
         }
         return properties
@@ -52,8 +51,9 @@ object PropertiesFileSettings {
             fileSystem.createDirectories(directory)
             fileSystem.write(temporaryFile, mustCreate = true) { properties.store(outputStream(), null) }
             fileSystem.atomicMove(temporaryFile, file)
+            logger.v { "Wrote settings file $file" }
         } catch (exception: IOException) {
-            logger.e(exception) { "Could not write settings file" }
+            logger.e(exception) { "Could not write settings file $file; changes are kept in memory" }
             try {
                 fileSystem.delete(temporaryFile, mustExist = false)
             } catch (cleanupFailure: IOException) {
