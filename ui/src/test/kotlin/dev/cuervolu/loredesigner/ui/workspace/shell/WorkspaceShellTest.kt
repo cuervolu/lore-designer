@@ -22,6 +22,7 @@ import dev.cuervolu.loredesigner.ui.resources.workspace_shell_toggle_explorer
 import dev.cuervolu.loredesigner.ui.resources.workspace_shell_toggle_log
 import dev.cuervolu.loredesigner.ui.resources.workspace_shell_toggle_properties
 import dev.cuervolu.loredesigner.ui.theme.LoreDesignerTheme
+import dev.cuervolu.loredesigner.ui.workspace.shell.dock.WorkspaceDockState
 import dev.cuervolu.loredesigner.workspace.Workspace
 import okio.Path.Companion.toPath
 import org.jetbrains.compose.resources.getString
@@ -38,7 +39,7 @@ class WorkspaceShellTest {
 
     private fun androidx.compose.ui.test.ComposeUiTest.show(
         workspace: Workspace? = this@WorkspaceShellTest.workspace,
-        state: WorkspaceShellState = WorkspaceShellState(),
+        state: WorkspaceDockState = WorkspaceDockState(),
         onClose: () -> Unit = {},
     ) = setContent {
         LoreDesignerTheme(darkTheme = false) {
@@ -48,7 +49,7 @@ class WorkspaceShellTest {
 
     @Test
     fun `every region shows its empty state`() = runComposeUiTest {
-        show(state = WorkspaceShellState().apply { toggleBottomPanel() })
+        show(state = WorkspaceDockState().apply { toggleBottomPanel() })
 
         onNodeWithText("Embercourt").assertExists()
         onNodeWithText(getString(Res.string.workspace_shell_explorer_empty_title)).assertExists()
@@ -59,7 +60,7 @@ class WorkspaceShellTest {
 
     @Test
     fun `status bar buttons hide and show their regions`() = runComposeUiTest {
-        val state = WorkspaceShellState()
+        val state = WorkspaceDockState()
         show(state = state)
         val explorerEmpty = getString(Res.string.workspace_shell_explorer_empty_title)
 
@@ -79,7 +80,7 @@ class WorkspaceShellTest {
 
     @Test
     fun `the log starts hidden and the status bar button reveals it`() = runComposeUiTest {
-        val state = WorkspaceShellState()
+        val state = WorkspaceDockState()
         show(state = state)
         val logEmpty = getString(Res.string.workspace_shell_log_empty)
 

@@ -38,6 +38,7 @@ import dev.cuervolu.loredesigner.ui.resources.workspace_shell_center_empty_body
 import dev.cuervolu.loredesigner.ui.resources.workspace_shell_center_empty_title
 import dev.cuervolu.loredesigner.ui.resources.workspace_shell_explorer_empty_body
 import dev.cuervolu.loredesigner.ui.resources.workspace_shell_explorer_empty_title
+import dev.cuervolu.loredesigner.ui.resources.workspace_shell_explorer_title
 import dev.cuervolu.loredesigner.ui.resources.workspace_shell_log_empty
 import dev.cuervolu.loredesigner.ui.resources.workspace_shell_log_title
 import dev.cuervolu.loredesigner.ui.resources.workspace_shell_not_open_body
@@ -58,13 +59,18 @@ import dev.cuervolu.loredesigner.ui.theme.dotToken
 import dev.cuervolu.loredesigner.ui.theme.sizes
 import dev.cuervolu.loredesigner.ui.theme.spacing
 import dev.cuervolu.loredesigner.ui.theme.typography
+import dev.cuervolu.loredesigner.ui.workspace.shell.dock.DockHost
+import dev.cuervolu.loredesigner.ui.workspace.shell.dock.DockPanelSpec
+import dev.cuervolu.loredesigner.ui.workspace.shell.dock.PanelRegistry
+import dev.cuervolu.loredesigner.ui.workspace.shell.dock.ShellPanels
+import dev.cuervolu.loredesigner.ui.workspace.shell.dock.WorkspaceDockState
 import dev.cuervolu.loredesigner.workspace.Workspace
 import org.jetbrains.compose.resources.stringResource
 
 private val SeparatorWidth = 1.dp
 
 /**
- * Structure of the workspace screen: Explorer, center, Properties, bottom panel and status bar.
+ * Structure of the workspace screen.
  *
  * Each region takes its content as a slot with an empty state as default, so later views can fill
  * a region without changing how the shell is composed. [workspace] is null when the route no longer
@@ -73,7 +79,7 @@ private val SeparatorWidth = 1.dp
 @Composable
 fun WorkspaceShell(
     workspace: Workspace?,
-    state: WorkspaceShellState,
+    state: WorkspaceDockState,
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
     explorer: @Composable () -> Unit = { ExplorerEmptyState() },
@@ -85,89 +91,48 @@ fun WorkspaceShell(
         NotOpen(onClose = onClose, modifier = modifier)
         return
     }
+    val registry = shellPanelRegistry(
+        explorerTitle = { ProjectTitle(workspace) },
+        explorer = explorer,
+        properties = properties,
+        bottomPanel = bottomPanel,
+    )
     Column(modifier = modifier.fillMaxSize().background(Theme[colors][LoreColors.border])) {
-        BoxWithConstraints(modifier = Modifier.weight(1f).fillMaxWidth()) {
-            val layout = shellLayout(
-                width = maxWidth,
-                height = maxHeight,
-                explorerVisible = state.explorerVisible,
-                propertiesVisible = state.propertiesVisible,
-                bottomVisible = state.bottomPanelVisible,
-            )
-            Row(
-                modifier = Modifier.fillMaxSize(),
-                horizontalArrangement = Arrangement.spacedBy(SeparatorWidth),
-            ) {
-                if (layout.explorerWidth > 0.dp) {
-                    Region(
-                        title = { ProjectTitle(workspace) },
-                        modifier = Modifier.width(layout.explorerWidth).fillMaxHeight(),
-                        content = explorer,
-                    )
-                }
-                Column(
-                    modifier = Modifier.weight(1f).fillMaxHeight(),
-                    verticalArrangement = Arrangement.spacedBy(SeparatorWidth),
-                ) {
-                    Box(
-                        modifier = Modifier.weight(1f).fillMaxWidth()
-                            .background(Theme[colors][LoreColors.surfaceEditor]),
-                    ) { center() }
-                    if (layout.bottomHeight > 0.dp) {
-                        Region(
-                            title = { RegionTitle(stringResource(Res.string.workspace_shell_log_title)) },
-                            background = Theme[colors][LoreColors.surfaceEditor],
-                            modifier = Modifier.height(layout.bottomHeight).fillMaxWidth(),
-                            content = bottomPanel,
-                        )
-                    }
-                }
-                if (layout.propertiesWidth > 0.dp) {
-                    Region(
-                        title = { RegionTitle(stringResource(Res.string.workspace_shell_properties_title)) },
-                        modifier = Modifier.width(layout.propertiesWidth).fillMaxHeight(),
-                        content = properties,
-                    )
-                }
-            }
-        }
+        DockHost(
+            state = state,
+            registry = registry,
+            viewEmpty = center,
+            modifier = Modifier.weight(1f).fillMaxWidth(),
+        )
         StatusBar(state)
     }
 }
 
 @Composable
-private fun Region(
-    title: @Composable () -> Unit,
-    modifier: Modifier = Modifier,
-    background: Color = Theme[colors][LoreColors.surface],
-    content: @Composable () -> Unit,
-) {
-    val borderColor = Theme[colors][LoreColors.borderSubtle]
-    Column(modifier = modifier.background(background)) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(Theme[sizes][LoreSizes.controlHeight])
-                .drawBehind {
-                    val y = size.height - 0.5.dp.toPx()
-                    drawLine(borderColor, Offset(0f, y), Offset(size.width, y), strokeWidth = 1.dp.toPx())
-                }
-                .padding(horizontal = Theme[spacing][LoreSpacing.space5]),
-            verticalAlignment = Alignment.CenterVertically,
-        ) { title() }
-        Box(modifier = Modifier.weight(1f).fillMaxWidth()) { content() }
-    }
-}
-
-@Composable
-private fun RegionTitle(text: String) {
-    Text(
-        text = text.uppercase(),
-        style = Theme[typography][LoreTypography.eyebrow],
-        color = Theme[colors][LoreColors.textMuted],
-        singleLine = true,
-    )
-}
+private fun shellPanelRegistry(
+    explorerTitle: @Composable () -> Unit,
+    explorer: @Composable () -> Unit,
+    properties: @Composable () -> Unit,
+    bottomPanel: @Composable () -> Unit,
+): PanelRegistry = mapOf(
+    ShellPanels.Explorer to DockPanelSpec(
+        label = { stringResource(Res.string.workspace_shell_explorer_title) },
+        content = explorer,
+        sizing = ShellPanels.Sizing.getValue(ShellPanels.Explorer),
+        header = explorerTitle,
+    ),
+    ShellPanels.Properties to DockPanelSpec(
+        label = { stringResource(Res.string.workspace_shell_properties_title) },
+        content = properties,
+        sizing = ShellPanels.Sizing.getValue(ShellPanels.Properties),
+    ),
+    ShellPanels.Log to DockPanelSpec(
+        label = { stringResource(Res.string.workspace_shell_log_title) },
+        content = bottomPanel,
+        sizing = ShellPanels.Sizing.getValue(ShellPanels.Log),
+        editorSurface = true,
+    ),
+)
 
 @Composable
 private fun ProjectTitle(workspace: Workspace) {
@@ -238,7 +203,7 @@ private fun LogEmptyState() = Text(
 )
 
 @Composable
-private fun StatusBar(state: WorkspaceShellState) {
+private fun StatusBar(state: WorkspaceDockState) {
     val muted = Theme[colors][LoreColors.textMuted]
     val active = Theme[colors][LoreColors.accent]
     Row(
