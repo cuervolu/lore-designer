@@ -75,3 +75,8 @@ internal fun RenderNode.shrinkOrder(registry: PanelRegistry): Int = when (this) 
 
 private fun RenderGroup.panelSizing(registry: PanelRegistry): PanelSizing =
     displayed?.let { registry[it]?.sizing } ?: ViewSizing
+
+internal fun RenderNode.panels(): Set<PanelId> = when (this) {
+    is RenderGroup -> tabs.toSet()
+    is RenderSplit -> children.flatMapTo(mutableSetOf()) { it.panels() }
+}

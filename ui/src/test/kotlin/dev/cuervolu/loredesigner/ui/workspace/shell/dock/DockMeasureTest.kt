@@ -93,4 +93,14 @@ class DockMeasureTest {
         assertEquals(264.dp, sizes[0])
         assertEquals(735.dp, sizes[1])
     }
+
+    @Test
+    fun `a dragged size replaces the preferred one and gives way when the window shrinks`() {
+        val wider = explorer.copy(sizing = AxisSizing(400.dp, 180.dp))
+        val children = listOf(wider, center, properties)
+
+        assertEquals(400.dp, measure(1400, children)[0])
+        assertEquals(358.dp, measure(900, children)[0])
+        assertEquals(400.dp, measure(1400, children)[0])
+    }
 }

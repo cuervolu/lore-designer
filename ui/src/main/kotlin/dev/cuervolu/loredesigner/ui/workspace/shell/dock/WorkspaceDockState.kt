@@ -4,14 +4,18 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.unit.Dp
 import co.touchlab.kermit.Logger
 import dev.cuervolu.loredesigner.editor.dock.DockLayout
+import dev.cuervolu.loredesigner.editor.dock.DockNode
+import dev.cuervolu.loredesigner.editor.dock.DockNodeId
 import dev.cuervolu.loredesigner.editor.dock.DockOperation
 import dev.cuervolu.loredesigner.editor.dock.DockResult
 import dev.cuervolu.loredesigner.editor.dock.DockSide
 import dev.cuervolu.loredesigner.editor.dock.DockTarget
 import dev.cuervolu.loredesigner.editor.dock.PanelId
 import dev.cuervolu.loredesigner.editor.dock.PanelKind
+import dev.cuervolu.loredesigner.editor.dock.SplitNode
 
 /**
  * The workspace's dock layout plus which panels the user has hidden.
@@ -32,6 +36,10 @@ class WorkspaceDockState(
     var hidden: Set<PanelId> by mutableStateOf(initiallyHidden)
         private set
 
+    /** Sizes the user dragged fixed-size nodes to, along their split's axis, keyed by node. Defaults apply when absent. */
+    var sizeOverrides: Map<DockNodeId, Dp> by mutableStateOf(emptyMap())
+        private set
+
     val explorerVisible: Boolean get() = isVisible(ShellPanels.Explorer)
     val propertiesVisible: Boolean get() = isVisible(ShellPanels.Properties)
     val bottomPanelVisible: Boolean get() = isVisible(ShellPanels.Log)
@@ -50,6 +58,41 @@ class WorkspaceDockState(
 
     fun toggleBottomPanel() = toggle(ShellPanels.Log)
 
+    /** Hides [panels] without touching [layout], so each one returns to its place when shown again. */
+    fun hide(panels: Set<PanelId>) {
+        hidden = hidden + panels
+    }
+
+    fun sizeOverride(node: DockNodeId): Dp? = sizeOverrides[node]
+
+    fun resizeFixed(node: DockNodeId, size: Dp) {
+        sizeOverrides = sizeOverrides + (node to size)
+    }
+
+    fun resetFixed(node: DockNodeId) {
+        sizeOverrides = sizeOverrides - node
+    }
+
+    /**
+     * Moves the boundary between the flexible nodes [before] and [after] of [split] so that [before] gets
+     * [beforeShare] of their combined weight. Weights of every other child are left alone.
+     */
+    fun resizeFill(split: DockNodeId, before: DockNodeId, after: DockNodeId, beforeShare: Float) {
+        val node = layout.findSplit(split) ?: return logger.w { "Cannot resize unknown split $split" }
+        val beforeIndex = node.children.indexOfFirst { it.contains(before) }
+        val afterIndex = node.children.indexOfFirst { it.contains(after) }
+        if (beforeIndex < 0 || afterIndex < 0) return logger.w { "Nodes $before/$after are not in split $split" }
+        val pair = node.weights[beforeIndex] + node.weights[afterIndex]
+        val weights = node.weights.toMutableList().apply {
+            this[beforeIndex] = pair * beforeShare
+            this[afterIndex] = pair - this[beforeIndex]
+        }
+        when (val result = layout.apply(DockOperation.SetWeights(split, weights))) {
+            is DockResult.Applied -> layout = result.layout
+            is DockResult.Rejected -> logger.w { "Cannot resize split $split: ${result.reason}" }
+        }
+    }
+
     /** Brings [panel] to the front of its group, revealing it first if the user had hidden it. */
     fun activate(panel: PanelId) {
         when (val result = layout.apply(DockOperation.Activate(panel))) {
@@ -61,6 +104,9 @@ class WorkspaceDockState(
             is DockResult.Rejected -> logger.w { "Cannot activate $panel: ${result.reason}" }
         }
     }
+
+    private fun DockNode.contains(id: DockNodeId): Boolean = this.id == id ||
+        (this is SplitNode && children.any { it.contains(id) })
 
     companion object {
         /** Explorer left, Properties right and Log under the editor area, built only with core operations. */

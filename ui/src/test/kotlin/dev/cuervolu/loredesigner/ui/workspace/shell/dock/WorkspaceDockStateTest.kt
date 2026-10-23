@@ -1,11 +1,14 @@
 package dev.cuervolu.loredesigner.ui.workspace.shell.dock
 
+import androidx.compose.ui.unit.dp
 import dev.cuervolu.loredesigner.editor.dock.DockLayout
 import dev.cuervolu.loredesigner.editor.dock.DockOperation
 import dev.cuervolu.loredesigner.editor.dock.DockResult
+import dev.cuervolu.loredesigner.editor.dock.DockSide
 import dev.cuervolu.loredesigner.editor.dock.DockTarget
 import dev.cuervolu.loredesigner.editor.dock.PanelId
 import dev.cuervolu.loredesigner.editor.dock.PanelKind
+import dev.cuervolu.loredesigner.editor.dock.SplitNode
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -91,5 +94,59 @@ class WorkspaceDockStateTest {
         listOf(ShellPanels.Explorer, ShellPanels.Log, ShellPanels.Explorer).forEach(state::toggle)
 
         assertEquals(emptyList(), state.layout.validate())
+    }
+
+    @Test
+    fun `dragged sizes are kept while the panel is hidden and shown again`() {
+        val state = WorkspaceDockState()
+        val explorer = state.layout.groupOf(ShellPanels.Explorer)!!.id
+
+        state.resizeFixed(explorer, 320.dp)
+        state.toggleExplorer()
+        state.toggleExplorer()
+
+        assertEquals(320.dp, state.sizeOverride(explorer))
+        state.resetFixed(explorer)
+        assertEquals(null, state.sizeOverride(explorer))
+    }
+
+    @Test
+    fun `hiding by gesture keeps the panel in its place`() {
+        val state = WorkspaceDockState()
+        val before = state.layout
+
+        state.hide(setOf(ShellPanels.Explorer))
+
+        assertFalse(state.explorerVisible)
+        assertEquals(before, state.layout)
+    }
+
+    @Test
+    fun `resizing flexible neighbours only moves weight between them`() {
+        val state = twoViewGroups()
+        val split = state.layout.root as SplitNode
+        val (first, second) = split.children.map { it.id }
+
+        state.resizeFill(split.id, first, second, beforeShare = 0.75f)
+
+        val resized = state.layout.findSplit(split.id)!!
+        assertEquals(0.75f, resized.weights[0], 1e-4f)
+        assertEquals(0.25f, resized.weights[1], 1e-4f)
+        assertEquals(emptyList(), state.layout.validate())
+    }
+
+    private fun twoViewGroups(): WorkspaceDockState {
+        var layout = DockLayout.initial()
+        val editorArea = layout.groups.single().id
+        listOf("a", "b").forEachIndexed { index, name ->
+            val target = if (index == 0) {
+                DockTarget.Tab(editorArea)
+            } else {
+                DockTarget.Edge(editorArea, DockSide.Right)
+            }
+            layout = (layout.apply(DockOperation.AddPanel(PanelId(name), PanelKind.View, target)) as DockResult.Applied)
+                .layout
+        }
+        return WorkspaceDockState(layout, initiallyHidden = emptySet())
     }
 }

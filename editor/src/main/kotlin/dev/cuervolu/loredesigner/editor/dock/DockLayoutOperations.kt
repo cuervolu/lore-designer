@@ -1,5 +1,7 @@
 package dev.cuervolu.loredesigner.editor.dock
 
+import kotlin.math.abs
+
 private fun rejected(reason: DockRejection) = DockResult.Rejected(reason)
 
 internal fun DockLayout.applyOperation(operation: DockOperation, ids: DockIdGenerator): DockResult = when (operation) {
@@ -13,6 +15,22 @@ internal fun DockLayout.applyOperation(operation: DockOperation, ids: DockIdGene
 
     is DockOperation.Split ->
         move(operation.panel, DockTarget.Edge(operation.group, operation.side), operation.share, ids)
+
+    is DockOperation.SetWeights -> setWeights(operation.split, operation.weights)
+}
+
+private fun DockLayout.setWeights(split: DockNodeId, weights: List<Float>): DockResult {
+    val node = findSplit(split) ?: return rejected(DockRejection.UnknownSplit(split))
+    val valid = weights.size == node.children.size &&
+        weights.all { it > 0f } &&
+        abs(weights.sum() - 1f) <= WEIGHT_TOLERANCE
+    if (!valid) return rejected(DockRejection.InvalidWeights(split, weights))
+    return DockResult.Applied(copy(root = root.mapSplit(split) { it.copy(weights = weights) }))
+}
+
+private fun DockNode.mapSplit(id: DockNodeId, transform: (SplitNode) -> SplitNode): DockNode = when (this) {
+    is PanelGroup -> this
+    is SplitNode -> if (this.id == id) transform(this) else copy(children = children.map { it.mapSplit(id, transform) })
 }
 
 private fun DockLayout.addPanel(op: DockOperation.AddPanel, ids: DockIdGenerator): DockResult {

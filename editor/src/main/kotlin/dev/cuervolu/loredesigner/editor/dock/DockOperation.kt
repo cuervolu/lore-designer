@@ -38,6 +38,9 @@ sealed interface DockOperation {
         val side: DockSide,
         val share: Float = DockSplitPolicy.DEFAULT_SHARE,
     ) : DockOperation
+
+    /** Redistributes the space of [split] among its children, in order. Weights must be positive and sum to 1. */
+    data class SetWeights(val split: DockNodeId, val weights: List<Float>) : DockOperation
 }
 
 sealed interface DockRejection {
@@ -52,6 +55,10 @@ sealed interface DockRejection {
     data class KindMismatch(val panel: PanelId, val panelKind: PanelKind, val group: DockNodeId) : DockRejection
 
     data class InvalidShare(val share: Float) : DockRejection
+
+    data class UnknownSplit(val split: DockNodeId) : DockRejection
+
+    data class InvalidWeights(val split: DockNodeId, val weights: List<Float>) : DockRejection
 
     /** Splitting a group against its own edge with its only panel would just recreate the same group. */
     data class SelfSplit(val panel: PanelId, val group: DockNodeId) : DockRejection

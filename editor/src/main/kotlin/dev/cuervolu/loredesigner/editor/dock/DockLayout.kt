@@ -10,6 +10,8 @@ data class DockLayout(val root: DockNode, val panels: Map<PanelId, PanelKind>) {
 
     fun findGroup(id: DockNodeId): PanelGroup? = groups.firstOrNull { it.id == id }
 
+    fun findSplit(id: DockNodeId): SplitNode? = root.splits().firstOrNull { it.id == id }
+
     fun groupOf(panel: PanelId): PanelGroup? = groups.firstOrNull { panel in it.panels }
 
     fun validate(): List<DockViolation> = validateLayout(this)
@@ -34,4 +36,9 @@ data class DockLayout(val root: DockNode, val panels: Map<PanelId, PanelKind>) {
 internal fun DockNode.groups(): List<PanelGroup> = when (this) {
     is PanelGroup -> listOf(this)
     is SplitNode -> children.flatMap { it.groups() }
+}
+
+internal fun DockNode.splits(): List<SplitNode> = when (this) {
+    is PanelGroup -> emptyList()
+    is SplitNode -> listOf(this) + children.flatMap { it.splits() }
 }
