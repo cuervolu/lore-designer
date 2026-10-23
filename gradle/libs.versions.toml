@@ -71,6 +71,7 @@ nucleus-updater-runtime = { module = "dev.nucleusframework:nucleus.updater-runti
 nucleus-taskbar-progress-tao = { module = "dev.nucleusframework:nucleus.taskbar-progress-tao", version.ref = "nucleus" }
 nucleus-decorated-window-tao = { module = "dev.nucleusframework:nucleus.decorated-window-tao", version.ref = "nucleus" }
 nucleus-darkmode-detector = { module = "dev.nucleusframework:nucleus.darkmode-detector", version.ref = "nucleus" }
+nucleus-menu-macos = { module = "dev.nucleusframework:nucleus.menu-macos", version.ref = "nucleus" }
 nucleus-system-info = {module = "dev.nucleusframework:nucleus.system-info", version.ref = "nucleus"}
 
 

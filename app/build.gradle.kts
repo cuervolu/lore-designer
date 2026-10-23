@@ -126,6 +126,7 @@ dependencies {
     implementation(libs.nucleus.decorated.window.tao)
     implementation(libs.nucleus.darkmode.detector)
     implementation(libs.nucleus.core.runtime)
+    implementation(libs.nucleus.menu.macos)
     implementation(libs.koin.core)
     implementation(libs.filekit.core)
     implementation(libs.kotlinx.coroutines.swing)

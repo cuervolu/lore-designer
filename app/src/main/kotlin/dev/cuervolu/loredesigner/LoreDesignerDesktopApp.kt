@@ -20,20 +20,27 @@ import dev.cuervolu.loredesigner.resources.Res
 import dev.cuervolu.loredesigner.resources.app_icon
 import dev.cuervolu.loredesigner.system.DesktopProjectSystemActions
 import dev.cuervolu.loredesigner.ui.LoreDesignerApp
+import dev.cuervolu.loredesigner.ui.chrome.windowTitle
+import dev.cuervolu.loredesigner.ui.commands.commandShortcuts
 import dev.cuervolu.loredesigner.ui.i18n.ProvideAppLocale
 import dev.cuervolu.loredesigner.ui.launcher.LocalProjectSystemActions
+import dev.cuervolu.loredesigner.ui.session.rememberAppMenus
 import dev.cuervolu.loredesigner.ui.session.rememberAppSessionState
 import dev.cuervolu.loredesigner.ui.settings.data.ApplicationSettingsRepository
 import dev.cuervolu.loredesigner.ui.theme.LoreDesignerTheme
-import dev.cuervolu.loredesigner.window.LauncherWindowTitleBar
+import dev.cuervolu.loredesigner.window.AppWindowTitleBar
+import dev.cuervolu.loredesigner.window.NativeAppMenuBar
 import dev.nucleusframework.application.DecoratedWindow
 import dev.nucleusframework.application.NucleusApplicationScope
+import dev.nucleusframework.core.runtime.Platform
 import dev.nucleusframework.darkmodedetector.isSystemInDarkMode
 import dev.nucleusframework.window.NucleusDecoratedWindowTheme
 import dev.nucleusframework.window.WindowScaffold
 import dev.nucleusframework.window.tao.LocalWindowExceptionHandlerFactory
 import dev.nucleusframework.window.tao.WindowExceptionHandlerFactory
 import org.jetbrains.compose.resources.painterResource
+
+private const val APP_NAME = "Lore Designer"
 
 /**
  * Logs failures raised inside a window, then rethrows them so Nucleus still takes its fatal path
@@ -62,18 +69,31 @@ fun NucleusApplicationScope.LoreDesignerDesktopApp(
         loggingWindowExceptionHandlerFactory(logger.withTag(APP_TAG))
     }
 
+    // Hoisted above the window so the native menu bar, which lives at application scope, shares it.
+    val session = rememberAppSessionState()
+    val isMacOS = Platform.Current == Platform.MacOS
+    val title = windowTitle(document = null, project = session.activeWorkspace?.config?.name, appName = APP_NAME)
+
+    if (isMacOS) {
+        // Its own locale boundary: wrapping the window instead would recreate the window on a language change.
+        ProvideAppLocale(settings.language) {
+            NativeAppMenuBar(
+                menus = rememberAppMenus(session, onQuit = ::exitApplication, macOS = true),
+                appName = APP_NAME,
+            )
+        }
+    }
+
     NucleusDecoratedWindowTheme(isDark = darkTheme) {
         CompositionLocalProvider(LocalWindowExceptionHandlerFactory provides windowExceptionHandlerFactory) {
             DecoratedWindow(
                 onCloseRequest = ::exitApplication,
                 state = rememberWindowState(size = DpSize(1100.dp, 720.dp)),
-                title = "Lore Designer",
+                title = title.plain,
                 icon = painterResource(Res.drawable.app_icon),
                 minimumSize = DpSize(800.dp, 520.dp),
                 nativeContextMenu = true,
             ) {
-                // Created above the locale boundary so a language change keeps navigation and dialogs.
-                val session = rememberAppSessionState()
                 val clipboard = LocalClipboard.current
                 val systemActions = remember(clipboard) {
                     DesktopProjectSystemActions(folderOpener, clipboard, logger.withTag("System"))
@@ -81,10 +101,23 @@ fun NucleusApplicationScope.LoreDesignerDesktopApp(
                 CompositionLocalProvider(LocalProjectSystemActions provides systemActions) {
                     LoreDesignerTheme(darkTheme = darkTheme) {
                         ProvideAppLocale(settings.language) {
+                            val menus = rememberAppMenus(session, onQuit = ::exitApplication, macOS = isMacOS)
                             WindowScaffold(
-                                titleBar = { LauncherWindowTitleBar(onSettingsClick = session.settingsModal::open) },
+                                titleBar = {
+                                    AppWindowTitleBar(
+                                        onSettingsClick = session.settingsModal::open,
+                                        menus = menus,
+                                        workspace = session.activeWorkspace,
+                                        title = title,
+                                    )
+                                },
                             ) { contentPadding ->
-                                LoreDesignerApp(Modifier.padding(contentPadding), session = session)
+                                LoreDesignerApp(
+                                    modifier = Modifier
+                                        .padding(contentPadding)
+                                        .let { if (isMacOS) it else it.commandShortcuts(menus) },
+                                    session = session,
+                                )
                             }
                         }
                     }

@@ -14,6 +14,7 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.rememberNavBackStack
 import dev.cuervolu.loredesigner.ui.navigation.AppRoute
 import dev.cuervolu.loredesigner.ui.navigation.AppRouteSavedStateConfiguration
+import dev.cuervolu.loredesigner.ui.workspace.shell.WorkspaceShellState
 import dev.cuervolu.loredesigner.workspace.Workspace
 
 /** Whether the shared Settings modal is showing; any chrome (launcher, workspace) opens the same one. */
@@ -46,6 +47,22 @@ class SettingsModalState {
 @Stable
 class AppSessionState internal constructor(val backStack: NavBackStack<NavKey>) {
     var activeWorkspace: Workspace? by mutableStateOf(null)
+
+    /** Replaced whenever a workspace is opened or closed so each project starts with the default layout. */
+    var shell: WorkspaceShellState by mutableStateOf(WorkspaceShellState())
+        private set
+
+    fun openWorkspace(workspace: Workspace) {
+        activeWorkspace = workspace
+        shell = WorkspaceShellState()
+        backStack.add(AppRoute.Workspace(workspace.config.id.toString()))
+    }
+
+    fun closeWorkspace() {
+        activeWorkspace = null
+        shell = WorkspaceShellState()
+        backStack.removeAll { it is AppRoute.Workspace }
+    }
 
     val settingsModal = SettingsModalState()
 

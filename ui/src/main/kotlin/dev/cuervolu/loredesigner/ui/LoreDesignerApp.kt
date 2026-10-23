@@ -27,7 +27,7 @@ import dev.cuervolu.loredesigner.ui.settings.SettingsModal
 import dev.cuervolu.loredesigner.ui.settings.SettingsViewModelFactory
 import dev.cuervolu.loredesigner.ui.theme.LoreColors
 import dev.cuervolu.loredesigner.ui.theme.colors
-import dev.cuervolu.loredesigner.ui.workspace.WorkspacePlaceholder
+import dev.cuervolu.loredesigner.ui.workspace.shell.WorkspaceShell
 import dev.cuervolu.loredesigner.workspace.CreateWorkspace
 import dev.cuervolu.loredesigner.workspace.WorkspaceOpener
 import dev.cuervolu.loredesigner.workspace.recent.RecentWorkspacesRegistry
@@ -71,21 +71,16 @@ fun LoreDesignerApp(
                                 )
                             },
                             pickDirectory = pickDirectory,
-                            onWorkspaceOpened = { workspace ->
-                                session.activeWorkspace = workspace
-                                backStack.add(AppRoute.Workspace(workspace.config.id.toString()))
-                            },
+                            onWorkspaceOpened = session::openWorkspace,
                         )
                     }
                     entry<AppRoute.Workspace> { route ->
-                        WorkspacePlaceholder(
+                        WorkspaceShell(
                             workspace = session.activeWorkspace?.takeIf {
                                 it.config.id.toString() == route.workspaceId
                             },
-                            onClose = {
-                                session.activeWorkspace = null
-                                backStack.remove(route)
-                            },
+                            state = session.shell,
+                            onClose = session::closeWorkspace,
                         )
                     }
                 },

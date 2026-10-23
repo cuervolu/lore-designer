@@ -10,6 +10,7 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.doubleClick
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -22,7 +23,11 @@ import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.v2.runComposeUiTest
 import dev.cuervolu.loredesigner.core.settings.AppLanguage
 import dev.cuervolu.loredesigner.core.workspace.ProjectColor
-import dev.cuervolu.loredesigner.ui.chrome.LauncherTitleBar
+import dev.cuervolu.loredesigner.ui.chrome.AppMenuBar
+import dev.cuervolu.loredesigner.ui.chrome.AppTitleBar
+import dev.cuervolu.loredesigner.ui.chrome.TitleBarBrand
+import dev.cuervolu.loredesigner.ui.chrome.TitleBarSearchButton
+import dev.cuervolu.loredesigner.ui.chrome.TitleBarSettingsButton
 import dev.cuervolu.loredesigner.ui.i18n.ProvideAppLocale
 import dev.cuervolu.loredesigner.ui.launcher.FakeProjectSystemActions
 import dev.cuervolu.loredesigner.ui.launcher.FakeRecentWorkspacesRegistry
@@ -40,12 +45,16 @@ import dev.cuervolu.loredesigner.ui.resources.launcher_new_name_label
 import dev.cuervolu.loredesigner.ui.resources.launcher_new_submit
 import dev.cuervolu.loredesigner.ui.resources.launcher_open_path_label
 import dev.cuervolu.loredesigner.ui.resources.launcher_open_submit
+import dev.cuervolu.loredesigner.ui.resources.menu_close_project
+import dev.cuervolu.loredesigner.ui.resources.menu_file
+import dev.cuervolu.loredesigner.ui.resources.menu_settings
 import dev.cuervolu.loredesigner.ui.resources.settings_close
 import dev.cuervolu.loredesigner.ui.resources.settings_page_appearance
 import dev.cuervolu.loredesigner.ui.resources.settings_page_general
 import dev.cuervolu.loredesigner.ui.resources.settings_page_language
 import dev.cuervolu.loredesigner.ui.resources.titlebar_settings
-import dev.cuervolu.loredesigner.ui.resources.workspace_placeholder_close
+import dev.cuervolu.loredesigner.ui.resources.workspace_shell_status_no_document
+import dev.cuervolu.loredesigner.ui.session.rememberAppMenus
 import dev.cuervolu.loredesigner.ui.session.rememberAppSessionState
 import dev.cuervolu.loredesigner.ui.settings.SettingsTestHarness
 import dev.cuervolu.loredesigner.ui.theme.LoreDesignerTheme
@@ -82,7 +91,21 @@ class LoreDesignerAppTest {
             LoreDesignerTheme(darkTheme = false) {
                 ProvideAppLocale(appSettings.language) {
                     Column {
-                        LauncherTitleBar(onSettingsClick = session.settingsModal::open)
+                        val menus = rememberAppMenus(session, onQuit = {}, macOS = false)
+                        val inWorkspace = session.activeWorkspace != null
+                        AppTitleBar(
+                            brand = if (inWorkspace) null else ({ TitleBarBrand() }),
+                            menuBar = { AppMenuBar(menus) },
+                            actions = {
+                                if (inWorkspace) {
+                                    TitleBarSearchButton()
+                                } else {
+                                    TitleBarSettingsButton(
+                                        session.settingsModal::open,
+                                    )
+                                }
+                            },
+                        )
                         LoreDesignerApp(
                             session = session,
                             createWorkspace = store.createWorkspace(),
@@ -96,6 +119,16 @@ class LoreDesignerAppTest {
                 }
             }
         }
+    }
+
+    private suspend fun ComposeUiTest.closeProject() {
+        onNodeWithText(getString(Res.string.menu_file)).performClick()
+        onNodeWithText(getString(Res.string.menu_close_project)).performClick()
+    }
+
+    private suspend fun ComposeUiTest.openSettingsFromMenu() {
+        onNodeWithText(getString(Res.string.menu_file)).performClick()
+        onNodeWithText(getString(Res.string.menu_settings)).performClick()
     }
 
     private suspend fun ComposeUiTest.openProject() {
@@ -127,7 +160,8 @@ class LoreDesignerAppTest {
         openProject()
 
         val general = getString(Res.string.settings_page_general)
-        onNodeWithContentDescription(getString(Res.string.titlebar_settings)).performClick()
+        onAllNodesWithContentDescription(getString(Res.string.titlebar_settings)).assertCountEquals(0)
+        openSettingsFromMenu()
 
         waitUntil { onAllNodesWithText(general).fetchSemanticsNodes().isNotEmpty() }
         onNodeWithText("EMBERCOURT").assertExists()
@@ -138,18 +172,18 @@ class LoreDesignerAppTest {
         settings.repository.update { it.copy(language = AppLanguage.ENGLISH) }
         launchApp()
         openProject()
-        onNodeWithContentDescription(getString(Res.string.titlebar_settings)).performClick()
+        openSettingsFromMenu()
         onNodeWithText(getString(Res.string.settings_page_language)).performClick()
-        val englishClose = getString(Res.string.workspace_placeholder_close)
+        val englishClose = getString(Res.string.workspace_shell_status_no_document)
 
         settings.repository.update { it.copy(language = AppLanguage.SPANISH) }
         waitForIdle()
 
         val spanishLanguagePage = getString(Res.string.settings_page_language)
         assertEquals("es", Locale.getDefault().language)
-        assertNotEquals(englishClose, getString(Res.string.workspace_placeholder_close))
+        assertNotEquals(englishClose, getString(Res.string.workspace_shell_status_no_document))
         // The workspace is still open, the modal still shows the Language page, now in Spanish.
-        onNodeWithText(getString(Res.string.workspace_placeholder_close)).assertExists()
+        onNodeWithText(getString(Res.string.workspace_shell_status_no_document)).assertExists()
         onNodeWithText("Embercourt").assertExists()
         onAllNodesWithText(spanishLanguagePage).assertCountEquals(2)
         assertEquals(AppLanguage.SPANISH, settings.store.stored.language)
@@ -180,17 +214,17 @@ class LoreDesignerAppTest {
         waitUntil { onAllNodesWithText("Embercourt").fetchSemanticsNodes().isNotEmpty() }
         assertEquals(listOf("/worlds/Embercourt".toPath()), store.openedLocations)
 
-        onNodeWithText(getString(Res.string.workspace_placeholder_close)).performClick()
+        closeProject()
         waitUntil { onAllNodesWithText("/worlds/Embercourt").fetchSemanticsNodes().isNotEmpty() }
         onNodeWithText(getString(Res.string.launcher_empty_welcome_title)).assertDoesNotExist()
     }
 
     @Test
     fun `a closed project stays listed and reopens from the launcher`() = runComposeUiTest {
-        val close = getString(Res.string.workspace_placeholder_close)
+        val close = getString(Res.string.workspace_shell_status_no_document)
         launchApp()
         openProject()
-        onNodeWithText(close).performClick()
+        closeProject()
         waitUntil { onAllNodesWithText("/worlds/Embercourt").fetchSemanticsNodes().isNotEmpty() }
 
         onNodeWithText("/worlds/Embercourt").performMouseInput { doubleClick() }
@@ -210,7 +244,7 @@ class LoreDesignerAppTest {
 
         val message = getString(Res.string.launcher_error_not_a_workspace, "notes")
         waitUntil { onAllNodesWithText(message).fetchSemanticsNodes().isNotEmpty() }
-        onAllNodesWithText(getString(Res.string.workspace_placeholder_close)).fetchSemanticsNodes().let {
+        onAllNodesWithText(getString(Res.string.workspace_shell_status_no_document)).fetchSemanticsNodes().let {
             assertTrue(it.isEmpty(), "Navigated despite the failure")
         }
     }
@@ -243,7 +277,9 @@ class LoreDesignerAppTest {
 
         assertEquals(1, store.createdLocations.size)
         assertTrue(
-            onAllNodesWithText(getString(Res.string.workspace_placeholder_close)).fetchSemanticsNodes().isEmpty(),
+            onAllNodesWithText(
+                getString(Res.string.workspace_shell_status_no_document),
+            ).fetchSemanticsNodes().isEmpty(),
         )
     }
 
@@ -273,7 +309,9 @@ class LoreDesignerAppTest {
         waitUntil { onAllNodesWithText(message).fetchSemanticsNodes().isNotEmpty() }
         assertTrue(store.createdLocations.isEmpty())
         assertTrue(
-            onAllNodesWithText(getString(Res.string.workspace_placeholder_close)).fetchSemanticsNodes().isEmpty(),
+            onAllNodesWithText(
+                getString(Res.string.workspace_shell_status_no_document),
+            ).fetchSemanticsNodes().isEmpty(),
         )
     }
 
