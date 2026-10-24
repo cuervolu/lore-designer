@@ -1,6 +1,7 @@
 package dev.cuervolu.loredesigner.ui.workspace.shell.dock
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -23,6 +24,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,14 +34,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
@@ -77,8 +87,32 @@ fun DockHost(
     modifier: Modifier = Modifier,
 ) {
     val root = remember(state.layout, state.hidden) { state.layout.project(state.hidden) }
-    Box(modifier = modifier.background(Theme[colors][LoreColors.border])) {
-        DockNodeView(root, registry, viewEmpty, state)
+    val drag = remember(state) { DockDragState(state) }
+    val focus = remember { FocusRequester() }
+    var origin by remember { mutableStateOf(Offset.Zero) }
+    // A drag built on a layout that has since changed would point at groups that may no longer exist.
+    LaunchedEffect(state.layout, state.hidden) { drag.cancel() }
+    // Focus is only taken while a drag is running, to hear Escape, and is not held afterwards.
+    LaunchedEffect(drag.active) {
+        if (drag.active) runCatching { focus.requestFocus() }
+    }
+    Box(
+        modifier = modifier
+            .background(Theme[colors][LoreColors.border])
+            .onGloballyPositioned {
+                origin = it.positionInRoot()
+                drag.host = it
+            }
+            .onPreviewKeyEvent { event ->
+                val escape = drag.active && event.key == Key.Escape
+                if (escape && event.type == KeyEventType.KeyDown) drag.cancel()
+                escape
+            }
+            .focusRequester(focus)
+            .focusable(enabled = drag.active),
+    ) {
+        DockNodeView(root, registry, viewEmpty, state, drag)
+        DockDragOverlay(drag, registry, origin)
     }
 }
 
@@ -88,10 +122,11 @@ private fun DockNodeView(
     registry: PanelRegistry,
     viewEmpty: @Composable () -> Unit,
     state: WorkspaceDockState,
+    drag: DockDragState,
 ) {
     when (node) {
-        is RenderGroup -> DockGroupView(node, registry, viewEmpty, state::activate)
-        is RenderSplit -> DockSplitView(node, registry, viewEmpty, state)
+        is RenderGroup -> DockGroupView(node, registry, viewEmpty, state::activate, drag)
+        is RenderSplit -> DockSplitView(node, registry, viewEmpty, state, drag)
     }
 }
 
@@ -101,6 +136,7 @@ private fun DockSplitView(
     registry: PanelRegistry,
     viewEmpty: @Composable () -> Unit,
     state: WorkspaceDockState,
+    drag: DockDragState,
 ) {
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         val horizontal = split.orientation == DockOrientation.Horizontal
@@ -132,7 +168,7 @@ private fun DockSplitView(
                 Modifier.height(size).fillMaxWidth()
             }
             val dim = if (index == collapsing) Modifier.alpha(COLLAPSING_ALPHA) else Modifier
-            Box(sizeModifier.then(dim)) { DockNodeView(split.children[index], registry, viewEmpty, state) }
+            Box(sizeModifier.then(dim)) { DockNodeView(split.children[index], registry, viewEmpty, state, drag) }
         }
         if (horizontal) {
             Row(Modifier.fillMaxSize(), Arrangement.spacedBy(DockSeparator)) { shown.forEach { content(it) } }
@@ -294,18 +330,22 @@ private fun DockGroupView(
     registry: PanelRegistry,
     viewEmpty: @Composable () -> Unit,
     onActivate: (PanelId) -> Unit,
+    drag: DockDragState,
 ) {
+    val tracking = Modifier.testTag("dock-group-${group.id.value}").trackGroup(drag, group.id)
     val displayed = group.displayed?.let { registry[it] }
     val editorSurface = displayed?.editorSurface ?: (displayed == null)
     val surface = if (editorSurface) LoreColors.surfaceEditor else LoreColors.surface
     if (displayed == null) {
-        Box(Modifier.fillMaxSize().background(Theme[colors][surface])) { viewEmpty() }
+        Box(tracking.fillMaxSize().background(Theme[colors][surface])) { viewEmpty() }
         return
     }
     val borderColor = Theme[colors][LoreColors.borderSubtle]
-    Column(Modifier.fillMaxSize().background(Theme[colors][surface])) {
+    Column(tracking.fillMaxSize().background(Theme[colors][surface])) {
         Row(
             modifier = Modifier
+                .testTag("dock-tabbar-${group.id.value}")
+                .trackTabBar(drag, group.id)
                 .fillMaxWidth()
                 .height(Theme[sizes][LoreSizes.controlHeight])
                 .drawBehind {
@@ -319,11 +359,27 @@ private fun DockGroupView(
                 Row(horizontalArrangement = Arrangement.spacedBy(Theme[spacing][LoreSpacing.space1])) {
                     group.tabs.forEach { panel ->
                         val spec = registry[panel] ?: return@forEach
-                        DockTab(spec.label(), selected = panel == group.displayed, onClick = { onActivate(panel) })
+                        DockTab(
+                            label = spec.label(),
+                            selected = panel == group.displayed,
+                            onClick = { onActivate(panel) },
+                            modifier = Modifier
+                                .testTag("dock-tab-${panel.value}")
+                                .alpha(if (drag.dragged == panel) DRAG_SOURCE_ALPHA else 1f),
+                            dragSource = Modifier.dockDragSource(group.id, panel, drag),
+                        )
                     }
                 }
             } else {
-                displayed.header?.invoke() ?: PanelTitle(displayed.label())
+                val panel = checkNotNull(group.displayed)
+                Box(
+                    Modifier
+                        .testTag("dock-tab-${panel.value}")
+                        .alpha(if (drag.dragged == panel) DRAG_SOURCE_ALPHA else 1f)
+                        .dockDragSource(group.id, panel, drag),
+                ) {
+                    displayed.header?.invoke() ?: PanelTitle(displayed.label())
+                }
             }
         }
         Box(Modifier.weight(1f).fillMaxWidth()) { displayed.content() }
@@ -341,7 +397,7 @@ fun PanelTitle(text: String) {
 }
 
 @Composable
-private fun DockTab(label: String, selected: Boolean, onClick: () -> Unit) {
+private fun DockTab(label: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier, dragSource: Modifier) {
     val interactionSource = remember { MutableInteractionSource() }
     val hovered by interactionSource.collectIsHoveredAsState()
     val background = when {
@@ -355,7 +411,7 @@ private fun DockTab(label: String, selected: Boolean, onClick: () -> Unit) {
         color = if (selected) Theme[colors][LoreColors.accent] else Theme[colors][LoreColors.textSecondary],
         singleLine = true,
         overflow = TextOverflow.Ellipsis,
-        modifier = Modifier
+        modifier = modifier
             .height(Theme[sizes][LoreSizes.controlHeightSmall])
             .background(background, Theme[shapes][LoreShapes.control])
             .selectable(
@@ -365,6 +421,7 @@ private fun DockTab(label: String, selected: Boolean, onClick: () -> Unit) {
                 interactionSource = interactionSource,
                 indication = null,
             )
+            .then(dragSource)
             .padding(horizontal = Theme[spacing][LoreSpacing.space4])
             .wrapContentHeight(),
     )

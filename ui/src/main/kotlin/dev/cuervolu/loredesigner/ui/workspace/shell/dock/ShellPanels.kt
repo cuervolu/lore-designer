@@ -1,6 +1,7 @@
 package dev.cuervolu.loredesigner.ui.workspace.shell.dock
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import dev.cuervolu.loredesigner.editor.dock.DockOrientation
 import dev.cuervolu.loredesigner.editor.dock.PanelId
@@ -36,6 +37,7 @@ class DockPanelSpec(
     val sizing: PanelSizing,
     val header: (@Composable () -> Unit)? = null,
     val editorSurface: Boolean = false,
+    val icon: ImageVector? = null,
 )
 
 typealias PanelRegistry = Map<PanelId, DockPanelSpec>

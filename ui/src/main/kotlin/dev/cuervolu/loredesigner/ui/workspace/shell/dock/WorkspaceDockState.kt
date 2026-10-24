@@ -105,6 +105,31 @@ class WorkspaceDockState(
         }
     }
 
+    /**
+     * Moves [panel] to [target] through the Docking Core and reveals it. The layout is left untouched when the core
+     * rejects the move. Returns whether it was applied.
+     */
+    fun move(panel: PanelId, target: DockTarget): Boolean =
+        when (val result = layout.apply(DockOperation.Move(panel, target))) {
+            is DockResult.Applied -> {
+                layout = result.layout
+                setVisible(panel, true)
+                val alive = result.layout.root.nodeIds()
+                sizeOverrides = sizeOverrides.filterKeys { it in alive }
+                true
+            }
+
+            is DockResult.Rejected -> {
+                logger.w { "Cannot move $panel to $target: ${result.reason}" }
+                false
+            }
+        }
+
+    private fun DockNode.nodeIds(): Set<DockNodeId> = when (this) {
+        is SplitNode -> children.flatMapTo(mutableSetOf(id)) { it.nodeIds() }
+        else -> setOf(id)
+    }
+
     private fun DockNode.contains(id: DockNodeId): Boolean = this.id == id ||
         (this is SplitNode && children.any { it.contains(id) })
 

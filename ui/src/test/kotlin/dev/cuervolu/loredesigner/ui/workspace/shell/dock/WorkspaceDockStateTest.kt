@@ -12,6 +12,7 @@ import dev.cuervolu.loredesigner.editor.dock.SplitNode
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 class WorkspaceDockStateTest {
@@ -148,5 +149,65 @@ class WorkspaceDockStateTest {
                 .layout
         }
         return WorkspaceDockState(layout, initiallyHidden = emptySet())
+    }
+
+    private fun withExtraTool(): Triple<WorkspaceDockState, PanelId, DockLayout> {
+        val extra = PanelId("extra")
+        val base = WorkspaceDockState.defaultLayout()
+        val explorer = checkNotNull(base.groupOf(ShellPanels.Explorer)).id
+        val layout = (
+            base.apply(
+                DockOperation.AddPanel(extra, PanelKind.Tool, DockTarget.Tab(explorer)),
+            ) as DockResult.Applied
+            )
+            .layout
+        return Triple(WorkspaceDockState(layout), extra, layout)
+    }
+
+    @Test
+    fun `moving a panel to another group keeps the catalog, activates it and keeps the tree valid`() {
+        val (state, extra, before) = withExtraTool()
+        val target = checkNotNull(before.groupOf(ShellPanels.Properties)).id
+
+        assertTrue(state.move(extra, DockTarget.Tab(target, 0)))
+
+        assertEquals(before.panels, state.layout.panels)
+        assertEquals(listOf(extra, ShellPanels.Properties), state.layout.findGroup(target)?.panels)
+        assertEquals(extra, state.layout.findGroup(target)?.activePanel)
+        assertEquals(listOf(ShellPanels.Explorer), state.layout.groupOf(ShellPanels.Explorer)?.panels)
+        assertEquals(emptyList(), state.layout.validate())
+    }
+
+    @Test
+    fun `a rejected move leaves the very same layout in place`() {
+        val (state, extra, before) = withExtraTool()
+        val view = checkNotNull(before.groups.single { it.kind == PanelKind.View }).id
+
+        assertFalse(state.move(extra, DockTarget.Tab(view)))
+
+        assertSame(before, state.layout)
+    }
+
+    @Test
+    fun `moving a hidden panel reveals it`() {
+        val (state, extra, before) = withExtraTool()
+        state.hide(setOf(extra))
+
+        state.move(extra, DockTarget.Tab(checkNotNull(before.groupOf(ShellPanels.Properties)).id))
+
+        assertTrue(state.isVisible(extra))
+    }
+
+    @Test
+    fun `moving the last panel out of a group drops the size override of the group that disappeared`() {
+        val (state, _, before) = withExtraTool()
+        val properties = checkNotNull(before.groupOf(ShellPanels.Properties)).id
+        val explorer = checkNotNull(before.groupOf(ShellPanels.Explorer)).id
+        state.resizeFixed(properties, 320.dp)
+        state.resizeFixed(explorer, 280.dp)
+
+        state.move(ShellPanels.Properties, DockTarget.Tab(explorer))
+
+        assertEquals(mapOf(explorer to 280.dp), state.sizeOverrides)
     }
 }

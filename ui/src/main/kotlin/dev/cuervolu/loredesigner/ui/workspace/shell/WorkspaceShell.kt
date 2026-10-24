@@ -120,17 +120,20 @@ private fun shellPanelRegistry(
         content = explorer,
         sizing = ShellPanels.Sizing.getValue(ShellPanels.Explorer),
         header = explorerTitle,
+        icon = Lucide.PanelLeft,
     ),
     ShellPanels.Properties to DockPanelSpec(
         label = { stringResource(Res.string.workspace_shell_properties_title) },
         content = properties,
         sizing = ShellPanels.Sizing.getValue(ShellPanels.Properties),
+        icon = Lucide.PanelRight,
     ),
     ShellPanels.Log to DockPanelSpec(
         label = { stringResource(Res.string.workspace_shell_log_title) },
         content = bottomPanel,
         sizing = ShellPanels.Sizing.getValue(ShellPanels.Log),
         editorSurface = true,
+        icon = Lucide.PanelBottom,
     ),
 )
 
