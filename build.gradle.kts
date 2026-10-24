@@ -1,3 +1,5 @@
+import kotlinx.kover.gradle.plugin.dsl.KoverProjectExtension
+
 plugins {
     alias(libs.plugins.compose.compiler) apply false
     alias(libs.plugins.compose.multiplatform) apply false
@@ -15,6 +17,25 @@ plugins {
 allprojects {
     group = "dev.cuervolu"
     version = "0.1.0"
+
+    // Each project filters its own report; the root report aggregates them under the root's filters.
+    plugins.withId("org.jetbrains.kotlinx.kover") {
+        extensions.configure<KoverProjectExtension> {
+            reports {
+                filters {
+                    excludes {
+                        // Compose Resources generates a Res class and per-file accessors in every module.
+                        packages(
+                            "dev.cuervolu.loredesigner.resources",
+                            "dev.cuervolu.loredesigner.ui.resources",
+                        )
+                        // Compiler-generated holders for hoisted composable lambdas.
+                        classes("*.ComposableSingletons\$*")
+                    }
+                }
+            }
+        }
+    }
 }
 
 spotless {

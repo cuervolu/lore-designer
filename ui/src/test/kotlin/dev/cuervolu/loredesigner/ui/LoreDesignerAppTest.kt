@@ -1,15 +1,10 @@
 package dev.cuervolu.loredesigner.ui
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.doubleClick
 import androidx.compose.ui.test.hasContentDescription
-import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
@@ -19,47 +14,25 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.performMouseInput
-import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.v2.runComposeUiTest
 import dev.cuervolu.loredesigner.core.settings.AppLanguage
 import dev.cuervolu.loredesigner.core.workspace.ProjectColor
-import dev.cuervolu.loredesigner.ui.chrome.AppMenuBar
-import dev.cuervolu.loredesigner.ui.chrome.AppTitleBar
-import dev.cuervolu.loredesigner.ui.chrome.TitleBarBrand
-import dev.cuervolu.loredesigner.ui.chrome.TitleBarSearchButton
-import dev.cuervolu.loredesigner.ui.chrome.TitleBarSettingsButton
-import dev.cuervolu.loredesigner.ui.i18n.ProvideAppLocale
-import dev.cuervolu.loredesigner.ui.launcher.FakeProjectSystemActions
-import dev.cuervolu.loredesigner.ui.launcher.FakeRecentWorkspacesRegistry
 import dev.cuervolu.loredesigner.ui.resources.Res
-import dev.cuervolu.loredesigner.ui.resources.launcher_action_new
-import dev.cuervolu.loredesigner.ui.resources.launcher_action_open
 import dev.cuervolu.loredesigner.ui.resources.launcher_browse
 import dev.cuervolu.loredesigner.ui.resources.launcher_color_green
 import dev.cuervolu.loredesigner.ui.resources.launcher_empty_welcome_title
+import dev.cuervolu.loredesigner.ui.resources.launcher_error_destination_not_empty
 import dev.cuervolu.loredesigner.ui.resources.launcher_error_invalid_name
 import dev.cuervolu.loredesigner.ui.resources.launcher_error_missing_location
 import dev.cuervolu.loredesigner.ui.resources.launcher_error_not_a_workspace
-import dev.cuervolu.loredesigner.ui.resources.launcher_new_location_label
 import dev.cuervolu.loredesigner.ui.resources.launcher_new_name_label
-import dev.cuervolu.loredesigner.ui.resources.launcher_new_submit
-import dev.cuervolu.loredesigner.ui.resources.launcher_open_path_label
-import dev.cuervolu.loredesigner.ui.resources.launcher_open_submit
-import dev.cuervolu.loredesigner.ui.resources.menu_close_project
-import dev.cuervolu.loredesigner.ui.resources.menu_file
-import dev.cuervolu.loredesigner.ui.resources.menu_settings
 import dev.cuervolu.loredesigner.ui.resources.settings_close
 import dev.cuervolu.loredesigner.ui.resources.settings_page_appearance
 import dev.cuervolu.loredesigner.ui.resources.settings_page_general
 import dev.cuervolu.loredesigner.ui.resources.settings_page_language
 import dev.cuervolu.loredesigner.ui.resources.titlebar_settings
 import dev.cuervolu.loredesigner.ui.resources.workspace_shell_status_no_document
-import dev.cuervolu.loredesigner.ui.session.rememberAppMenus
-import dev.cuervolu.loredesigner.ui.session.rememberAppSessionState
-import dev.cuervolu.loredesigner.ui.settings.SettingsTestHarness
-import dev.cuervolu.loredesigner.ui.theme.LoreDesignerTheme
 import dev.cuervolu.loredesigner.workspace.WorkspaceError
-import okio.Path
 import okio.Path.Companion.toPath
 import org.jetbrains.compose.resources.getString
 import java.util.Locale
@@ -74,256 +47,182 @@ private val originalLocale: Locale = Locale.getDefault()
 
 @OptIn(ExperimentalTestApi::class)
 class LoreDesignerAppTest {
-    private val settings = SettingsTestHarness()
-    private val store = settings.workspaceStore
-    private val registry = FakeRecentWorkspacesRegistry()
+    private val app = AppTestHarness()
+    private val settings = app.settings
+    private val store = app.store
 
     @AfterTest
-    fun restoreLocale() {
+    fun tearDown() {
+        app.close()
         Locale.setDefault(originalLocale)
-    }
-
-    /** Mirrors the desktop composition: session state above the locale boundary, localized UI below. */
-    private fun ComposeUiTest.launchApp(pickedDirectory: Path? = null) {
-        setContent {
-            val appSettings by settings.repository.settings.collectAsState()
-            val session = rememberAppSessionState()
-            LoreDesignerTheme(darkTheme = false) {
-                ProvideAppLocale(appSettings.language) {
-                    Column {
-                        val menus = rememberAppMenus(session, onQuit = {}, macOS = false)
-                        val inWorkspace = session.activeWorkspace != null
-                        AppTitleBar(
-                            brand = if (inWorkspace) null else ({ TitleBarBrand() }),
-                            menuBar = { AppMenuBar(menus) },
-                            actions = {
-                                if (inWorkspace) {
-                                    TitleBarSearchButton()
-                                } else {
-                                    TitleBarSettingsButton(
-                                        session.settingsModal::open,
-                                    )
-                                }
-                            },
-                        )
-                        LoreDesignerApp(
-                            session = session,
-                            createWorkspace = store.createWorkspace(),
-                            workspaceOpener = store.opener(registry),
-                            recentWorkspaces = registry,
-                            settingsViewModelFactory = settings.factory,
-                            pickDirectory = { pickedDirectory },
-                            projectSystemActions = FakeProjectSystemActions(),
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-    private suspend fun ComposeUiTest.closeProject() {
-        onNodeWithText(getString(Res.string.menu_file)).performClick()
-        onNodeWithText(getString(Res.string.menu_close_project)).performClick()
-    }
-
-    private suspend fun ComposeUiTest.openSettingsFromMenu() {
-        onNodeWithText(getString(Res.string.menu_file)).performClick()
-        onNodeWithText(getString(Res.string.menu_settings)).performClick()
-    }
-
-    private suspend fun ComposeUiTest.openProject() {
-        onAllNodesWithText(getString(Res.string.launcher_action_open)).onFirst().performClick()
-        onNodeWithContentDescription(
-            getString(Res.string.launcher_open_path_label),
-        ).performTextInput("/worlds/Embercourt")
-        onNodeWithText(getString(Res.string.launcher_open_submit)).performClick()
-        waitUntil { onAllNodesWithText("Embercourt").fetchSemanticsNodes().isNotEmpty() }
     }
 
     @Test
     fun `settings button on the launcher opens the modal without project settings`() = runComposeUiTest {
-        launchApp()
+        with(app) { launch() }
 
         val appearance = getString(Res.string.settings_page_appearance)
         onNodeWithContentDescription(getString(Res.string.titlebar_settings)).performClick()
 
-        waitUntil { onAllNodesWithText(appearance).fetchSemanticsNodes().isNotEmpty() }
+        waitForText(appearance)
         onAllNodesWithText(getString(Res.string.settings_page_general)).assertCountEquals(0)
 
         onNodeWithContentDescription(getString(Res.string.settings_close)).performClick()
-        waitUntil { onAllNodesWithText(appearance).fetchSemanticsNodes().isEmpty() }
+        waitUntilTextGone(appearance)
     }
 
     @Test
     fun `settings opened from a workspace include project settings`() = runComposeUiTest {
-        launchApp()
-        openProject()
+        with(app) { launch() }
+        openProjectFromLauncher("/worlds/Embercourt")
+        waitForText("Embercourt")
 
-        val general = getString(Res.string.settings_page_general)
         onAllNodesWithContentDescription(getString(Res.string.titlebar_settings)).assertCountEquals(0)
         openSettingsFromMenu()
 
-        waitUntil { onAllNodesWithText(general).fetchSemanticsNodes().isNotEmpty() }
+        waitForText(getString(Res.string.settings_page_general))
         onNodeWithText("EMBERCOURT").assertExists()
     }
 
     @Test
     fun `changing the language relocalizes live and keeps the session`() = runComposeUiTest {
         settings.repository.update { it.copy(language = AppLanguage.ENGLISH) }
-        launchApp()
-        openProject()
+        with(app) { launch() }
+        openProjectFromLauncher("/worlds/Embercourt")
+        waitForText("Embercourt")
         openSettingsFromMenu()
         onNodeWithText(getString(Res.string.settings_page_language)).performClick()
-        val englishClose = getString(Res.string.workspace_shell_status_no_document)
+        val englishStatus = getString(Res.string.workspace_shell_status_no_document)
 
         settings.repository.update { it.copy(language = AppLanguage.SPANISH) }
         waitForIdle()
 
-        val spanishLanguagePage = getString(Res.string.settings_page_language)
+        val spanishStatus = getString(Res.string.workspace_shell_status_no_document)
         assertEquals("es", Locale.getDefault().language)
-        assertNotEquals(englishClose, getString(Res.string.workspace_shell_status_no_document))
+        assertNotEquals(englishStatus, spanishStatus)
         // The workspace is still open, the modal still shows the Language page, now in Spanish.
-        onNodeWithText(getString(Res.string.workspace_shell_status_no_document)).assertExists()
-        onNodeWithText("Embercourt").assertExists()
-        onAllNodesWithText(spanishLanguagePage).assertCountEquals(2)
+        assertOnWorkspace("Embercourt")
+        onAllNodesWithText(getString(Res.string.settings_page_language)).assertCountEquals(2)
         assertEquals(AppLanguage.SPANISH, settings.store.stored.language)
 
         settings.repository.update { it.copy(language = AppLanguage.ENGLISH) }
         waitForIdle()
 
-        onNodeWithText(englishClose).assertExists()
+        onNodeWithText(englishStatus).assertExists()
+        onAllNodesWithText(spanishStatus).assertCountEquals(0)
     }
 
     @Test
     fun `launcher is the initial destination`() = runComposeUiTest {
-        launchApp()
+        with(app) { launch() }
 
         onNodeWithText(getString(Res.string.launcher_empty_welcome_title)).assertExists()
+        assertOnLauncher()
     }
 
     @Test
     fun `opening a project navigates to the workspace and closing returns`() = runComposeUiTest {
-        launchApp()
+        with(app) { launch() }
 
-        onAllNodesWithText(getString(Res.string.launcher_action_open)).onFirst().performClick()
-        onNodeWithContentDescription(
-            getString(Res.string.launcher_open_path_label),
-        ).performTextInput("/worlds/Embercourt")
-        onNodeWithText(getString(Res.string.launcher_open_submit)).performClick()
+        openProjectFromLauncher("/worlds/Embercourt")
 
-        waitUntil { onAllNodesWithText("Embercourt").fetchSemanticsNodes().isNotEmpty() }
+        waitForText("Embercourt")
+        assertOnWorkspace("Embercourt")
         assertEquals(listOf("/worlds/Embercourt".toPath()), store.openedLocations)
 
-        closeProject()
-        waitUntil { onAllNodesWithText("/worlds/Embercourt").fetchSemanticsNodes().isNotEmpty() }
+        closeProjectFromMenu()
+
+        waitForText("/worlds/Embercourt")
+        assertOnLauncher()
         onNodeWithText(getString(Res.string.launcher_empty_welcome_title)).assertDoesNotExist()
     }
 
     @Test
     fun `a closed project stays listed and reopens from the launcher`() = runComposeUiTest {
-        val close = getString(Res.string.workspace_shell_status_no_document)
-        launchApp()
-        openProject()
-        closeProject()
-        waitUntil { onAllNodesWithText("/worlds/Embercourt").fetchSemanticsNodes().isNotEmpty() }
+        with(app) { launch() }
+        openProjectFromLauncher("/worlds/Embercourt")
+        waitForText("Embercourt")
+        closeProjectFromMenu()
+        waitForText("/worlds/Embercourt")
 
         onNodeWithText("/worlds/Embercourt").performMouseInput { doubleClick() }
 
-        waitUntil { onAllNodesWithText(close).fetchSemanticsNodes().isNotEmpty() }
+        waitForText(getString(Res.string.workspace_shell_status_no_document))
+        assertOnWorkspace("Embercourt")
         assertEquals(List(2) { "/worlds/Embercourt".toPath() }, store.openedLocations)
     }
 
     @Test
     fun `failed open stays on the launcher with a message`() = runComposeUiTest {
         store.openError = WorkspaceError.NotAWorkspace("/tmp/notes".toPath())
-        launchApp()
+        with(app) { launch() }
 
-        onAllNodesWithText(getString(Res.string.launcher_action_open)).onFirst().performClick()
-        onNodeWithContentDescription(getString(Res.string.launcher_open_path_label)).performTextInput("/tmp/notes")
-        onNodeWithText(getString(Res.string.launcher_open_submit)).performClick()
+        openProjectFromLauncher("/tmp/notes")
 
-        val message = getString(Res.string.launcher_error_not_a_workspace, "notes")
-        waitUntil { onAllNodesWithText(message).fetchSemanticsNodes().isNotEmpty() }
-        onAllNodesWithText(getString(Res.string.workspace_shell_status_no_document)).fetchSemanticsNodes().let {
-            assertTrue(it.isEmpty(), "Navigated despite the failure")
-        }
+        waitForText(getString(Res.string.launcher_error_not_a_workspace, "notes"))
+        assertOnLauncher()
+        assertEquals(listOf("/tmp/notes".toPath()), store.openedLocations)
+        assertTrue(app.registry.workspaces.value.isEmpty(), "A failed open must not be remembered")
     }
 
     @Test
     fun `creating a project with a browsed location navigates to the workspace`() = runComposeUiTest {
-        launchApp(pickedDirectory = "/worlds".toPath())
+        with(app) { launch(pickedDirectory = "/worlds".toPath()) }
 
-        onAllNodesWithText(getString(Res.string.launcher_action_new)).onFirst().performClick()
-        onNodeWithContentDescription(getString(Res.string.launcher_new_name_label)).performTextInput("Thistlewood")
-        onNodeWithText(getString(Res.string.launcher_new_location_label)).assertExists()
+        fillNewProject("Thistlewood")
         onAllNodesWithText(getString(Res.string.launcher_browse)).onFirst().performClick()
         waitForIdle()
-        onNodeWithText(getString(Res.string.launcher_new_submit)).performClick()
+        submitNewProject()
 
-        waitUntil { onAllNodes(hasText("Thistlewood")).fetchSemanticsNodes().isNotEmpty() }
+        waitForText(getString(Res.string.workspace_shell_status_no_document))
+        assertOnWorkspace("Thistlewood")
         assertEquals(listOf("/worlds/Thistlewood".toPath()), store.createdLocations)
     }
 
     @Test
-    fun `failed create does not navigate`() = runComposeUiTest {
+    fun `failed create shows a message and does not navigate`() = runComposeUiTest {
         store.createError = WorkspaceError.DestinationNotEmpty("/worlds/Thistlewood".toPath())
-        launchApp()
+        with(app) { launch() }
 
-        onAllNodesWithText(getString(Res.string.launcher_action_new)).onFirst().performClick()
-        onNodeWithContentDescription(getString(Res.string.launcher_new_name_label)).performTextInput("Thistlewood")
-        onNodeWithContentDescription(getString(Res.string.launcher_new_location_label)).performTextInput("/worlds")
-        onNodeWithText(getString(Res.string.launcher_new_submit)).performClick()
-        waitForIdle()
+        fillNewProject("Thistlewood", location = "/worlds")
+        submitNewProject()
 
+        waitForText(getString(Res.string.launcher_error_destination_not_empty, "Thistlewood"))
+        assertOnLauncher()
         assertEquals(1, store.createdLocations.size)
-        assertTrue(
-            onAllNodesWithText(
-                getString(Res.string.workspace_shell_status_no_document),
-            ).fetchSemanticsNodes().isEmpty(),
-        )
     }
 
     @Test
     fun `creating without a location shows a message and does not touch storage`() = runComposeUiTest {
-        launchApp()
+        with(app) { launch() }
 
-        onAllNodesWithText(getString(Res.string.launcher_action_new)).onFirst().performClick()
-        onNodeWithContentDescription(getString(Res.string.launcher_new_name_label)).performTextInput("Thistlewood")
-        onNodeWithText(getString(Res.string.launcher_new_submit)).performClick()
+        fillNewProject("Thistlewood")
+        submitNewProject()
 
-        val message = getString(Res.string.launcher_error_missing_location)
-        waitUntil { onAllNodesWithText(message).fetchSemanticsNodes().isNotEmpty() }
+        waitForText(getString(Res.string.launcher_error_missing_location))
+        assertOnLauncher()
         assertTrue(store.createdLocations.isEmpty())
     }
 
     @Test
     fun `creating with an invalid name shows a message and stays on the launcher`() = runComposeUiTest {
-        launchApp()
+        with(app) { launch() }
 
-        onAllNodesWithText(getString(Res.string.launcher_action_new)).onFirst().performClick()
-        onNodeWithContentDescription(getString(Res.string.launcher_new_name_label)).performTextInput("a/b")
-        onNodeWithContentDescription(getString(Res.string.launcher_new_location_label)).performTextInput("/worlds")
-        onNodeWithText(getString(Res.string.launcher_new_submit)).performClick()
+        fillNewProject("a/b", location = "/worlds")
+        submitNewProject()
 
-        val message = getString(Res.string.launcher_error_invalid_name)
-        waitUntil { onAllNodesWithText(message).fetchSemanticsNodes().isNotEmpty() }
+        waitForText(getString(Res.string.launcher_error_invalid_name))
+        assertOnLauncher()
         assertTrue(store.createdLocations.isEmpty())
-        assertTrue(
-            onAllNodesWithText(
-                getString(Res.string.workspace_shell_status_no_document),
-            ).fetchSemanticsNodes().isEmpty(),
-        )
     }
 
     @Test
     fun `the selected color is saved with the new project`() = runComposeUiTest {
-        launchApp()
+        with(app) { launch() }
 
-        onAllNodesWithText(getString(Res.string.launcher_action_new)).onFirst().performClick()
-        onNodeWithContentDescription(getString(Res.string.launcher_new_name_label)).performTextInput("Thistlewood")
-        onNodeWithContentDescription(getString(Res.string.launcher_new_location_label)).performTextInput("/worlds")
+        fillNewProject("Thistlewood", location = "/worlds")
         onNodeWithContentDescription(getString(Res.string.launcher_color_green)).performClick()
-        onNodeWithText(getString(Res.string.launcher_new_submit)).performClick()
+        submitNewProject()
 
         waitUntil { store.createdConfigs.isNotEmpty() }
         assertEquals(ProjectColor.GREEN, store.createdConfigs.single().color)
@@ -331,14 +230,12 @@ class LoreDesignerAppTest {
 
     @Test
     fun `cancelling the folder picker keeps the typed location`() = runComposeUiTest {
-        launchApp(pickedDirectory = null)
+        with(app) { launch(pickedDirectory = null) }
 
-        onAllNodesWithText(getString(Res.string.launcher_action_new)).onFirst().performClick()
-        onNodeWithContentDescription(getString(Res.string.launcher_new_name_label)).performTextInput("Thistlewood")
-        onNodeWithContentDescription(getString(Res.string.launcher_new_location_label)).performTextInput("/worlds")
+        fillNewProject("Thistlewood", location = "/worlds")
         onAllNodesWithText(getString(Res.string.launcher_browse)).onFirst().performClick()
         waitForIdle()
-        onNodeWithText(getString(Res.string.launcher_new_submit)).performClick()
+        submitNewProject()
 
         waitUntil { store.createdLocations.isNotEmpty() }
         assertEquals(listOf("/worlds/Thistlewood".toPath()), store.createdLocations)
@@ -347,7 +244,7 @@ class LoreDesignerAppTest {
     @Test
     fun `ctrl+n opens the new project dialog`() = runComposeUiTest {
         val nameLabel = getString(Res.string.launcher_new_name_label)
-        launchApp()
+        with(app) { launch() }
         waitForIdle()
 
         onRoot().performKeyInput {
@@ -357,8 +254,22 @@ class LoreDesignerAppTest {
             keyUp(Key.CtrlLeft)
         }
 
-        waitUntil {
-            onAllNodes(hasContentDescription(nameLabel)).fetchSemanticsNodes().isNotEmpty()
+        waitUntil { onAllNodes(hasContentDescription(nameLabel)).fetchSemanticsNodes().isNotEmpty() }
+    }
+
+    @Test
+    fun `ctrl+comma opens settings through the window shortcuts`() = runComposeUiTest {
+        with(app) { launch() }
+        val appearance = getString(Res.string.settings_page_appearance)
+
+        onRoot().performKeyInput {
+            keyDown(Key.CtrlLeft)
+            keyDown(Key.Comma)
+            keyUp(Key.Comma)
+            keyUp(Key.CtrlLeft)
         }
+        waitForText(appearance)
+        onNodeWithContentDescription(getString(Res.string.settings_close)).performClick()
+        waitUntilTextGone(appearance)
     }
 }

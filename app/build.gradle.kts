@@ -131,5 +131,7 @@ dependencies {
     implementation(libs.filekit.core)
     implementation(libs.kotlinx.coroutines.swing)
     testImplementation(libs.koin.test)
+    testImplementation(libs.compose.ui.test)
+    testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(kotlin("test"))
 }

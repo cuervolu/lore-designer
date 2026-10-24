@@ -1,6 +1,6 @@
 package dev.cuervolu.loredesigner
 
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
@@ -19,25 +19,26 @@ import dev.cuervolu.loredesigner.platform.system.DesktopFolderOpener
 import dev.cuervolu.loredesigner.resources.Res
 import dev.cuervolu.loredesigner.resources.app_icon
 import dev.cuervolu.loredesigner.system.DesktopProjectSystemActions
-import dev.cuervolu.loredesigner.ui.LoreDesignerApp
+import dev.cuervolu.loredesigner.ui.LoreDesignerWindowContent
+import dev.cuervolu.loredesigner.ui.WindowChrome
 import dev.cuervolu.loredesigner.ui.chrome.windowTitle
-import dev.cuervolu.loredesigner.ui.commands.commandShortcuts
 import dev.cuervolu.loredesigner.ui.i18n.ProvideAppLocale
 import dev.cuervolu.loredesigner.ui.launcher.LocalProjectSystemActions
 import dev.cuervolu.loredesigner.ui.session.rememberAppMenus
 import dev.cuervolu.loredesigner.ui.session.rememberAppSessionState
 import dev.cuervolu.loredesigner.ui.settings.data.ApplicationSettingsRepository
-import dev.cuervolu.loredesigner.ui.theme.LoreDesignerTheme
-import dev.cuervolu.loredesigner.window.AppWindowTitleBar
 import dev.cuervolu.loredesigner.window.NativeAppMenuBar
 import dev.nucleusframework.application.DecoratedWindow
 import dev.nucleusframework.application.NucleusApplicationScope
 import dev.nucleusframework.core.runtime.Platform
 import dev.nucleusframework.darkmodedetector.isSystemInDarkMode
+import dev.nucleusframework.window.LocalWindowChromeInsets
 import dev.nucleusframework.window.NucleusDecoratedWindowTheme
+import dev.nucleusframework.window.WindowControls
 import dev.nucleusframework.window.WindowScaffold
 import dev.nucleusframework.window.tao.LocalWindowExceptionHandlerFactory
 import dev.nucleusframework.window.tao.WindowExceptionHandlerFactory
+import dev.nucleusframework.window.windowDragArea
 import org.jetbrains.compose.resources.painterResource
 
 private const val APP_NAME = "Lore Designer"
@@ -98,29 +99,25 @@ fun NucleusApplicationScope.LoreDesignerDesktopApp(
                 val systemActions = remember(clipboard) {
                     DesktopProjectSystemActions(folderOpener, clipboard, logger.withTag("System"))
                 }
+                val dragArea = Modifier.windowDragArea()
+                val chrome = remember(isMacOS, dragArea) {
+                    WindowChrome(
+                        titleBarModifier = dragArea,
+                        titleBarContentPadding = { LocalWindowChromeInsets.current.controlsInsets },
+                        windowControls = { if (!isMacOS) WindowControls(Modifier.fillMaxHeight()) },
+                        frame = { titleBar, content -> WindowScaffold(titleBar = titleBar, content = content) },
+                    )
+                }
                 CompositionLocalProvider(LocalProjectSystemActions provides systemActions) {
-                    LoreDesignerTheme(darkTheme = darkTheme) {
-                        ProvideAppLocale(settings.language) {
-                            val menus = rememberAppMenus(session, onQuit = ::exitApplication, macOS = isMacOS)
-                            WindowScaffold(
-                                titleBar = {
-                                    AppWindowTitleBar(
-                                        onSettingsClick = session.settingsModal::open,
-                                        menus = menus,
-                                        workspace = session.activeWorkspace,
-                                        title = title,
-                                    )
-                                },
-                            ) { contentPadding ->
-                                LoreDesignerApp(
-                                    modifier = Modifier
-                                        .padding(contentPadding)
-                                        .let { if (isMacOS) it else it.commandShortcuts(menus) },
-                                    session = session,
-                                )
-                            }
-                        }
-                    }
+                    LoreDesignerWindowContent(
+                        session = session,
+                        title = title,
+                        darkTheme = darkTheme,
+                        language = settings.language,
+                        macOS = isMacOS,
+                        onQuit = ::exitApplication,
+                        chrome = chrome,
+                    )
                 }
             }
         }
