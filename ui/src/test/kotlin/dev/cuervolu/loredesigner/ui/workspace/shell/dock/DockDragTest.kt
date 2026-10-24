@@ -25,6 +25,7 @@ import dev.cuervolu.loredesigner.editor.dock.DockResult
 import dev.cuervolu.loredesigner.editor.dock.DockTarget
 import dev.cuervolu.loredesigner.editor.dock.PanelId
 import dev.cuervolu.loredesigner.editor.dock.PanelKind
+import dev.cuervolu.loredesigner.editor.dock.SplitNode
 import dev.cuervolu.loredesigner.ui.theme.LoreDesignerTheme
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -332,5 +333,43 @@ class DockDragTest {
         release("dock-tab-doc")
 
         assertSame(before, state.layout)
+    }
+
+    @Test
+    fun `log can leave the bottom for the explorer group and return without deforming the layout`() = runComposeUiTest {
+        val state = WorkspaceDockState(initiallyHidden = emptySet())
+        show(state)
+        val editorWidth = bounds(
+            "dock-group-${state.layout.groups.single {
+                it.kind == PanelKind.View
+            }.id.value}",
+        ).width
+        val logHeight = bounds("content-log").height
+        val catalog = state.layout.panels
+
+        dragAndDrop("dock-tab-log", bounds("content-explorer").center)
+        assertEquals(listOf(ShellPanels.Explorer, ShellPanels.Log), state.layout.groupOf(ShellPanels.Log)?.panels)
+        assertEquals(emptyList(), state.layout.validate())
+
+        pickUp("dock-tab-log")
+        moveOver("dock-tab-log", Offset(500f, bounds("content-properties").bottom - 8f))
+        onNodeWithTag("dock-drop-edge").assertExists()
+        release("dock-tab-log")
+
+        assertEquals(emptyList(), state.layout.validate())
+        assertEquals(catalog, state.layout.panels)
+        val view = state.layout.groups.single { it.kind == PanelKind.View }
+        val log = checkNotNull(state.layout.groupOf(ShellPanels.Log))
+        assertEquals(listOf(ShellPanels.Log), log.panels)
+        val column = state.layout.root.let { root ->
+            (root as SplitNode).children.filterIsInstance<SplitNode>().single()
+        }
+        assertEquals(listOf(view.id, log.id), column.children.map { it.id })
+
+        assertEquals(264f, bounds("content-explorer").width)
+        assertEquals(300f, bounds("content-properties").width)
+        assertEquals(editorWidth, bounds("dock-group-${view.id.value}").width)
+        assertEquals(logHeight, bounds("content-log").height)
+        assertEquals(bounds("dock-group-${view.id.value}").width, bounds("content-log").width)
     }
 }

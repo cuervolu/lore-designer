@@ -210,4 +210,21 @@ class WorkspaceDockStateTest {
 
         assertEquals(mapOf(explorer to 280.dp), state.sizeOverrides)
     }
+
+    @Test
+    fun `rebalancing shares only the weight held by the flexible children`() {
+        val state = WorkspaceDockState()
+        val root = state.layout.root as SplitNode
+        val (explorer, editor, properties) = root.children.map { it.id }
+        val before = root.weights
+
+        state.rebalanceFill(root.id, setOf(explorer, editor))
+
+        val after = (state.layout.root as SplitNode).weights
+        assertEquals((before[0] + before[1]) / 2, after[0])
+        assertEquals(after[0], after[1])
+        assertEquals(before[2], after[2])
+        assertEquals(emptyList(), state.layout.validate())
+        assertEquals(properties, state.layout.root.let { (it as SplitNode).children[2].id })
+    }
 }

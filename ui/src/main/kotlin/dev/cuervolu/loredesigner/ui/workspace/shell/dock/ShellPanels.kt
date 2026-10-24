@@ -63,7 +63,8 @@ internal fun RenderNode.sizingAlong(orientation: DockOrientation, registry: Pane
             )
         } else {
             AxisSizing(
-                preferred = if (preferred.all { it != null }) preferred.filterNotNull().max() else null,
+                // Fill children stretch to the width a fixed sibling asks for, so one fixed child keeps the column fixed.
+                preferred = preferred.filterNotNull().maxOrNull(),
                 min = parts.maxOf { it.min },
             )
         }

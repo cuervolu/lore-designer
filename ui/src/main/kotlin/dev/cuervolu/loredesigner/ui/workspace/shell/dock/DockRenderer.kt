@@ -58,6 +58,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.composeunstyled.Text
 import com.composeunstyled.theme.Theme
+import dev.cuervolu.loredesigner.editor.dock.DockNodeId
 import dev.cuervolu.loredesigner.editor.dock.DockOrientation
 import dev.cuervolu.loredesigner.editor.dock.PanelId
 import dev.cuervolu.loredesigner.ui.theme.LoreColors
@@ -150,6 +151,15 @@ private fun DockSplitView(
                 index == collapsing -> base.copy(preferred = base.min)
                 else -> base.copy(preferred = state.sizeOverride(child.id) ?: preferred)
             }
+        }
+        val fillIds = split.children
+            .filter { it.sizingAlong(split.orientation, registry).preferred == null }
+            .mapTo(mutableSetOf()) { it.id }
+        val knownFill = remember(split.id) { arrayOf<Set<DockNodeId>?>(null) }
+        LaunchedEffect(fillIds) {
+            val before = knownFill[0]
+            knownFill[0] = fillIds
+            if (before != null && !before.containsAll(fillIds)) state.rebalanceFill(split.id, fillIds)
         }
         val sizes = remember(split, sizings, available) {
             measureSplit(

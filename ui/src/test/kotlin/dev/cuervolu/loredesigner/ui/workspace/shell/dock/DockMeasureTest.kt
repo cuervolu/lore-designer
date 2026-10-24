@@ -2,6 +2,9 @@ package dev.cuervolu.loredesigner.ui.workspace.shell.dock
 
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import dev.cuervolu.loredesigner.editor.dock.DockNodeId
+import dev.cuervolu.loredesigner.editor.dock.DockOrientation
+import dev.cuervolu.loredesigner.editor.dock.PanelKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -102,5 +105,34 @@ class DockMeasureTest {
         assertEquals(400.dp, measure(1400, children)[0])
         assertEquals(358.dp, measure(900, children)[0])
         assertEquals(400.dp, measure(1400, children)[0])
+    }
+
+    @Test
+    fun `a column mixing a fixed width panel with a fill panel stays fixed width`() {
+        val registry = ShellPanels.Sizing.mapValues { (id, sizing) ->
+            DockPanelSpec(label = { id.value }, content = {}, sizing = sizing)
+        }
+        val column = RenderSplit(
+            id = DockNodeId(kotlin.uuid.Uuid.random()),
+            orientation = DockOrientation.Vertical,
+            children = listOf(
+                RenderGroup(
+                    DockNodeId(kotlin.uuid.Uuid.random()),
+                    PanelKind.Tool,
+                    listOf(ShellPanels.Properties),
+                    ShellPanels.Properties,
+                ),
+                RenderGroup(
+                    DockNodeId(kotlin.uuid.Uuid.random()),
+                    PanelKind.Tool,
+                    listOf(ShellPanels.Log),
+                    ShellPanels.Log,
+                ),
+            ),
+            weights = listOf(0.5f, 0.5f),
+        )
+
+        assertEquals(300.dp, column.sizingAlong(DockOrientation.Horizontal, registry).preferred)
+        assertEquals(null, column.sizingAlong(DockOrientation.Vertical, registry).preferred)
     }
 }

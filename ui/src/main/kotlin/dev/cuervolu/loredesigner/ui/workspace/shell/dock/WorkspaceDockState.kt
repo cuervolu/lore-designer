@@ -93,6 +93,23 @@ class WorkspaceDockState(
         }
     }
 
+    /**
+     * Gives the flexible children [fill] of [split] equal shares of the weight they hold between them.
+     * Weights of children that kept a preferred size are never read, so they go stale; a child that turns flexible
+     * (for example because its group now shows another panel) would otherwise inherit a share nobody chose.
+     */
+    fun rebalanceFill(split: DockNodeId, fill: Set<DockNodeId>) {
+        val node = layout.findSplit(split) ?: return
+        val indices = node.children.indices.filter { node.children[it].id in fill }
+        if (indices.size < 2) return
+        val share = indices.sumOf { node.weights[it].toDouble() }.toFloat() / indices.size
+        val weights = node.weights.toMutableList().apply { indices.forEach { this[it] = share } }
+        when (val result = layout.apply(DockOperation.SetWeights(split, weights))) {
+            is DockResult.Applied -> layout = result.layout
+            is DockResult.Rejected -> logger.w { "Cannot rebalance split $split: ${result.reason}" }
+        }
+    }
+
     /** Brings [panel] to the front of its group, revealing it first if the user had hidden it. */
     fun activate(panel: PanelId) {
         when (val result = layout.apply(DockOperation.Activate(panel))) {

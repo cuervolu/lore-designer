@@ -96,7 +96,10 @@ private fun edgeResolution(
         },
     )
     val (side, zone, touching) = candidates.firstOrNull { it.second.contains(pointer) } ?: return null
-    val anchor = live.filter { touching(it).first }.maxByOrNull { touching(it).second } ?: return null
+    // The editor area owns the window edge when it touches it, so tools dock around it rather than under a side panel.
+    val onEdge = live.filter { touching(it).first }
+    val anchor = onEdge.filter { layout.findGroup(it.group)?.kind == PanelKind.View }.ifEmpty { onEdge }
+        .maxByOrNull { touching(it).second } ?: return null
     val group = checkNotNull(layout.findGroup(anchor.group))
     // A panel that is alone in the group already on this edge has nowhere further to go.
     if (group.panels == listOf(dragged)) return DropResolution.Invalid(anchor)
