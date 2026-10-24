@@ -31,6 +31,34 @@ class DockDropTest {
     }
 
     @Test
+    fun `the drag threshold scales with the density instead of staying a fixed pixel count`() {
+        val origin = Offset(10f, 10f)
+        val moved = Offset(16f, 10f)
+        val atOneX = DRAG_THRESHOLD * 1f
+        val atTwoX = DRAG_THRESHOLD * 2f
+
+        assertTrue(exceedsDragThreshold(origin, moved, atOneX))
+        assertFalse(exceedsDragThreshold(origin, moved, atTwoX), "6 px is only 3 dp at 2x")
+        assertTrue(exceedsDragThreshold(origin, Offset(20.5f, 10f), atTwoX))
+    }
+
+    @Test
+    fun `the edge strip has the width it is given, so it covers the same dp at any density`() {
+        val layout = layout()
+        val window = Rect(0f, 0f, 2000f, 1600f)
+        val properties = checkNotNull(layout.groupOf(ShellPanels.Properties)).id
+        val areas = listOf(GroupArea(properties, Rect(1400f, 0f, 2000f, 1600f), tabBar = null, tabs = emptyList()))
+        val pointer = Offset(2000f - 30f, 800f)
+
+        assertIs<DropResolution.ValidEdge>(
+            resolveDrop(pointer, ShellPanels.Explorer, layout, emptySet(), areas, window, edgeZone = EDGE_ZONE * 2),
+        )
+        assertIs<DropResolution.Valid>(
+            resolveDrop(pointer, ShellPanels.Explorer, layout, emptySet(), areas, window, edgeZone = EDGE_ZONE),
+        )
+    }
+
+    @Test
     fun `hidden panels are skipped when mapping a visible slot to a layout index`() {
         val panels = listOf(a, b, c)
 

@@ -1,13 +1,18 @@
 package dev.cuervolu.loredesigner.ui
 
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.unit.dp
 import dev.cuervolu.loredesigner.core.settings.AppLanguage
 import dev.cuervolu.loredesigner.ui.chrome.AppMenuBar
@@ -70,6 +75,13 @@ fun LoreDesignerWindowContent(
         ProvideAppLocale(language) {
             val menus = rememberAppMenus(session, onQuit = onQuit, macOS = macOS)
             val workspace = session.activeWorkspace
+            val shortcutFocus = remember { FocusRequester() }
+            // Key events only reach the shortcuts while something under them has focus. Opening a project destroys
+            // the launcher's focused row and nothing in the shell takes focus, so the shortcuts would go dead.
+            // macOS handles its shortcuts in the native menu and does not attach the requester.
+            LaunchedEffect(workspace?.config?.id) {
+                if (workspace != null && !macOS) shortcutFocus.requestFocus()
+            }
             chrome.frame(
                 {
                     AppTitleBar(
@@ -93,7 +105,9 @@ fun LoreDesignerWindowContent(
                     LoreDesignerApp(
                         modifier = modifier
                             .padding(contentPadding)
-                            .let { if (macOS) it else it.commandShortcuts(menus) },
+                            .let {
+                                if (macOS) it else it.commandShortcuts(menus).focusRequester(shortcutFocus).focusable()
+                            },
                         session = session,
                         pickDirectory = pickDirectory,
                     )

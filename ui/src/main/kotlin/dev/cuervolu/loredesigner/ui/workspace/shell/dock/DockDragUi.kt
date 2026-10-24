@@ -84,7 +84,7 @@ internal fun Modifier.dockDragSource(group: DockNodeId, panel: PanelId, dragStat
             var last = root(down.position)
             val released = drag(down.id) { change ->
                 if (!started) {
-                    if (!exceedsDragThreshold(down.position, change.position)) return@drag
+                    if (!exceedsDragThreshold(down.position, change.position, DRAG_THRESHOLD * density)) return@drag
                     started = dragState.start(panel, root(change.position))
                 }
                 if (started) {

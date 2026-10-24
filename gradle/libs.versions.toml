@@ -25,6 +25,7 @@ okio = "3.18.2"
 semver = "3.1.0"
 kover = "0.9.11"
 sonner = "0.4.0"
+kotest = "6.2.6"
 
 [libraries]
 compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose-multiplatform" }
@@ -55,6 +56,8 @@ multiplatformSettings-test = { module = "com.russhwolf:multiplatform-settings-te
 room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.ref = "sqlite" }
+
+kotest-property = { module = "io.kotest:kotest-property", version.ref = "kotest" }
 
 junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }

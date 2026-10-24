@@ -90,10 +90,12 @@ fun DockHost(
     val root = remember(state.layout, state.hidden) { state.layout.project(state.hidden) }
     val drag = remember(state) { DockDragState(state) }
     val focus = remember { FocusRequester() }
+    drag.density = LocalDensity.current.density
     var origin by remember { mutableStateOf(Offset.Zero) }
     // A drag built on a layout that has since changed would point at groups that may no longer exist.
     LaunchedEffect(state.layout, state.hidden) { drag.cancel() }
-    // Focus is only taken while a drag is running, to hear Escape, and is not held afterwards.
+    // Focus is taken while a drag is running, to hear Escape. It is kept afterwards: releasing it would leave the
+    // window without focus, and the window shortcuts only hear key events while something under them is focused.
     LaunchedEffect(drag.active) {
         if (drag.active) runCatching { focus.requestFocus() }
     }
@@ -110,7 +112,7 @@ fun DockHost(
                 escape
             }
             .focusRequester(focus)
-            .focusable(enabled = drag.active),
+            .focusable(),
     ) {
         DockNodeView(root, registry, viewEmpty, state, drag)
         DockDragOverlay(drag, registry, origin)

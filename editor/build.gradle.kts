@@ -10,4 +10,6 @@ kotlin {
 dependencies {
     implementation(project(":core"))
     testImplementation(kotlin("test"))
+    testImplementation(libs.kotest.property)
+    testImplementation(libs.kotlinx.coroutines.core)
 }

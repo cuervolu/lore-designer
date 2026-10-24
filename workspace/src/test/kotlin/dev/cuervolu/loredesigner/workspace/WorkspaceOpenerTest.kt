@@ -3,11 +3,7 @@ package dev.cuervolu.loredesigner.workspace
 import co.touchlab.kermit.Severity
 import dev.cuervolu.loredesigner.core.workspace.ProjectConfig
 import dev.cuervolu.loredesigner.core.workspace.WorkspaceId
-import dev.cuervolu.loredesigner.workspace.recent.RecentWorkspace
-import dev.cuervolu.loredesigner.workspace.recent.RecentWorkspacesRegistry
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.test.runTest
 import okio.Path
 import okio.Path.Companion.toPath
@@ -130,29 +126,5 @@ class WorkspaceOpenerTest {
             error("not used")
 
         override suspend fun hasProjectFile(location: Path): Boolean = location in folders
-    }
-
-    private class RecordingRegistry : RecentWorkspacesRegistry {
-        val recorded = mutableListOf<Workspace>()
-        val relocated = mutableListOf<Workspace>()
-        var failure: Exception? = null
-        override val workspaces: StateFlow<List<RecentWorkspace>> = MutableStateFlow(emptyList())
-        override val loaded: StateFlow<Boolean> = MutableStateFlow(true)
-
-        override suspend fun initialize() = Unit
-
-        override suspend fun recordOpened(workspace: Workspace) {
-            failure?.let { throw it }
-            recorded += workspace
-        }
-
-        override suspend fun updateLocation(workspace: Workspace) {
-            failure?.let { throw it }
-            relocated += workspace
-        }
-
-        override suspend fun setPinned(id: WorkspaceId, pinned: Boolean) = Unit
-
-        override suspend fun forget(id: WorkspaceId) = Unit
     }
 }

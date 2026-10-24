@@ -9,14 +9,19 @@ import dev.cuervolu.loredesigner.editor.dock.DockTarget
 import dev.cuervolu.loredesigner.editor.dock.PanelId
 import dev.cuervolu.loredesigner.editor.dock.PanelKind
 
-/** Distance in pixels the pointer must travel before a press on a tab becomes a drag instead of a click. */
+/**
+ * Distance in dp the pointer must travel before a press on a tab becomes a drag instead of a click. Pointer
+ * positions are physical pixels, so multiply by the density before comparing: a threshold in raw pixels would
+ * halve at 2x and turn ordinary hand jitter into drags.
+ */
 internal const val DRAG_THRESHOLD = 5f
 
-/** Width in pixels of the strips along the window's left, right and bottom edges that dock a tool outside every group. */
+/** Width in dp of the strips along the window's left, right and bottom edges that dock a tool outside every group. */
 internal const val EDGE_ZONE = 24f
 
-internal fun exceedsDragThreshold(origin: Offset, current: Offset): Boolean =
-    (current - origin).getDistance() > DRAG_THRESHOLD
+/** [threshold] is in pixels; callers scale [DRAG_THRESHOLD] by the density. */
+internal fun exceedsDragThreshold(origin: Offset, current: Offset, threshold: Float = DRAG_THRESHOLD): Boolean =
+    (current - origin).getDistance() > threshold
 
 internal class TabSlot(val panel: PanelId, val bounds: Rect)
 
@@ -46,11 +51,12 @@ internal fun resolveDrop(
     hidden: Set<PanelId>,
     areas: List<GroupArea>,
     window: Rect? = null,
+    edgeZone: Float = EDGE_ZONE,
 ): DropResolution {
     val kind = layout.panels[dragged] ?: return DropResolution.None
     // The outer strips come first so they win over whichever interior group happens to lie under them.
     if (kind == PanelKind.Tool && window != null) {
-        edgeResolution(pointer, dragged, layout, areas, window)?.let { return it }
+        edgeResolution(pointer, dragged, layout, areas, window, edgeZone)?.let { return it }
     }
     val area = areas.lastOrNull { it.bounds.contains(pointer) && layout.findGroup(it.group) != null }
         ?: return DropResolution.None
@@ -76,21 +82,22 @@ private fun edgeResolution(
     layout: DockLayout,
     areas: List<GroupArea>,
     window: Rect,
+    edgeZone: Float,
 ): DropResolution? {
     val live = areas.filter { layout.findGroup(it.group) != null }
     val candidates = listOf(
-        Triple(DockSide.Left, Rect(window.left, window.top, window.left + EDGE_ZONE, window.bottom)) { a: GroupArea ->
+        Triple(DockSide.Left, Rect(window.left, window.top, window.left + edgeZone, window.bottom)) { a: GroupArea ->
             (a.bounds.left <= window.left + EDGE_TOLERANCE) to a.bounds.height
         },
         Triple(
             DockSide.Right,
-            Rect(window.right - EDGE_ZONE, window.top, window.right, window.bottom),
+            Rect(window.right - edgeZone, window.top, window.right, window.bottom),
         ) { a: GroupArea ->
             (a.bounds.right >= window.right - EDGE_TOLERANCE) to a.bounds.height
         },
         Triple(
             DockSide.Bottom,
-            Rect(window.left, window.bottom - EDGE_ZONE, window.right, window.bottom),
+            Rect(window.left, window.bottom - edgeZone, window.right, window.bottom),
         ) { a: GroupArea ->
             (a.bounds.bottom >= window.bottom - EDGE_TOLERANCE) to a.bounds.width
         },

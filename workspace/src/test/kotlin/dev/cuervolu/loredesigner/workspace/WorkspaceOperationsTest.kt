@@ -115,7 +115,7 @@ class WorkspaceOperationsTest {
         val workspace =
             Workspace("worlds/Embercourt".toPath(), config(name = "Embercourt", color = ProjectColor.VIOLET))
 
-        val result = UpdateProjectConfig(store)(workspace, "  Ember Court  ", ProjectColor.GREEN)
+        val result = updateProjectConfig(store)(workspace, "  Ember Court  ", ProjectColor.GREEN)
 
         val updated = assertIs<WorkspaceResult.Success<Workspace>>(result).value
         assertEquals("worlds/Embercourt".toPath(), updated.location)
@@ -127,7 +127,7 @@ class WorkspaceOperationsTest {
     fun `update accepts names that are not valid folder names`() = runTest {
         val workspace = Workspace("worlds/Embercourt".toPath(), config(name = "Embercourt"))
 
-        val result = UpdateProjectConfig(RecordingWorkspaceStore())(workspace, "Ember: Court?", null)
+        val result = updateProjectConfig(RecordingWorkspaceStore())(workspace, "Ember: Court?", null)
 
         assertEquals("Ember: Court?", assertIs<WorkspaceResult.Success<Workspace>>(result).value.config.name)
     }
@@ -137,7 +137,7 @@ class WorkspaceOperationsTest {
         val workspace = Workspace("worlds/Embercourt".toPath(), config(name = "Embercourt"))
 
         for (name in listOf("", "   ", "tab\tname")) {
-            val result = UpdateProjectConfig(FailingWorkspaceStore())(workspace, name, null)
+            val result = updateProjectConfig(FailingWorkspaceStore())(workspace, name, null)
 
             assertIs<WorkspaceError.InvalidWorkspaceName>(assertIs<WorkspaceResult.Failure>(result).error)
         }
@@ -147,10 +147,47 @@ class WorkspaceOperationsTest {
     fun `update without changes does not touch storage`() = runTest {
         val workspace = Workspace("worlds/Embercourt".toPath(), config(name = "Embercourt", color = ProjectColor.BLUE))
 
-        val result = UpdateProjectConfig(FailingWorkspaceStore())(workspace, "Embercourt", ProjectColor.BLUE)
+        val result = updateProjectConfig(FailingWorkspaceStore())(workspace, "Embercourt", ProjectColor.BLUE)
 
         assertEquals(workspace, assertIs<WorkspaceResult.Success<Workspace>>(result).value)
     }
+
+    @Test
+    fun `a successful update refreshes the cached name and color of the recent workspace`() = runTest {
+        val workspace = Workspace("worlds/Embercourt".toPath(), config(name = "Embercourt"))
+
+        val result = updateProjectConfig(RecordingWorkspaceStore())(workspace, "Ember Court", ProjectColor.GREEN)
+
+        val updated = assertIs<WorkspaceResult.Success<Workspace>>(result).value
+        assertEquals(listOf(updated), registry.relocated)
+    }
+
+    @Test
+    fun `a rejected or unchanged update leaves the recent workspace alone`() = runTest {
+        val workspace = Workspace("worlds/Embercourt".toPath(), config(name = "Embercourt"))
+
+        updateProjectConfig(FailingWorkspaceStore())(workspace, "   ", null)
+        updateProjectConfig(FailingWorkspaceStore())(workspace, "Embercourt", null)
+        val failed = updateProjectConfig(RejectingWorkspaceStore())(workspace, "Ember Court", null)
+
+        assertIs<WorkspaceResult.Failure>(failed)
+        assertEquals(emptyList(), registry.relocated)
+    }
+
+    @Test
+    fun `failing to refresh the recent workspace does not fail the update`() = runTest {
+        registry.failure = IllegalStateException("disk full")
+        val workspace = Workspace("worlds/Embercourt".toPath(), config(name = "Embercourt"))
+
+        val result = updateProjectConfig(RecordingWorkspaceStore())(workspace, "Ember Court", null)
+
+        assertEquals("Ember Court", assertIs<WorkspaceResult.Success<Workspace>>(result).value.config.name)
+    }
+
+    private val registry = RecordingRegistry()
+
+    private fun updateProjectConfig(store: WorkspaceStore) =
+        UpdateProjectConfig(store, registry, RecordingLogWriter().logger())
 
     private fun config(name: String, color: ProjectColor? = null) =
         ProjectConfig(version = CURRENT_PROJECT_FORMAT_VERSION, id = workspaceId, name = name, color = color)
@@ -173,6 +210,18 @@ class WorkspaceOperationsTest {
         }
 
         override suspend fun hasProjectFile(location: Path): Boolean = false
+    }
+
+    private class RejectingWorkspaceStore : WorkspaceStore {
+        override suspend fun create(location: Path, config: ProjectConfig): WorkspaceResult<Workspace> =
+            error("not used")
+
+        override suspend fun open(location: Path): WorkspaceResult<Workspace> = error("not used")
+
+        override suspend fun updateConfig(location: Path, config: ProjectConfig): WorkspaceResult<Workspace> =
+            WorkspaceResult.Failure(WorkspaceError.NotAWorkspace(location))
+
+        override suspend fun hasProjectFile(location: Path): Boolean = error("not used")
     }
 
     private class FailingWorkspaceStore : WorkspaceStore {

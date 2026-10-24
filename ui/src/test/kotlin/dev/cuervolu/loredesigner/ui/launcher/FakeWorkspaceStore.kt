@@ -58,7 +58,8 @@ internal class FakeWorkspaceStore : WorkspaceStore {
 
     fun createWorkspace() = CreateWorkspace(this, WorkspaceIdGenerator { TestWorkspaceId })
 
-    fun updateProjectConfig() = UpdateProjectConfig(this)
+    fun updateProjectConfig(registry: RecentWorkspacesRegistry) =
+        UpdateProjectConfig(this, registry, RecordingLogWriter().logger())
 
     fun opener(registry: RecentWorkspacesRegistry) = WorkspaceOpener(this, registry, RecordingLogWriter().logger())
 }

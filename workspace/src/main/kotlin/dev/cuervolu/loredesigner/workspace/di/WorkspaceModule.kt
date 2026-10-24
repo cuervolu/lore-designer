@@ -12,6 +12,6 @@ import org.koin.dsl.module
 fun workspaceModule(): Module = module {
     factory { CreateWorkspace(get(), get()) }
     factory { OpenWorkspace(get()) }
-    factory { UpdateProjectConfig(get()) }
+    factory { UpdateProjectConfig(get(), get(), get<Logger>().withTag("Workspaces")) }
     factory { WorkspaceOpener(get(), get(), get<Logger>().withTag("Workspaces")) }
 }

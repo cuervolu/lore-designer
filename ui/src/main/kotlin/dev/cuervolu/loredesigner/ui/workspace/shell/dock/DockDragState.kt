@@ -38,6 +38,9 @@ internal class DockDragState(private val dock: WorkspaceDockState) {
 
     var host: LayoutCoordinates? = null
 
+    /** Pixels per dp of the window, which turns the dp-based distances of the drag into pixels. */
+    var density: Float = 1f
+
     private val registrations = mutableMapOf<DockNodeId, Registration>()
 
     fun setGroup(group: DockNodeId, coordinates: LayoutCoordinates?) {
@@ -93,8 +96,15 @@ internal class DockDragState(private val dock: WorkspaceDockState) {
         resolution = DropResolution.None
     }
 
-    private fun resolve(panel: PanelId, at: Offset): DropResolution =
-        resolveDrop(at, panel, dock.layout, dock.hidden, areas(), host?.takeIf { it.isAttached }?.boundsInRoot())
+    private fun resolve(panel: PanelId, at: Offset): DropResolution = resolveDrop(
+        at,
+        panel,
+        dock.layout,
+        dock.hidden,
+        areas(),
+        host?.takeIf { it.isAttached }?.boundsInRoot(),
+        edgeZone = EDGE_ZONE * density,
+    )
 
     private fun areas(): List<GroupArea> = registrations.mapNotNull { (id, registration) ->
         val group = registration.group?.takeIf { it.isAttached } ?: return@mapNotNull null

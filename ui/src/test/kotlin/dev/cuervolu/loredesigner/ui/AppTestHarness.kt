@@ -14,7 +14,6 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import dev.cuervolu.loredesigner.ui.chrome.windowTitle
 import dev.cuervolu.loredesigner.ui.launcher.FakeProjectSystemActions
-import dev.cuervolu.loredesigner.ui.launcher.FakeRecentWorkspacesRegistry
 import dev.cuervolu.loredesigner.ui.launcher.LocalProjectSystemActions
 import dev.cuervolu.loredesigner.ui.resources.Res
 import dev.cuervolu.loredesigner.ui.resources.launcher_action_new
@@ -45,7 +44,7 @@ import org.koin.dsl.module
 internal class AppTestHarness {
     val settings = SettingsTestHarness()
     val store = settings.workspaceStore
-    val registry = FakeRecentWorkspacesRegistry()
+    val registry = settings.recentWorkspaces
     val systemActions = FakeProjectSystemActions()
 
     private val koin = koinApplication {
@@ -73,7 +72,7 @@ internal class AppTestHarness {
                             project = session.activeWorkspace?.config?.name,
                             appName = APP_NAME,
                         ),
-                        darkTheme = false,
+                        darkTheme = appSettings.theme.isDark(systemDark = false),
                         language = appSettings.language,
                         macOS = false,
                         onQuit = {},

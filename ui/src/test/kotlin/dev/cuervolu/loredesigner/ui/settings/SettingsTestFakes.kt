@@ -3,6 +3,7 @@ package dev.cuervolu.loredesigner.ui.settings
 import dev.cuervolu.loredesigner.core.settings.ApplicationSettings
 import dev.cuervolu.loredesigner.core.settings.ApplicationSettingsStore
 import dev.cuervolu.loredesigner.ui.RecordingLogWriter
+import dev.cuervolu.loredesigner.ui.launcher.FakeRecentWorkspacesRegistry
 import dev.cuervolu.loredesigner.ui.launcher.FakeWorkspaceStore
 import dev.cuervolu.loredesigner.ui.settings.data.ApplicationSettingsRepository
 import dev.cuervolu.loredesigner.ui.settings.pages.builtInSettingsPages
@@ -57,8 +58,15 @@ internal class SettingsTestHarness(
     val registry = SettingsPageRegistry(builtInSettingsPages())
     val environment = FakeSettingsEnvironment()
     val workspaceStore = FakeWorkspaceStore()
+    val recentWorkspaces = FakeRecentWorkspacesRegistry()
 
     val factory = SettingsViewModelFactory { workspace ->
-        SettingsViewModel(repository, registry, workspace, workspaceStore.updateProjectConfig(), environment)
+        SettingsViewModel(
+            repository,
+            registry,
+            workspace,
+            workspaceStore.updateProjectConfig(recentWorkspaces),
+            environment,
+        )
     }
 }
